@@ -1034,83 +1034,101 @@ const S={
 const QUOTA={visitor:2,beta:Infinity,vip:Infinity};
 const VALID_CODES={'MIXTURA-BETA-2025':'beta','MIXTURA-VIP-2025':'vip'};
 
-/* ─── Classic recipes ── */
-const CLASSIC_RECIPES=[
-  {id:'c1',name:'Mojito',emoji:'🍹',category:'classic',glassType:'highball',
-   garnish:'Menthe + citron vert',
-   description:'Le classique cubain par excellence. Frais, herbacé et légèrement sucré.',
-   tags:['cubain','fresh','summer'],foodCost:1.45,sellingPrice:12,
-   ingredients:[
-     {id:'i1',name:'Rhum blanc',quantityCl:5,pricePerCl:0.21,unit:'cl'},
-     {id:'i2',name:'Jus de citron vert',quantityCl:3,pricePerCl:0.04,unit:'cl'},
-     {id:'i3',name:'Sirop de sucre de canne',quantityCl:2,pricePerCl:0.05,unit:'cl'},
-     {id:'i4',name:'Eau gazeuse',quantityCl:6,pricePerCl:0.02,unit:'cl'},
-     {id:'i5',name:'Menthe fraîche',quantityCl:0,qty:8,unit:'feuilles',pricePerCl:0},
-   ],
-   steps:['Déposer la menthe dans le verre avec le sirop','Écraser délicatement avec un pilon',
-     'Ajouter le jus de citron vert pressé','Remplir de glace pilée et verser le rhum',
-     'Compléter à l\'eau gazeuse froide','Garnir d\'une tige de menthe'],
+/* ─── Recettes Officielles IBA ── */
+const RECETTES_IBA = [
+  {
+    identifiant: 'iba-1',
+    nom: 'Negroni',
+    emoji: '🥃',
+    categorie: 'The Unforgettables',
+    typeDeVerre: 'Old Fashioned',
+    garnir: 'Tranche d’orange',
+    description: 'Le classique italien par excellence, équilibré et amer.',
+    etiquettes: ['Amer', 'Stirred', 'Pre-dinner'],
+    coutDesAliments: 2.30, // Estimation basée sur vos prix
+    prixDeVente: 14,
+    ingredients: [
+      { identifiant: 'i6', nom: 'Gin', quantiteCl: 3, prixParCl: 0.43, unite: 'cl' },
+      { identifiant: 'i7', nom: 'Campari', quantiteCl: 3, prixParCl: 0.29, unite: 'cl' },
+      { identifiant: 'i8', nom: 'Vermouth Rouge Doux', quantiteCl: 3, prixParCl: 0.11, unite: 'cl' }
+    ],
+    mesures: [
+      'Verser tous les ingrédients directement dans un verre old fashioned rempli de glace',
+      'Remuer doucement',
+      'Garnir d\'une demi-tranche d\'orange'
+    ]
   },
-  {id:'c2',name:'Negroni',emoji:'🥃',category:'classic',glassType:'rocks',
-   garnish:'Zeste d\'orange',
-   description:'Le roi des apéritifs italiens. Puissant, amer et élégant.',
-   tags:['italien','bitter','aperitif'],foodCost:2.30,sellingPrice:14,
-   ingredients:[
-     {id:'i6',name:'Gin',quantityCl:3,pricePerCl:0.43,unit:'cl'},
-     {id:'i7',name:'Campari',quantityCl:3,pricePerCl:0.29,unit:'cl'},
-     {id:'i8',name:'Vermouth rouge',quantityCl:3,pricePerCl:0.11,unit:'cl'},
-   ],
-   steps:['Remplir un verre rocks de glaçons',
-     'Verser gin, Campari et vermouth à parts égales',
-     'Remuer 30 secondes avec une cuillère à mélange',
-     'Exprimer un zeste d\'orange et déposer en garniture'],
+  {
+    identifiant: 'iba-2',
+    nom: 'Margarita',
+    emoji: '🍸',
+    categorie: 'Contemporary Classics',
+    typeDeVerre: 'Coupette',
+    garnir: 'Bord givré au sel',
+    description: 'La recette officielle IBA privilégie le 100% Agave Tequila.',
+    etiquettes: ['Tequila', 'Sour', 'Citrique'],
+    coutDesAliments: 1.85,
+    prixDeVente: 12,
+    ingredients: [
+      { identifiant: 'i9', nom: 'Tequila 100% Agave', quantiteCl: 5, prixParCl: 0.29, unite: 'cl' },
+      { identifiant: 'i10', nom: 'Triple Sec', quantiteCl: 2, prixParCl: 0.65, unite: 'cl' },
+      { identifiant: 'i2', nom: 'Jus de citron vert frais', quantiteCl: 1.5, prixParCl: 0.04, unite: 'cl' }
+    ],
+    mesures: [
+      'Shaker tous les ingrédients avec de la glace',
+      'Filtrer dans un verre à cocktail givré au sel',
+      'Servir sans glace (Up)'
+    ]
   },
-  {id:'c3',name:'Margarita',emoji:'🍸',category:'classic',glassType:'coupe',
-   garnish:'Sel sur le bord + citron',
-   description:'Le cocktail mexicain intemporel. Équilibre parfait entre tequila, acide et sucre.',
-   tags:['mexicain','citrus','tequila'],foodCost:1.85,sellingPrice:12,
-   ingredients:[
-     {id:'i9',name:'Tequila blanche',quantityCl:4.5,pricePerCl:0.29,unit:'cl'},
-     {id:'i10',name:'Triple Sec (Cointreau)',quantityCl:2,pricePerCl:0.65,unit:'cl'},
-     {id:'i2',name:'Jus de citron vert',quantityCl:2.5,pricePerCl:0.04,unit:'cl'},
-   ],
-   steps:['Givrer le bord du verre avec sel et citron vert',
-     'Mettre tous les ingrédients dans un shaker avec glace',
-     'Shaker vigoureusement 15 secondes',
-     'Filtrer dans le verre givré et garnir d\'une rondelle de citron'],
+  {
+    identifiant: 'iba-3',
+    nom: 'Mojito',
+    emoji: '🍹',
+    categorie: 'Contemporary Classics',
+    typeDeVerre: 'Highball',
+    garnir: 'Menthe et tranche de citron vert',
+    description: 'Le rafraîchissement cubain selon les standards internationaux.',
+    etiquettes: ['Rhum', 'Long Drink', 'Frais'],
+    coutDesAliments: 1.45,
+    prixDeVente: 12,
+    ingredients: [
+      { identifiant: 'i1', nom: 'Rhum Blanc Cubain', quantiteCl: 4.5, prixParCl: 0.21, unite: 'cl' },
+      { identifiant: 'i2', nom: 'Jus de citron vert frais', quantiteCl: 2, prixParCl: 0.04, unite: 'cl' },
+      { identifiant: 'i5', nom: 'Menthe fraîche', quantiteCl: 0, quantite: 6, unite: 'feuilles', prixParCl: 0 },
+      { identifiant: 'i3', nom: 'Sucre de canne blanc', quantiteCl: 0, quantite: 2, unite: 'cuillères', prixParCl: 0.05 },
+      { identifiant: 'i4', nom: 'Eau gazeuse', quantiteCl: 6, prixParCl: 0.02, unite: 'cl' }
+    ],
+    mesures: [
+      'Mélanger le sucre avec le jus de citron et la menthe',
+      'Ajouter un splash d\'eau gazeuse et piler délicatement',
+      'Ajouter le rhum et des glaçons',
+      'Compléter à l\'eau gazeuse'
+    ]
   },
-  {id:'c4',name:'Gin Tonic',emoji:'🥂',category:'classic',glassType:'highball',
-   garnish:'Concombre + poivre noir',
-   description:'Simple et sophistiqué. Toute la puissance du gin révélée par le tonic.',
-   tags:['british','light','simple'],foodCost:1.25,sellingPrice:10,
-   ingredients:[
-     {id:'i6',name:'Gin',quantityCl:4,pricePerCl:0.43,unit:'cl'},
-     {id:'i11',name:'Tonic Water',quantityCl:12,pricePerCl:0.09,unit:'cl'},
-   ],
-   steps:['Remplir un verre ballon de glaçons de grande taille',
-     'Verser le gin sur les glaçons',
-     'Ajouter le tonic froid en versant sur le dos d\'une cuillère',
-     'Remuer très délicatement pour préserver les bulles',
-     'Garnir selon le profil du gin'],
-  },
-  {id:'c5',name:'Espresso Martini',emoji:'☕',category:'classic',glassType:'martini',
-   garnish:'3 grains de café torréfiés',
-   description:'Le cocktail après-dîner par excellence. Caféiné, velouté et légèrement sucré.',
-   tags:['coffee','après-dîner','festif'],foodCost:2.00,sellingPrice:14,
-   ingredients:[
-     {id:'i12',name:'Vodka',quantityCl:4,pricePerCl:0.22,unit:'cl'},
-     {id:'i13',name:'Kahlúa',quantityCl:2,pricePerCl:0.36,unit:'cl'},
-     {id:'i14',name:'Espresso (refroidi)',quantityCl:3,pricePerCl:0.10,unit:'cl'},
-     {id:'i3',name:'Sirop de sucre de canne',quantityCl:1,pricePerCl:0.05,unit:'cl'},
-   ],
-   steps:['Préparer un espresso et le laisser refroidir',
-     'Mettre tous les ingrédients dans un shaker rempli de glace',
-     'Shaker fort et longtemps pour créer la mousse',
-     'Double filtrer dans un verre martini glacé',
-     'Déposer 3 grains de café sur la mousse'],
-  },
+  {
+    identifiant: 'iba-4',
+    nom: 'Espresso Martini',
+    emoji: '☕',
+    categorie: 'New Era Drinks',
+    typeDeVerre: 'Martini / Coupette',
+    garnir: '3 grains de café',
+    description: 'Un cocktail moderne devenu un incontournable mondial.',
+    etiquettes: ['Vodka', 'Caféine', 'After-dinner'],
+    coutDesAliments: 2.00,
+    prixDeVente: 14,
+    ingredients: [
+      { identifiant: 'i12', nom: 'Vodka', quantiteCl: 5, prixParCl: 0.22, unite: 'cl' },
+      { identifiant: 'i13', nom: 'Liqueur de café', quantiteCl: 3, prixParCl: 0.36, unite: 'cl' },
+      { identifiant: 'i14', nom: 'Café Espresso frais', quantiteCl: 3, prixParCl: 0.10, unite: 'cl' },
+      { identifiant: 'i3', nom: 'Sirop de sucre (optionnel)', quantiteCl: 1, prixParCl: 0.05, unite: 'cl' }
+    ],
+    mesures: [
+      'Shaker vigoureusement pour obtenir une mousse épaisse',
+      'Filtrer dans un verre refroidi',
+      'Déposer les grains de café en forme de trèfle'
+    ]
+  }
 ];
-
 /* ─── Default ingredients ── */
 const DEFAULT_INGREDIENTS=[
   {id:'d1',name:'Rhum blanc Havana 3 ans',category:'spirits',brand:'Havana Club',bottleSizeCl:70,bottlePrice:14.90,supplier:'Metro'},
