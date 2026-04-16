@@ -1,7 +1,7 @@
-/* âââââââââââââââââââââââââââââââââââââââ
-   MIXTURA â Service Worker
+/* ═══════════════════════════════════════
+   MIXTURA — Service Worker
    Gestion du cache hors-ligne
-âââââââââââââââââââââââââââââââââââââââ */
+═══════════════════════════════════════ */
 
 const CACHE_NAME = 'mixtura-v2';
 const ASSETS = [
@@ -12,7 +12,7 @@ const ASSETS = [
   './icons/icon-512.png',
 ];
 
-/* ââ Installation : mise en cache des assets ââ */
+/* ── Installation : mise en cache des assets ── */
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
@@ -20,7 +20,7 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-/* ââ Activation : suppression des anciens caches ââ */
+/* ── Activation : suppression des anciens caches ── */
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -34,9 +34,9 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-/* ââ Fetch : cache-first pour les assets, network-first pour Firebase ââ */
+/* ── Fetch : cache-first pour les assets, network-first pour Firebase ── */
 self.addEventListener('fetch', event => {
-  // Laisser passer les requÃªtes Firebase / API (rÃ©seau uniquement)
+  // Laisser passer les requêtes Firebase / API (réseau uniquement)
   if (
     event.request.url.includes('firebaseapp.com') ||
     event.request.url.includes('googleapis.com') ||

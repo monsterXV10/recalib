@@ -1,7 +1,7 @@
 {
-  "name": "MIXTURA â Cocktail Library & Calculator",
+  "name": "MIXTURA — Cocktail Library & Calculator",
   "short_name": "MIXTURA",
-  "description": "Outil professionnel pour mixologues : calcul food cost, gestion de recettes et d'Ã©quipe",
+  "description": "Outil professionnel pour mixologues : calcul food cost, gestion de recettes et d'équipe",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0A0E1A",
@@ -28,7 +28,7 @@
     {
       "name": "Nouvelle recette",
       "short_name": "Ajouter",
-      "description": "CrÃ©er une nouvelle recette",
+      "description": "Créer une nouvelle recette",
       "url": "./index.html?action=new",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }

@@ -10,9 +10,9 @@
 <title>MIXTURA — Cocktail Library & Calculator</title>
 <link rel="manifest" href="manifest.json">
 <style>
-/* ════════════════════════════════════════
+/* ═══════════════════════════════════════
    MIXTURA — Design System v2
-════════════════════════════════════════ */
+═══════════════════════════════════════ */
 :root{
   --navy-900:#0A0E1A; --navy-800:#0F1629; --navy-700:#1A2340;
   --navy-600:#1E2B4D; --navy-500:#243358;
@@ -22,7 +22,7 @@
   --success:#2ECC9A; --error:#E05C6A; --warn:#E8B84B;
   --radius-sm:8px; --radius:14px; --radius-lg:20px; --radius-xl:28px;
   --shadow:0 4px 24px rgba(0,0,0,.5);
-  --shadow-gold: 0 0 20px rgba(200,169,110,.2);
+  --shadow-gold:0 0 20px rgba(200,169,110,.2);
   --tr:.2s cubic-bezier(.4,0,.2,1);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -35,10 +35,10 @@ input,select,textarea{font:inherit;color:inherit}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--navy-600);border-radius:2px}
 
-/* ─── App shell ─── */
+/* ── App shell ── */
 #app{display:flex;height:100dvh;overflow:hidden}
 
-/* ─── Sidebar ─── */
+/* ── Sidebar ── */
 .sidebar{width:240px;flex-shrink:0;background:var(--navy-800);
   border-right:1px solid rgba(200,169,110,.08);display:flex;flex-direction:column;
   z-index:100;transition:transform var(--tr)}
@@ -52,7 +52,7 @@ input,select,textarea{font:inherit;color:inherit}
 .logo-name{font-size:15px;font-weight:700;letter-spacing:.12em;color:var(--gold)}
 .logo-sub{font-size:9px;font-weight:500;letter-spacing:.18em;color:var(--text-3);
   text-transform:uppercase;margin-top:2px}
-.sidebar-nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:0;text-align:start;overflow-y:auto}
+.sidebar-nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
 .nav-section-label{font-size:10px;font-weight:600;letter-spacing:.14em;color:var(--text-3);
   text-transform:uppercase;padding:12px 10px 6px}
 .nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius-sm);
@@ -68,13 +68,13 @@ input,select,textarea{font:inherit;color:inherit}
 .sidebar-footer{padding:16px;border-top:1px solid rgba(200,169,110,.08)}
 .plan-badge{display:flex;align-items:center;gap:10px;padding:10px 12px;
   background:var(--navy-700);border-radius:var(--radius-sm);
-  border:1px solid rgba(200,169,110,.1);cursor:pointer}
+  border:1px solid rgba(200,169,110,.12);cursor:pointer}
 .plan-icon{font-size:18px}
 .plan-info{flex:1;min-width:0}
 .plan-name{font-size:12px;font-weight:600;color:var(--gold)}
 .plan-desc{font-size:11px;color:var(--text-3);margin-top:1px}
 
-/* ─── Main ─── */
+/* ── Main ── */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 .topbar{height:60px;flex-shrink:0;background:var(--navy-900);
   border-bottom:1px solid rgba(200,169,110,.06);
@@ -105,12 +105,12 @@ input,select,textarea{font:inherit;color:inherit}
 .back-btn svg{width:16px;height:16px}
 .back-btn.visible{display:flex}
 
-/* ─── Screens ─── */
+/* ── Screens ── */
 .screen{display:none;flex:1;overflow:hidden;flex-direction:column}
 .screen.active{display:flex}
 .content{flex:1;overflow-y:auto;padding:28px 24px}
 
-/* ─── Stats ─── */
+/* ── Stats ── */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
 .stat-card{background:var(--navy-800);border:1px solid rgba(200,169,110,.08);
   border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden;transition:all var(--tr)}
@@ -122,7 +122,7 @@ input,select,textarea{font:inherit;color:inherit}
 .stat-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:32px;height:32px;opacity:.15}
 .stat-icon svg{width:32px;height:32px}
 
-/* ─── Section header ─── */
+/* ── Section header ── */
 .section-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .section-title{font-size:15px;font-weight:700;color:var(--text-1)}
 .section-count{font-size:12px;font-weight:600;background:var(--navy-700);
@@ -139,7 +139,7 @@ input,select,textarea{font:inherit;color:inherit}
 .view-btn.active{background:var(--navy-500);color:var(--text-1)}
 .view-btn svg{width:15px;height:15px;display:block}
 
-/* ─── Recipe grid ─── */
+/* ── Recipe grid ── */
 .recipe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
 .recipe-grid.list-view{grid-template-columns:1fr;gap:8px}
 .recipe-card{background:var(--navy-800);border:1px solid rgba(200,169,110,.08);
@@ -185,8 +185,8 @@ input,select,textarea{font:inherit;color:inherit}
 .empty-state h3{font-size:16px;font-weight:600;color:var(--text-2);margin-bottom:8px}
 .empty-state p{font-size:13px;line-height:1.6}
 
-/* ─── Access banner ─── */
-.access-banner{color:var(--navy-700);background:linear-gradient(135deg,var(--navy-700),var(--navy-600));
+/* ── Access banner ── */
+.access-banner{background:linear-gradient(135deg,var(--navy-700),var(--navy-600));
   border:1px solid rgba(200,169,110,.15);border-radius:var(--radius);
   padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:28px;
   cursor:pointer;transition:all var(--tr)}
@@ -197,152 +197,43 @@ input,select,textarea{font:inherit;color:inherit}
 .access-banner-arrow{margin-left:auto;color:var(--gold-dim)}
 .access-banner-arrow svg{width:16px;height:16px}
 
-/* ═══ Modals ═══ */
-.modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
-.modal.open{display:flex}
-.modal-content{background:var(--navy-800);border:1px solid rgba(200,169,110,.15);border-radius:var(--radius-lg);padding:28px;max-width:600px;width:90%;max-height:90dvh;overflow-y:auto;box-shadow:var(--shadow)}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;border-bottom:1px solid rgba(200,169,110,.08);padding-bottom:16px}
-.modal-title{font-size:18px;font-weight:700;color:var(--text-1)}
-.close-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:none;border:1px solid rgba(200,169,110,.1);border-radius:6px;color:var(--text-3);cursor:pointer;transition:all var(--tr)}
-.close-btn:hover{border-color:rgba(200,169,110,.3);color:var(--text-1)}
-.close-btn svg{width:18px;height:18px}
-.form-group{display:flex;flex-direction:column;margin-bottom:16px}
-.form-label{font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px}
-.form-input{background:var(--navy-900);border:1px solid rgba(200,169,110,.15);border-radius:8px;padding:10px 12px;color:var(--text-1);font-size:13px;outline:none;transition:all var(--tr)}
-.form-input:focus{border-color:rgba(200,169,110,.35);background:var(--navy-700)}
-.form-input::placeholder{color:var(--text-3)}
-.form-textarea{resize:vertical;min-height:100px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.ing-table{width:100%;border-collapse:collapse;border:1px solid rgba(200,169,110,.08)}
-.ing-table tr{border-top:1px solid rgba(200,169,110,.05)}
-.ing-table tr:first-child{border-top:none}
-.ing-table td{padding:10px 8px;vertical-align:middle}
-.ing-name{font-size:13px;font-weight:600;color:var(--text-1)}
-.ing-unit{font-size:11px;color:var(--text-3)}
-.ing-base-qty{font-size:13px;color:var(--text-2);font-weight:500}
-.ing-adjusted{font-size:14px;font-weight:700;color:var(--gold)}
-.ing-adjusted.changed{color:var(--success)}
-.stock-input-wrap{display:flex;align-items:center;gap:6px}
-.stock-input{width:76px;background:var(--navy-700);border:1px solid rgba(200,169,110,.15);
-  border-radius:6px;padding:6px 8px;font-size:13px;font-weight:600;color:var(--text-1);
-  outline:none;text-align:center;transition:8px;width:56px;height:56px;
-  background:linear-gradient(135deg,var(--gold),var(--gold-dim));border-radius:18px;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 20px rgba(200,169,110,.45);cursor:pointer;transition:all var(--tr);z-index:200}
-.fab:hover{transform:translateY(-2px) scale(1.05);box-shadow:0 8px 28px rgba(200,169,110,.55)}
-.fab:active{transform:scale(.97)}
-.fab svg{width:22px;height:22px;color:var(--navy-900)}
+/* ══════════════════════════════════════
+   RECIPE DETAIL SCREEN
+══════════════════════════════════════ */
+.recipe-detail-content{flex:1;overflow-y:auto;padding:28px 24px}
+.detail-hero{display:flex;align-items:flex-start;gap:20px;margin-bottom:28px}
+.detail-emoji{width:72px;height:72px;background:linear-gradient(135deg,var(--navy-700),var(--navy-600));
+  border:2px solid rgba(200,169,110,.2);border-radius:20px;
+  display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0}
+.detail-meta{flex:1;min-width:0}
+.detail-name{font-size:22px;font-weight:800;color:var(--text-1);line-height:1.2}
+.detail-desc{font-size:13px;color:var(--text-2);margin-top:6px;line-height:1.6}
+.detail-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.detail-chip{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;
+  background:var(--navy-700);border:1px solid rgba(200,169,110,.12);color:var(--text-2)}
+.detail-chip.gold{background:var(--gold-glow);border-color:rgba(200,169,110,.3);color:var(--gold)}
+.cost-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+.cost-box{background:var(--navy-800);border:1px solid rgba(200,169,110,.08);
+  border-radius:var(--radius);padding:14px 16px;text-align:center}
+.cost-box-label{font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--text-3)}
+.cost-box-value{font-size:20px;font-weight:800;color:var(--text-1);margin-top:4px}
+.cost-box-value.gold{color:var(--gold)}
+.cost-box-value.green{color:var(--success)}
 
-/* ── Toast ── */
-.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:var(--navy-600);border:1px solid rgba(200,169,110,.15);
-  border-radius:var(--radius-sm);padding:10px 20px;font-size:13px;font-weight:500;
-  color:var(--text-1);white-space:nowrap;opacity:0;pointer-events:none;
-  transition:all var(--tr);z-index:1000;box-shadow:var(--shadow)}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.success{border-color:rgba(46,204,154,.3);color:var(--success)}
-.toast.error{border-color:rgba(224,92,106,.3);color:var(--error)}
-
-/* ── Mobile ── */
-@media(max-width:900px){
-  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%)}
-  .sidebar.open{transform:translateX(0)}
-  .sidebar-overlay{display:block;position:fixed;inset:0;background:rgba(0,0,0,.6);
-    z-index:99;opacity:0;pointer-events:none;transition:opacity var(--tr)}
-  .sidebar-overlay.visible{opacity:1;pointer-events:all}
-  .menu-toggle{display:flex}
-  .stats-row{grid-template-columns:repeat(2,1fr)}
-  .search-wrap{flex:1}
-  .lang-btn span{display:none}
-  .content,.recipe-detail-content{padding:20px 16px}
-  .fab{right:20px;bottom:20px}
-  .cost-summary{grid-template-columns:repeat(3,1fr)}
-  .ing-grid{grid-template-columns:1fr 1fr}
-}
-@media(max-width:480px){
-  .stats-row{grid-template-columns:repeat(2,1fr);gap:10px}
-  .recipe-grid{grid-template-columns:1fr 1fr}
-  .topbar{padding:0 16px}>:hover{border-color:rgba(200,169,110,.25);color:var(--text-1)}
-.chip.active{background:var(--gold-glow);border-color:var(--gold-dim);color:var(--gold)}
-.view-toggle{display:flex;gap:2px;background:var(--navy-700);padding:3px;border-radius:var(--radius-sm)}
-.view-btn{padding:5px 8px;border-radius:6px;color:var(--text-3);transition:all var(--tr)}
-.view-btn.active{background:var(--navy-500);color:var(--text-1)}
-.view-btn svg{width:15px;height:15px;display:block}
-
-/* --- Recipe grid --- */
-.recipe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
-.recipe-grid.list-view{grid-template-columns:1fr;gap:8px}
-.recipe-card{background:var(--navy-800);border:1px solid rgba(200,169,110,.08);
-  border-radius:var(--radius);padding:18px;cursor:pointer;transition:all var(--tr);
-  position:relative;display:flex;flex-direction:column;gap:12px}
-.recipe-card:hover{border-color:rgba(200,169,110,.25);transform:translateY(-2px);box-shadow:var(--shadow)}
-.recipe-card.list-view{flex-direction:row;align-items:center;padding:14px 18px;gap:16px}
-.card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.card-emoji{width:44px;height:44px;flex-shrink:0;
-  background:linear-gradient(135deg,var(--navy-700),var(--navy-600));
-  border:1px solid rgba(200,169,110,.12);border-radius:12px;
-  display:flex;align-items:center;justify-content:center;font-size:22px}
-.card-menu-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;
-  border-radius:6px;color:var(--text-3);opacity:0;transition:all var(--tr)}
-.recipe-card:hover .card-menu-btn{opacity:1}
-.card-menu-btn:hover{background:var(--navy-600);color:var(--text-1)}
-.card-menu-btn svg{width:16px;height:16px}
-.card-body{flex:1;min-width:0}
-.card-name{font-size:14px;font-weight:700;color:var(--text-1);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-category{font-size:11px;color:var(--text-3);margin-top:2px}
-.card-tags{display:flex;gap:6px;flex-wrap:wrap}
-.card-tag{font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;
-  background:var(--navy-700);color:var(--text-3);border:1px solid rgba(255,255,255,.06)}
-.card-footer{display:flex;align-items:center;justify-content:space-between;
-  padding-top:10px;border-top:1px solid rgba(200,169,110,.06)}
-.card-cost{display:flex;flex-direction:column}
-.cost-label{font-size:10px;color:var(--text-3)}
-.cost-value{font-size:15px;font-weight:800;color:var(--gold)}
-.cost-value.no-price{color:var(--text-3);font-size:12px;font-weight:400}
-.card-margin{display:flex;align-items:center;background:rgba(46,204,154,.1);
-  border:1px solid rgba(46,204,154,.2);border-radius:6px;padding:3px 8px}
-.margin-value{font-size:11px;font-weight:700;color:var(--success)}
-.classic-badge{position:absolute;top:12px;right:12px;font-size:9px;font-weight:700;
-  letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;
-  background:rgba(200,169,110,.1);border:1px solid rgba(200,169,110,.2);
-  color:var(--gold-dim);border-radius:20px}
-.recipe-card.list-view .card-emoji{width:38px;height:38px;font-size:18px}
-.recipe-card.list-view .card-footer{border:none;padding:0}
-.recipe-card.list-view .card-tags{display:none}
-.empty-state{text-align:center;padding:64px 32px;color:var(--text-3);grid-column:1/-1}
-.empty-state .empty-icon{font-size:48px;margin-bottom:16px;opacity:.5}
-.empty-state h3{font-size:16px;font-weight:600;color:var(--text-2);margin-bottom:8px}
-.empty-state p{font-size:13px;line-height:1.6}
-/* --- Access banner --- */
-.access-banner{color:var(--navy-700);background:linear-gradient(135deg,var(--navy-700),var(--navy-600));
-  border:1px solid rgba(200,169,110,.15);border-radius:var(--radius);
-  padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:28px;
-  cursor:pointer;transition:all var(--tr)}
-.access-banner:hover{border-color:rgba(200,169,110,.3);box-shadow:var(--shadow-gold)}
-.access-banner-icon{font-size:24px;flex-shrink:0}
-.access-banner-text h4{font-size:13px;font-weight:700;color:var(--gold)}
-.access-banner-text p{font-size:12px;color:var(--text-3);margin-top:2px}
-.access-banner-arrow{margin-left:auto;color:var(--gold-dim)}
-.access-banner-arrow svg{width:16px;height:16px}
-
-/* ═══ Modals ═══ */
-.modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
-.modal.open{display:flex}
-.modal-content{background:var(--navy-800);border:1px solid rgba(200,169,110,.15);border-radius:var(--radius-lg);padding:28px;max-width:600px;width:90%;max-height:90dvh;overflow-y:auto;box-shadow:var(--shadow)}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;border-bottom:1px solid rgba(200,169,110,.08);padding-bottom:16px}
-.modal-title{font-size:18px;font-weight:700;color:var(--text-1)}
-.close-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:none;border:1px solid rgba(200,169,110,.1);border-radius:6px;color:var(--text-3);cursor:pointer;transition:all var(--tr)}
-.close-btn:hover{border-color:rgba(200,169,110,.3);color:var(--text-1)}
-.close-btn svg{width:18px;height:18px}
-.form-group{display:flex;flex-direction:column;margin-bottom:16px}
-.form-label{font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px}
-.form-input{background:var(--navy-900);border:1px solid rgba(200,169,110,.15);border-radius:8px;padding:10px 12px;color:var(--text-1);font-size:13px;outline:none;transition:all var(--tr)}
-.form-input:focus{border-color:rgba(200,169,110,.35);background:var(--navy-700)}
-.form-input::placeholder{color:var(--text-3)}
-.form-textarea{resize:vertical;min-height:100px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.ing-table{width:100%;border-collapse:collapse;border:1px solid rgba(200,169,110,.08)}
+/* ── Calculator ── */
+.calc-section{background:var(--navy-800);border:1px solid rgba(200,169,110,.12);
+  border-radius:var(--radius-lg);padding:20px;margin-bottom:24px}
+.calc-section-header{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.calc-section-icon{font-size:20px}
+.calc-section-title{font-size:14px;font-weight:700;color:var(--text-1)}
+.calc-section-sub{font-size:12px;color:var(--text-3);margin-bottom:16px;line-height:1.5}
+.calc-highlight{color:var(--gold);font-weight:600}
+.ing-table{width:100%;border-collapse:collapse}
+.ing-table th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--text-3);padding:0 8px 10px;text-align:left}
+.ing-table th:last-child,.ing-table td:last-child{text-align:right}
+.ing-table th.center,.ing-table td.center{text-align:center}
 .ing-table tr{border-top:1px solid rgba(200,169,110,.05)}
 .ing-table tr:first-child{border-top:none}
 .ing-table td{padding:10px 8px;vertical-align:middle}
@@ -355,49 +246,227 @@ input,select,textarea{font:inherit;color:inherit}
 .stock-input{width:76px;background:var(--navy-700);border:1px solid rgba(200,169,110,.15);
   border-radius:6px;padding:6px 8px;font-size:13px;font-weight:600;color:var(--text-1);
   outline:none;text-align:center;transition:all var(--tr)}
-.stock-input:focus{border-color:rgba(200,169,110,.35);background:var(--navy-600)}
-.stock-label{font-size:11px;color:var(--text-3)}
-.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;border-top:1px solid rgba(200,169,110,.08);padding-top:16px}
-.btn{padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all var(--tr)}
-.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-dim));color:var(--navy-900)}
-.btn-primary:hover{box-shadow:var(--shadow-gold)}
-.btn-secondary{background:var(--navy-700);border:1px solid rgba(200,169,110,.1);color:var(--text-1)}
-.btn-secondary:hover{border-color:rgba(200,169,110,.25);color:var(--gold)}
+.stock-input:focus{border-color:var(--gold);background:var(--navy-600)}
+.stock-input::placeholder{color:var(--text-3);font-weight:400}
+.stock-unit{font-size:11px;color:var(--text-3)}
+.portions-result{display:flex;align-items:center;gap:12px;
+  background:rgba(46,204,154,.06);border:1px solid rgba(46,204,154,.2);
+  border-radius:var(--radius-sm);padding:12px 16px;margin-top:16px}
+.portions-icon{font-size:20px}
+.portions-text{flex:1}
+.portions-main{font-size:14px;font-weight:700;color:var(--success)}
+.portions-sub{font-size:12px;color:var(--text-3);margin-top:1px}
+.portions-reset{font-size:12px;font-weight:600;color:var(--text-3);
+  padding:6px 12px;background:var(--navy-700);border-radius:6px;
+  cursor:pointer;transition:all var(--tr);white-space:nowrap}
+.portions-reset:hover{color:var(--text-1)}
+.steps-section{margin-bottom:24px}
+.step-item{display:flex;gap:14px;padding:12px 0;border-top:1px solid rgba(200,169,110,.05)}
+.step-item:first-child{border-top:none}
+.step-num{width:24px;height:24px;background:var(--gold-glow);border:1px solid rgba(200,169,110,.2);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0;margin-top:1px}
+.step-text{font-size:13px;color:var(--text-2);line-height:1.6}
+
+/* ── Editable recipe fields ── */
+.edit-field{width:100%;background:var(--navy-700);border:1px solid rgba(200,169,110,.2);
+  border-radius:var(--radius-sm);padding:9px 12px;font-size:14px;color:var(--text-1);
+  outline:none;transition:all var(--tr)}
+.edit-field:focus{border-color:var(--gold);background:var(--navy-600)}
+.edit-field-sm{width:120px;background:var(--navy-700);border:1px solid rgba(200,169,110,.2);
+  border-radius:var(--radius-sm);padding:7px 10px;font-size:14px;font-weight:700;
+  color:var(--gold);outline:none;text-align:center;transition:all var(--tr)}
+.edit-field-sm:focus{border-color:var(--gold);background:var(--navy-600)}
+.edit-section{background:rgba(200,169,110,.04);border:1px solid rgba(200,169,110,.1);
+  border-radius:var(--radius);padding:16px;margin-bottom:20px}
+.edit-section-title{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--gold-dim);margin-bottom:12px}
+.edit-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.edit-label{font-size:12px;color:var(--text-3);min-width:90px;flex-shrink:0}
+
+/* ── Recipe ingredient editor ── */
+.recipe-ing-row{display:flex;align-items:center;gap:10px;padding:10px 0;
+  border-top:1px solid rgba(200,169,110,.05)}
+.recipe-ing-row:first-child{border-top:none}
+.recipe-ing-name{flex:1;font-size:13px;font-weight:600;color:var(--text-1)}
+.recipe-ing-qty{font-size:13px;color:var(--text-2);min-width:55px;text-align:right}
+.recipe-ing-cost{font-size:12px;color:var(--gold);min-width:48px;text-align:right}
+.recipe-ing-remove{width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  border-radius:6px;color:var(--text-3);transition:all var(--tr);flex-shrink:0}
+.recipe-ing-remove:hover{background:rgba(224,92,106,.15);color:var(--error)}
+.add-ing-btn{display:flex;align-items:center;gap:8px;width:100%;
+  padding:10px 14px;border-radius:var(--radius-sm);margin-top:12px;
+  background:rgba(200,169,110,.06);border:1px dashed rgba(200,169,110,.2);
+  color:var(--gold-dim);font-size:13px;font-weight:600;cursor:pointer;
+  transition:all var(--tr);justify-content:center}
+.add-ing-btn:hover{background:rgba(200,169,110,.12);border-color:var(--gold-dim);color:var(--gold)}
+.add-ing-btn svg{width:15px;height:15px}
+.foodcost-auto{background:rgba(200,169,110,.08);border:1px solid rgba(200,169,110,.15);
+  border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;
+  justify-content:space-between;margin-top:14px}
+.foodcost-auto-label{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--text-3)}
+.foodcost-auto-value{font-size:18px;font-weight:800;color:var(--gold)}
+
+/* ── Ingredient picker modal ── */
+.ing-search-box{width:100%;background:var(--navy-700);border:1px solid rgba(200,169,110,.15);
+  border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;color:var(--text-1);
+  outline:none;margin-bottom:12px;transition:all var(--tr)}
+.ing-search-box:focus{border-color:var(--gold);background:var(--navy-600)}
+.ing-search-box::placeholder{color:var(--text-3)}
+.ing-pick-list{max-height:220px;overflow-y:auto;border:1px solid rgba(200,169,110,.08);
+  border-radius:var(--radius-sm);margin-bottom:14px}
+.ing-pick-item{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;cursor:pointer;transition:all var(--tr);border-top:1px solid rgba(200,169,110,.05)}
+.ing-pick-item:first-child{border-top:none}
+.ing-pick-item:hover{background:rgba(200,169,110,.06)}
+.ing-pick-item.selected{background:var(--gold-glow);border-color:rgba(200,169,110,.15)}
+.ing-pick-name{font-size:13px;font-weight:600;color:var(--text-1)}
+.ing-pick-brand{font-size:11px;color:var(--text-3);margin-top:1px}
+.ing-pick-price{font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap;margin-left:10px}
+.qty-row{display:flex;align-items:center;gap:12px;
+  background:var(--navy-700);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:4px}
+.qty-label{flex:1;font-size:13px;color:var(--text-2)}
+.qty-input{width:80px;background:var(--navy-600);border:1px solid rgba(200,169,110,.25);
+  border-radius:6px;padding:7px 10px;font-size:15px;font-weight:700;color:var(--text-1);
+  outline:none;text-align:center;transition:all var(--tr)}
+.qty-input:focus{border-color:var(--gold)}
+.qty-unit{font-size:12px;color:var(--text-3);min-width:18px}
+.cost-preview{text-align:center;font-size:12px;color:var(--text-3);margin-top:6px;min-height:18px}
+.cost-preview span{color:var(--gold);font-weight:700}
+
+/* ── Sub-recipe builder ── */
+.maison-toggle{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  background:var(--navy-700);border:1px solid rgba(200,169,110,.12);
+  border-radius:var(--radius-sm);cursor:pointer;margin-bottom:16px;
+  transition:all var(--tr);width:100%}
+.maison-toggle:hover{border-color:rgba(200,169,110,.3)}
+.maison-toggle.active{background:rgba(200,169,110,.08);border-color:rgba(200,169,110,.3)}
+.maison-toggle-icon{font-size:18px}
+.maison-toggle-text{flex:1;text-align:left}
+.maison-toggle-text strong{font-size:13px;font-weight:700;color:var(--text-1);display:block}
+.maison-toggle-text small{font-size:11px;color:var(--text-3)}
+.maison-toggle-chevron{color:var(--text-3);transition:transform var(--tr)}
+.maison-toggle.active .maison-toggle-chevron{transform:rotate(180deg)}
+.maison-toggle-chevron svg{width:16px;height:16px;display:block}
+.sub-recipe-builder{background:rgba(200,169,110,.04);border:1px solid rgba(200,169,110,.1);
+  border-radius:var(--radius);padding:14px;margin-bottom:16px}
+.sub-recipe-yield{display:flex;align-items:center;gap:10px;margin-bottom:14px;
+  padding-bottom:12px;border-bottom:1px solid rgba(200,169,110,.08)}
+.sub-recipe-yield-label{flex:1;font-size:12px;color:var(--text-2)}
+.sub-recipe-yield-input{width:80px;background:var(--navy-700);border:1px solid rgba(200,169,110,.2);
+  border-radius:6px;padding:6px 8px;font-size:13px;font-weight:700;color:var(--gold);
+  outline:none;text-align:center;transition:all var(--tr)}
+.sub-recipe-yield-input:focus{border-color:var(--gold)}
+.sub-recipe-yield-unit{font-size:12px;color:var(--text-3)}
+.comp-row{display:grid;grid-template-columns:1fr 60px 50px 70px 24px;gap:6px;
+  align-items:center;margin-bottom:8px}
+.comp-input{background:var(--navy-700);border:1px solid rgba(200,169,110,.1);
+  border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text-1);
+  outline:none;width:100%;transition:all var(--tr)}
+.comp-input:focus{border-color:rgba(200,169,110,.3)}
+.comp-cost-preview{font-size:11px;font-weight:700;color:var(--gold);text-align:center}
+.comp-remove{width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+  border-radius:5px;color:var(--text-3);cursor:pointer;transition:all var(--tr)}
+.comp-remove:hover{background:rgba(224,92,106,.15);color:var(--error)}
+.comp-remove svg{width:13px;height:13px}
+.comp-header{display:grid;grid-template-columns:1fr 60px 50px 70px 24px;gap:6px;
+  margin-bottom:6px}
+.comp-header span{font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--text-3)}
+.add-comp-btn{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+  color:var(--gold-dim);padding:6px 10px;border-radius:6px;cursor:pointer;
+  transition:all var(--tr);margin-top:8px}
+.add-comp-btn:hover{background:rgba(200,169,110,.08);color:var(--gold)}
+.add-comp-btn svg{width:13px;height:13px}
+.sub-total-row{display:flex;justify-content:space-between;align-items:center;
+  padding-top:10px;margin-top:6px;border-top:1px solid rgba(200,169,110,.08)}
+.sub-total-label{font-size:11px;color:var(--text-3)}
+.sub-total-value{font-size:15px;font-weight:800;color:var(--gold)}
+.maison-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;
+  background:rgba(200,169,110,.12);border:1px solid rgba(200,169,110,.2);
+  color:var(--gold-dim);margin-left:6px;letter-spacing:.05em}
+.ing-sub-recipe-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.ing-sub-chip{font-size:10px;padding:2px 8px;background:var(--navy-700);
+  border-radius:20px;color:var(--text-3);border:1px solid rgba(255,255,255,.06)}
+
+/* ══════════════════════════════════════
+   INGREDIENTS SCREEN
+══════════════════════════════════════ */
+.ing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.ing-card{background:var(--navy-800);border:1px solid rgba(200,169,110,.08);
+  border-radius:var(--radius);padding:16px 18px;cursor:pointer;transition:all var(--tr)}
+.ing-card:hover{border-color:rgba(200,169,110,.25);transform:translateY(-1px)}
+.ing-card-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.ing-cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ing-card-name{font-size:13px;font-weight:700;color:var(--text-1)}
+.ing-card-brand{font-size:11px;color:var(--text-3);margin-top:1px}
+.ing-card-body{display:flex;justify-content:space-between;align-items:flex-end}
+.ing-price-big{font-size:18px;font-weight:800;color:var(--gold)}
+.ing-price-unit{font-size:11px;color:var(--text-3);margin-top:1px}
+.ing-bottle-size{font-size:12px;font-weight:600;color:var(--text-2)}
+.ing-bottle-label{font-size:10px;color:var(--text-3);margin-top:1px}
+.ing-add-btn{display:flex;align-items:center;gap:8px;background:var(--gold-glow);
+  border:1px solid rgba(200,169,110,.2);border-radius:var(--radius-sm);padding:10px 16px;
+  cursor:pointer;font-size:13px;font-weight:600;color:var(--gold);transition:all var(--tr)}
+.ing-add-btn:hover{background:rgba(200,169,110,.2);box-shadow:var(--shadow-gold)}
+.ing-add-btn svg{width:16px;height:16px}
+.cat-spirits{background:#7B6FD0}.cat-liqueur{background:#E8804D}
+.cat-juice{background:#4DCF8A}.cat-syrup{background:#E8B84B}
+.cat-mixer{background:#4DB8CF}.cat-fresh{background:#CF4D82}.cat-other{background:#9B95A0}
+
+/* ══════════════════════════════════════
+   MODALS
+══════════════════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,14,26,.85);
+  backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;
+  z-index:500;opacity:0;pointer-events:none;transition:opacity var(--tr)}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--navy-800);border:1px solid rgba(200,169,110,.15);
+  border-radius:var(--radius-xl);padding:28px;width:min(480px,calc(100vw - 32px));
+  max-height:85dvh;overflow-y:auto;transform:translateY(12px) scale(.98);
+  transition:transform var(--tr);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.modal-overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.modal-title{font-size:17px;font-weight:700;color:var(--text-1)}
+.modal-close{width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  border-radius:8px;color:var(--text-3);transition:all var(--tr)}
+.modal-close:hover{background:var(--navy-700);color:var(--text-1)}
+.modal-close svg{width:18px;height:18px}
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--text-2);
+  text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px}
+.form-input{width:100%;background:var(--navy-700);border:1px solid rgba(200,169,110,.12);
+  border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;color:var(--text-1);
+  outline:none;transition:all var(--tr)}
+.form-input::placeholder{color:var(--text-3)}
+.form-input:focus{border-color:rgba(200,169,110,.4);background:var(--navy-600)}
+.form-select{width:100%;background:var(--navy-700);border:1px solid rgba(200,169,110,.12);
+  border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;color:var(--text-1);
+  outline:none;appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%235C566A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;transition:all var(--tr)}
+.form-select:focus{border-color:rgba(200,169,110,.4);background-color:var(--navy-600)}
+.form-select option{background:var(--navy-700)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.emoji-picker{display:flex;gap:8px;flex-wrap:wrap}
+.emoji-opt{width:40px;height:40px;background:var(--navy-700);border:2px solid transparent;
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:20px;cursor:pointer;transition:all var(--tr)}
+.emoji-opt:hover{border-color:rgba(200,169,110,.3)}
+.emoji-opt.selected{border-color:var(--gold);background:var(--gold-glow)}
+.modal-actions{display:flex;gap:10px;margin-top:24px;padding-top:20px;
+  border-top:1px solid rgba(200,169,110,.08)}
+.btn{flex:1;padding:12px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;
+  cursor:pointer;transition:all var(--tr);border:none;text-align:center}
+.btn-secondary{background:var(--navy-700);border:1px solid rgba(200,169,110,.12);color:var(--text-2)}
+.btn-secondary:hover{background:var(--navy-600);color:var(--text-1)}
+.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-dim));color:var(--navy-900);font-weight:700}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(200,169,110,.35)}
 .btn-danger{background:rgba(224,92,106,.15);border:1px solid rgba(224,92,106,.3);color:var(--error)}
 .btn-danger:hover{background:rgba(224,92,106,.25)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.cost-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(200,169,110,.08)}
-.cost-item{text-align:center}
-.cost-item-label{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em}
-.cost-item-value{font-size:16px;font-weight:700;color:var(--text-1);margin-top:4px}
-.cost-item-value.profit{color:var(--success)}
-.ing-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
-.ing-group{background:var(--navy-900);border:1px solid rgba(200,169,110,.08);border-radius:var(--radius-sm);padding:12px}
-.ing-group-title{font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-3);letter-spacing:.05em;margin-bottom:8px}
-.ing-grid-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px}
-.ing-grid-row:last-child{margin-bottom:0}
-.ing-grid-name{color:var(--text-2);flex:1}
-.ing-grid-qty{color:var(--text-1);font-weight:600}
-.recipe-detail-content{flex:1;overflow-y:auto;padding:24px}
-.recipe-detail-header{display:flex;align-items:flex-start;gap:20px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid rgba(200,169,110,.08)}
-.detail-emoji{width:80px;height:80px;flex-shrink:0;
-  background:linear-gradient(135deg,var(--navy-700),var(--navy-600));
-  border:2px solid rgba(200,169,110,.15);border-radius:16px;
-  display:flex;align-items:center;justify-content:center;font-size:40px}
-.detail-title{flex:1}
-.detail-name{font-size:24px;font-weight:700;color:var(--text-1);margin-bottom:8px}
-.detail-category{font-size:13px;color:var(--text-3)}
-.detail-meta{display:flex;gap:20px;margin-top:16px}
-.detail-meta-item{display:flex;flex-direction:column}
-.detail-meta-label{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
-.detail-meta-value{font-size:16px;font-weight:700;color:var(--text-1)}
-.detail-meta-value.price{color:var(--gold)}
-.detail-action{display:flex;gap:8px;margin-top:16px}
-.btn-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--navy-700);border:1px solid rgba(200,169,110,.1);border-radius:var(--radius-sm);color:var(--text-2);cursor:pointer;transition:all var(--tr)}
-.btn-icon:hover{border-color:rgba(200,169,110,.25);color:var(--text-1)}
-.btn-icon svg{width:18px;height:18px}
 
-/* --- FAB --- */
+/* ── FAB ── */
 .fab{position:fixed;right:28px;bottom:28px;width:56px;height:56px;
   background:linear-gradient(135deg,var(--gold),var(--gold-dim));border-radius:18px;
   display:flex;align-items:center;justify-content:center;
@@ -436,460 +505,1513 @@ input,select,textarea{font:inherit;color:inherit}
   .stats-row{grid-template-columns:repeat(2,1fr);gap:10px}
   .recipe-grid{grid-template-columns:1fr 1fr}
   .topbar{padding:0 16px;gap:10px}
-  .search-wrap{display:none}
-  .avatar{width:32px;height:32px;font-size:12px}
-  .recipe-grid.list-view{grid-template-columns:1fr}
-  .cost-summary{grid-template-columns:repeat(2,1fr)}
-  .recipe-detail-header{flex-direction:column}
-  .detail-emoji{width:60px;height:60px;font-size:32px}
+  .topbar-title{font-size:15px}
+  .cost-summary{grid-template-columns:1fr}
+  .ing-grid{grid-template-columns:1fr}
   .form-row{grid-template-columns:1fr}
-  .modal-content{width:95%}
+  .ing-table{display:block;overflow-x:auto}
 }
 </style>
 </head>
 <body>
 <div id="app">
-  <div class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-mark">
-        <div class="logo-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6" fill="var(--navy-900)"/></svg>
-        </div>
-        <div class="logo-text">
-          <div class="logo-name">MIXTURA</div>
-          <div class="logo-sub">— Barman</div>
-        </div>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C8A96E" stroke-width="1.8" stroke-linecap="round">
+          <path d="M8 3h8l-2 6H10L8 3z"/>
+          <path d="M10 9v4c0 2.5-3 4-3 4h10s-3-1.5-3-4V9"/>
+          <line x1="6" y1="17" x2="18" y2="17"/>
+          <line x1="6" y1="20" x2="18" y2="20"/>
+        </svg>
       </div>
-    </div>
-    <nav class="sidebar-nav">
-      <div class="nav-section-label">Menu</div>
-      <button class="nav-item active" data-screen="dashboard" onclick="switchScreen('dashboard')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        <span>Tableau de bord</span>
-      </button>
-      <button class="nav-item" data-screen="recipes" onclick="switchScreen('recipes')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h4"/></svg>
-        <span>Recettes</span>
-        <span class="nav-badge" id="recipe-count">8</span>
-      </button>
-      <button class="nav-item" data-screen="calculator" onclick="switchScreen('calculator')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h8M8 12h8M8 17h4"/></svg>
-        <span>Calculateur</span>
-      </button>
-      <button class="nav-item" data-screen="ingredients" onclick="switchScreen('ingredients')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M4 12h16M7 7h10M5 17h14"/></svg>
-        <span>Ingrédients</span>
-      </button>
-      <div class="nav-section-label" style="margin-top:16px">Autre</div>
-      <button class="nav-item" onclick="showSettings()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 0l4.24-4.24M1 12h6m6 0h6m-16.78 7.78l4.24-4.24m5.08 0l4.24 4.24"/></svg>
-        <span>Paramétres</span>
-      </button>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="plan-badge" onclick="showPlanModal()">
-        <div class="plan-icon">👤</div>
-        <div class="plan-info">
-          <div class="plan-name">Utilisateur</div>
-          <div class="plan-desc">v1.0.0</div>
-        </div>
+      <div class="logo-text">
+        <span class="logo-name">MIXTURA</span>
+        <span class="logo-sub">Cocktail Library</span>
       </div>
     </div>
   </div>
-  <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-  <div class="main">
-    <div class="topbar">
-      <button class="menu-toggle" onclick="toggleSidebar()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-      </button>
-      <h1 class="topbar-title" id="screen-title">Tableau de bord</h1>
-      <div class="search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="search" class="search-input" placeholder="Chercher..." onkeyup="searchRecipes()">
-      </div>
-      <button class="lang-btn" id="lang-btn" onclick="toggleLanguage()">
-        <span id="lang-name">FR</span>
-      </button>
-      <button class="avatar" onclick="showUserMenu()"><span id="user-initial">U</span></button>
-      <button class="back-btn" id="back-btn" onclick="switchScreen('dashboard')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-      </button>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Bibliothèque</div>
+    <div class="nav-item active" data-screen="dashboard" onclick="navigate('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <span>Dashboard</span>
     </div>
-    <div id="dashboard" class="screen active">
-      <div class="content">
-        <div class="stats-row">
-          <div class="stat-card">
-            <div class="stat-label">Recettes</div>
-            <div class="stat-value"><span id="stat-recipes">8</span></div>
-            <div class="stat-sub">enregistrées</div>
-            <div class="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Ingrédients</div>
-            <div class="stat-value"><span id="stat-ing">12</span></div>
-            <div class="stat-sub">en bibliothèque</div>
-            <div class="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 7L22 1M2 23L8 17M7 13C4.24 13 2 15.24 2 18S4.24 24 7 24 12 21.76 12 19 9.76 13 7 13M17 3C14.24 3 12 5.24 12 8S14.24 13 17 13 22 10.76 22 8 19.76 3 17 3Z" stroke="currentColor" stroke-width="1" fill="none"/></svg>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Marge</div>
-            <div class="stat-value"><span id="stat-margin">2.5</span><span>x</span></div>
-            <div class="stat-sub">moyenne</div>
-            <div class="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 15H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm0-8v4H3V7c0-1.1.9-2 2-2h4v2H5zm10 4h2v-4h4V3h-4v4zm2 10h-2v4h4c1.1 0 2-.9 2-2v-4h-2v2z"/></svg>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Coût moyen</div>
-            <div class="stat-value"><span id="stat-cost">12</span><span>€</span></div>
-            <div class="stat-sub">par recette</div>
-            <div class="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0z" fill="none"/><path d="M11.8 10.9c-2.27-.59-3-1.38-3-2.39 0-1.02.88-2 2.3-2 1.3 0 2.26.77 2.5 2.1h2.21c-.26-1.65-1.59-3.08-3.69-3.32V5h-3v2.26c-1.89.35-3.8 1.63-3.8 3.74 0 2.6 2.05 4.21 5.3 5.04 2.87.63 3 1.91 3 2.39 0 .72-.75 1.71-2.3 1.71-1.3 0-2.29-.72-2.56-1.96h-2.2c.26 1.78 1.59 3.18 3.98 3.5V19h3v-2.16c1.9-.35 3.8-1.63 3.8-3.74 0-2.6-2.05-4.21-5.3-5.04z"/></svg>
-            </div>
-          </div>
-        </div>
-        <div class="access-banner" onclick="showAccessModal()">
-          <div class="access-banner-icon">📚</div>
-          <div class="access-banner-text">
-            <h4>Importez vos recettes</h4>
-            <p>Personnalisez votre bibliothèque avec vos propres recettes</p>
-          </div>
-          <div class="access-banner-arrow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </div>
-        </div>
-        <div class="section-header">
-          <span class="section-title">Mes Recettes</span>
-          <span class="section-count" id="section-count">8 recettes</span>
-          <div class="section-actions">
-            <div class="view-toggle">
-              <button class="view-btn active" id="grid-btn" onclick="setView('grid')" title="Grille">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-              </button>
-              <button class="view-btn" id="list-btn" onclick="setView('list')" title="Liste">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><circle cx="3" cy="18" r="1" fill="currentColor"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="filter-chips">
-          <div class="chip active" data-filter="*" onclick="filterRecipes('*')">Tous</div>
-          <div class="chip" data-filter="classic" onclick="filterRecipes('classic')">Classique</div>
-          <div class="chip" data-filter="sweet" onclick="filterRecipes('sweet')">Sucré</div>
-          <div class="chip" data-filter="sour" onclick="filterRecipes('sour')">Acide</div>
-        </div>
-        <div class="recipe-grid" id="recipes-grid"></div>
-      </div>
+    <div class="nav-item" data-screen="ingredients" onclick="navigate('ingredients')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>
+      </svg>
+      <span>Ingrédients</span>
+      <span class="nav-badge" id="ing-count-badge">21</span>
     </div>
-    <div id="recipes" class="screen">
-      <div class="content">
-        <div class="section-header">
-          <span class="section-title">Toutes les Recettes</span>
-          <span class="section-count" id="all-recipe-count">8 recettes</span>
-          <div class="section-actions">
-            <button class="btn btn-primary" onclick="showAddRecipeModal()" title="Ajouter">+ Recette</button>
-          </div>
-        </div>
-        <div class="filter-chips">
-          <div class="chip active" data-filter="*" onclick="filterRecipes('*')">Tous</div>
-          <div class="chip" data-filter="classic" onclick="filterRecipes('classic')">Classique</div>
-          <div class="chip" data-filter="sweet" onclick="filterRecipes('sweet')">Sucré</div>
-          <div class="chip" data-filter="sour" onclick="filterRecipes('sour')">Acide</div>
-        </div>
-        <div class="recipe-grid list-view" id="all-recipes-grid"></div>
-      </div>
+    <div class="nav-section-label" style="margin-top:8px">Gestion</div>
+    <div class="nav-item" data-screen="team" onclick="navigate('team')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <circle cx="9" cy="7" r="3"/><circle cx="17" cy="7" r="3"/>
+        <path d="M3 20c0-3.3 2.7-6 6-6h6c3.3 0 6 2.7 6 6"/>
+      </svg>
+      <span>Équipe</span>
     </div>
-    <div id="calculator" class="screen">
-      <div class="content">
-        <div class="section-header">
-          <span class="section-title">Calculateur</span>
-        </div>
-        <div style="background:var(--navy-800);border:1px solid rgba(200,169,110,.08);border-radius:var(--radius);padding:20px">
-          <h3 style="font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:16px">Sélectionnez une recette</h3>
-          <select id="recipe-select" style="width:100%;padding:10px 12px;background:var(--navy-700);border:1px solid rgba(200,169,110,.15);border-radius:8px;color:var(--text-1)" onchange="loadRecipeCalculator()">
-            <option value="">Choisir une recette...</option>
-          </select>
-          <div id="calc-content" style="margin-top:16px;display:none"></div>
-        </div>
-      </div>
+    <div class="nav-item" data-screen="settings" onclick="navigate('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+      <span>Paramètres</span>
     </div>
-    <div id="ingredients" class="screen">
-      <div class="content">
-        <div class="section-header">
-          <span class="section-title">Bibliothèque d'Ingrédients</span>
-          <span class="section-count" id="ing-count">12 ingrédients</span>
-          <div class="section-actions">
-            <button class="btn btn-primary" onclick="showAddIngredientModal()">+ Ingrédient</button>
-          </div>
-        </div>
-        <table class="ing-table">
-          <thead>
-            <tr>
-              <th style="padding:12px 8px;text-align:left;border-bottom:1px solid rgba(200,169,110,.1);font-weight:600;color:var(--text-2);font-size:12px">Ingrédient</th>
-              <th style="padding:12px 8px;text-align:center;border-bottom:1px solid rgba(200,169,110,.1);font-weight:600;color:var(--text-2);font-size:12px">Unité</th>
-              <th style="padding:12px 8px;text-align:center;border-bottom:1px solid rgba(200,169,110,.1);font-weight:600;color:var(--text-2);font-size:12px">Quantité de base</th>
-              <th style="padding:12px 8px;text-align:center;border-bottom:1px solid rgba(200,169,110,.1);font-weight:600;color:var(--text-2);font-size:12px">Coût (EUR)</th>
-              <th style="padding:12px 8px;text-align:center;border-bottom:1px solid rgba(200,169,110,.1);font-weight:600;color:var(--text-2);font-size:12px">Stock</th>
-              <th style="padding:12px 8px;text-align:center;border-bottom:1px solid rgba(200,169,110,.1);font-weight:600;color:var(--text-2);font-size:12px">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="ing-list"></tbody>
-        </table>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="plan-badge" onclick="showAccessModal()">
+      <span class="plan-icon">🔓</span>
+      <div class="plan-info">
+        <div class="plan-name" id="plan-name">Visiteur</div>
+        <div class="plan-desc" id="plan-desc">2 recettes max</div>
       </div>
     </div>
   </div>
+</aside>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+  <header class="topbar">
+    <button class="menu-toggle" onclick="toggleSidebar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <button class="back-btn" id="back-btn" onclick="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="m15 18-6-6 6-6"/>
+      </svg>
+      <span>Retour</span>
+    </button>
+    <span class="topbar-title" id="topbar-title">Dashboard</span>
+    <div class="search-wrap" id="search-container">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input class="search-input" id="search-input" type="search"
+        placeholder="Rechercher une recette…" oninput="filterRecipes(this.value)">
+    </div>
+    <button class="lang-btn" onclick="toggleLang()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 2a14.5 14.5 0 0 0 0 20A14.5 14.5 0 0 0 12 2"/>
+        <line x1="2" y1="12" x2="22" y2="12"/>
+      </svg>
+      <span id="lang-label">FR</span>
+    </button>
+    <div class="avatar" onclick="showToast('Connexion Google — Firebase requis 🔑')">A</div>
+  </header>
+
+  <!-- ══ SCREEN: DASHBOARD ══ -->
+  <div class="screen active" id="screen-dashboard">
+    <div class="content">
+      <div class="access-banner" id="access-banner" onclick="showAccessModal()">
+        <span class="access-banner-icon">✨</span>
+        <div class="access-banner-text">
+          <h4>Débloquer l'accès complet</h4>
+          <p>Entrez un code Beta pour recettes illimitées + export Excel</p>
+        </div>
+        <span class="access-banner-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+        </span>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Recettes</div>
+          <div class="stat-value" id="stat-recipes">8</div>
+          <div class="stat-sub" id="stat-recipes-sub">dont 5 classiques</div>
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3h8l-2 6H10L8 3z"/><path d="M10 9v4c0 2.5-3 4-3 4h10s-3-1.5-3-4V9"/></svg></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Coût moyen</div>
+          <div class="stat-value" id="stat-cost">1.77<span>€</span></div>
+          <div class="stat-sub">par cocktail</div>
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Marge moy.</div>
+          <div class="stat-value" id="stat-margin">×6.8</div>
+          <div class="stat-sub">multiplicateur</div>
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22,7 13.5,15.5 8.5,10.5 2,17"/><polyline points="16,7 22,7 22,13"/></svg></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ingrédients</div>
+          <div class="stat-value" id="stat-ing">12</div>
+          <div class="stat-sub">en bibliothèque</div>
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></div>
+        </div>
+      </div>
+      <div class="section-header">
+        <span class="section-title">Mes Recettes</span>
+        <span class="section-count" id="section-count">8 recettes</span>
+        <div class="section-actions">
+          <div class="view-toggle">
+            <button class="view-btn active" id="grid-btn" onclick="setView('grid')" title="Grille">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </button>
+            <button class="view-btn" id="list-btn" onclick="setView('list')" title="Liste">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><circle cx="3" cy="18" r="1" fill="currentColor"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="filter-chips">
+        <div class="chip active" data-filter="all" onclick="filterByCategory(this,'all')">Tout</div>
+        <div class="chip" data-filter="classic" onclick="filterByCategory(this,'classic')">Classiques</div>
+        <div class="chip" data-filter="signature" onclick="filterByCategory(this,'signature')">Signature</div>
+        <div class="chip" data-filter="mocktail" onclick="filterByCategory(this,'mocktail')">Mocktails</div>
+        <div class="chip" data-filter="shot" onclick="filterByCategory(this,'shot')">Shots</div>
+      </div>
+      <div class="recipe-grid" id="recipe-grid"></div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN: RECIPE DETAIL ══ -->
+  <div class="screen" id="screen-recipe">
+    <div class="recipe-detail-content" id="recipe-detail-content"></div>
+  </div>
+
+  <!-- ══ SCREEN: INGREDIENTS ══ -->
+  <div class="screen" id="screen-ingredients">
+    <div class="content">
+      <div class="section-header">
+        <span class="section-title">Bibliothèque d'ingrédients</span>
+        <span class="section-count" id="ing-section-count">12 ingrédients</span>
+        <div class="section-actions">
+          <button class="ing-add-btn" onclick="openAddIngModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Ajouter
+          </button>
+        </div>
+      </div>
+      <div class="filter-chips" id="ing-category-filters">
+        <div class="chip active" data-filter="all" onclick="filterIngByCategory(this,'all')">Tout</div>
+        <div class="chip" data-filter="spirits" onclick="filterIngByCategory(this,'spirits')">Spiritueux</div>
+        <div class="chip" data-filter="liqueur" onclick="filterIngByCategory(this,'liqueur')">Liqueurs</div>
+        <div class="chip" data-filter="juice" onclick="filterIngByCategory(this,'juice')">Jus</div>
+        <div class="chip" data-filter="syrup" onclick="filterIngByCategory(this,'syrup')">Sirops</div>
+        <div class="chip" data-filter="mixer" onclick="filterIngByCategory(this,'mixer')">Mixers</div>
+        <div class="chip" data-filter="fresh" onclick="filterIngByCategory(this,'fresh')">Frais</div>
+      </div>
+      <div class="ing-grid" id="ing-grid"></div>
+    </div>
+  </div>
+
+</main>
 </div>
 
-<!-- Modals -->
-<div id="recipe-detail" class="modal">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <div style="display:flex;height:100%;flex-direction:column">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
-        <div></div>
-        <button class="close-btn" onclick="closeModal('recipe-detail')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <div class="recipe-detail-content" id="recipe-detail-content"></div>
-    </div>
-  </div>
-</div>
+<!-- FAB -->
+<button class="fab" onclick="fabAction()" id="fab-btn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+</button>
 
-<div id="add-recipe" class="modal" onclick="if(event.target===this) closeModal('add-recipe')">
-  <div class="modal-content" onclick="event.stopPropagation()">
+<!-- ══ MODAL: ADD RECIPE ══ -->
+<div class="modal-overlay" id="add-modal" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
     <div class="modal-header">
-      <h2 class="modal-title">Ajouter une Recette</h2>
-      <button class="close-btn" onclick="closeModal('add-recipe')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      <span class="modal-title">Nouvelle recette</span>
+      <button class="modal-close" onclick="closeAddModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div class="form-group">
-      <label class="form-label">Nom</label>
-      <input type="text" class="form-input" id="recipe-name" placeholder="Cocktail Margarita">
+      <label class="form-label">Icône</label>
+      <div class="emoji-picker" id="emoji-picker">
+        <div class="emoji-opt selected" data-emoji="🍹" onclick="selectEmoji(this)">🍹</div>
+        <div class="emoji-opt" data-emoji="🍸" onclick="selectEmoji(this)">🍸</div>
+        <div class="emoji-opt" data-emoji="🥂" onclick="selectEmoji(this)">🥂</div>
+        <div class="emoji-opt" data-emoji="🥃" onclick="selectEmoji(this)">🥃</div>
+        <div class="emoji-opt" data-emoji="🍾" onclick="selectEmoji(this)">🍾</div>
+        <div class="emoji-opt" data-emoji="🧃" onclick="selectEmoji(this)">🧃</div>
+        <div class="emoji-opt" data-emoji="🍵" onclick="selectEmoji(this)">🍵</div>
+        <div class="emoji-opt" data-emoji="⭐" onclick="selectEmoji(this)">⭐</div>
+      </div>
     </div>
     <div class="form-group">
-      <label class="form-label">Emoji</label>
-      <input type="text" class="form-input" id="recipe-emoji" placeholder="🍹" maxlength="2">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Catégorie</label>
-      <select class="form-input" id="recipe-category">
-        <option value="classic">Classique</option>
-        <option value="sweet">Sucré</option>
-        <option value="sour">Acide</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Classique</label>
-      <input type="checkbox" id="recipe-classic" style="width:20px;height:20px;cursor:pointer">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Ingrédients</label>
-      <table class="ing-table">
-        <tbody id="recipe-ings"></tbody>
-      </table>
-      <button class="btn btn-secondary" onclick="addIngredientRow()" style="margin-top:8px">+ Ajouter</button>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('add-recipe')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveRecipe()">Enregistrer</button>
-    </div>
-  </div>
-</div>
-
-<div id="add-ingredient" class="modal" onclick="if(event.target===this) closeModal('add-ingredient')">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h2 class="modal-title">Ajouter un Ingrédient</h2>
-      <button class="close-btn" onclick="closeModal('add-ingredient')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Nom</label>
-      <input type="text" class="form-input" id="ing-name" placeholder="Vodka">
+      <label class="form-label">Nom de la recette *</label>
+      <input class="form-input" type="text" id="recipe-name-input" placeholder="ex: Signature Sunset" maxlength="60">
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Unité</label>
-        <select class="form-input" id="ing-unit">
-          <option value="ml">ml</option>
-          <option value="cl">cl</option>
-          <option value="l">l</option>
-          <option value="g">g</option>
-          <option value="kg">kg</option>
-          <option value="oz">oz</option>
+        <label class="form-label">Catégorie</label>
+        <select class="form-select" id="recipe-category-input">
+          <option value="signature">Signature</option>
+          <option value="classic">Classique</option>
+          <option value="mocktail">Mocktail</option>
+          <option value="shot">Shot</option>
+          <option value="hot">Chaud</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Quantité</label>
-        <input type="number" class="form-input" id="ing-qty" placeholder="50">
+        <label class="form-label">Verre</label>
+        <select class="form-select" id="recipe-glass-input">
+          <option value="highball">Highball</option>
+          <option value="coupe">Coupe</option>
+          <option value="rocks">Rocks</option>
+          <option value="martini">Martini</option>
+          <option value="flute">Flûte</option>
+          <option value="shot">Shot</option>
+        </select>
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">Coût (EUR)</label>
-      <input type="number" class="form-input" id="ing-cost" placeholder="15" step="0.01">
+      <label class="form-label">Description</label>
+      <input class="form-input" type="text" id="recipe-desc-input" placeholder="Notes, profil aromatique…" maxlength="120">
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('add-ingredient')">Annuler</button>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Food cost (€)</label>
+        <input class="form-input" type="number" id="recipe-cost-input" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prix de vente (€)</label>
+        <input class="form-input" type="number" id="recipe-price-input" placeholder="0.00" min="0" step="0.5">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeAddModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveRecipe()">Créer la recette</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: ADD INGREDIENT ══ -->
+<div class="modal-overlay" id="add-ing-modal" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="ing-modal-title">Nouvel ingrédient</span>
+      <button class="modal-close" onclick="closeAddIngModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nom *</label>
+      <input class="form-input" type="text" id="ing-name-input" placeholder="ex: Rhum blanc Havana 3 ans" maxlength="60">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Catégorie</label>
+        <select class="form-select" id="ing-category-input">
+          <option value="spirits">Spiritueux</option>
+          <option value="liqueur">Liqueur</option>
+          <option value="juice">Jus</option>
+          <option value="syrup">Sirop</option>
+          <option value="mixer">Mixer / Eau</option>
+          <option value="fresh">Frais</option>
+          <option value="other">Autre</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Marque</label>
+        <input class="form-input" type="text" id="ing-brand-input" placeholder="ex: Havana Club">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Contenance (cl)</label>
+        <input class="form-input" type="number" id="ing-size-input" placeholder="70" min="1" step="1" oninput="computePricePerCl()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prix bouteille (€)</label>
+        <input class="form-input" type="number" id="ing-bottle-price-input" placeholder="14.90" min="0" step="0.1" oninput="computePricePerCl()">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Prix au cl (calculé auto)</label>
+      <input class="form-input" type="text" id="ing-price-per-cl-display" placeholder="—" readonly style="color:var(--gold);font-weight:700">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Fournisseur</label>
+      <input class="form-input" type="text" id="ing-supplier-input" placeholder="ex: Metro Cash & Carry">
+    </div>
+
+    <!-- Toggle recette maison -->
+    <button class="maison-toggle" id="ing-maison-toggle" onclick="toggleMaisonBuilder('standalone')">
+      <span class="maison-toggle-icon">🏠</span>
+      <div class="maison-toggle-text">
+        <strong>Ingrédient maison</strong>
+        <small>Sirop, infusion, cordial… avec sa propre recette de fabrication</small>
+      </div>
+      <span class="maison-toggle-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></span>
+    </button>
+    <div id="ing-maison-builder" style="display:none">
+      <div id="ing-maison-content"></div>
+    </div>
+
+    <div class="modal-actions" id="ing-modal-actions">
+      <button class="btn btn-secondary" onclick="closeAddIngModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveIngredient()">Enregistrer</button>
     </div>
   </div>
 </div>
 
-<div id="toast" class="toast"></div>
+<!-- ══ MODAL: AJOUTER INGRÉDIENT À UNE RECETTE ══ -->
+<div class="modal-overlay" id="recipe-ing-modal" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="ing-picker-title">Ajouter un ingrédient</span>
+      <button class="modal-close" onclick="closeRecipeIngModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
 
-<script>
-const recipes=JSON.parse(localStorage.getItem('recipes')||'[]'),ingredients=JSON.parse(localStorage.getItem('ingredients')||'[]'),plan=JSON.parse(localStorage.getItem('plan')||'{"name":"Free","date":"2025-01-01"}'),lang=localStorage.getItem('lang')||'fr';
-let currentView='grid',currentFilter='*';
-function switchScreen(s){document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active')),document.getElementById(s)?.classList.add('active');const t={'dashboard':'Tableau de bord','recipes':'Toutes les Recettes','calculator':'Calculateur','ingredients':'Bibliothèque d\'Ingrédients'};document.getElementById('screen-title').textContent=t[s],s==='dashboard'?document.getElementById('back-btn').classList.remove('visible'):document.getElementById('back-btn').classList.add('visible'),s==='recipes'?renderAllRecipes():s==='calculator'?renderCalculator():s==='ingredients'&&renderIngredients(),closeSidebar()}
-function renderRecipes(e=recipes){const t=document.getElementById('recipes-grid');t.innerHTML=e.map(e=>`<div class="recipe-card ${currentView===`list`?'list-view':''}" onclick="showRecipeDetail('${e.id}')">
-          <div class="card-header">
-            <div class="card-emoji">${e.emoji}</div>
-            ${e.classic?'<div class="classic-badge">CLASSIQUE</div>':''}
-            <div style="flex:1"></div>
-            <button class="card-menu-btn" onclick="event.stopPropagation(); showRecipeMenu('${e.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/></svg></button>
-          </div>
-          <div class="card-body">
-            <div class="card-name">${e.name}</div>
-            <div class="card-category">${e.category}</div>
-            <div class="card-tags">${e.ings.map(t=>`<div class="card-tag">${t.name}</div>`).join('')}</div>
-          </div>
-          <div class="card-footer">
-            <div class="card-cost">
-              <div class="cost-label">Coüt</div>
-              <div class="cost-value">${calcRecipeCost(e)}€</div>
-            </div>
-            <div class="card-margin">
-              <div class="margin-value">${calcRecipeMargin(e)}x</div>
-            </div>
-          </div>
-        </div>`).join('')}
-}
-function renderAllRecipes(){renderRecipes(recipes),document.getElementById('all-recipe-count').textContent=`${recipes.length} recettes`,updateStats()}
-function renderCalculator(){const e=document.getElementById('recipe-select');e.innerHTML='<option value="">Choisir une recette...</option>'+recipes.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}
-function renderIngredients(){const e=document.getElementById('ing-list');e.innerHTML=ingredients.map(t=>`<tr>
-            <td><div class="ing-name">${t.name}</div></td>
-            <td class="center"><div class="ing-unit">${t.unit}</div></td>
-            <td class="center"><span class="ing-base-qty">${t.qty}</span></td>
-            <td class="center"><span class="ing-cost">${t.cost}€</span></td>
-            <td><div class="stock-input-wrap"><input type="number" class="stock-input" value="${t.stock||0}" onchange="updateStock('${t.id}',this.value)"><span class="stock-label">${t.unit}</span></div></td>
-            <td class="center"><button style="background:none;border:none;color:var(--error);cursor:pointer" onclick="deleteIngredient('${t.id}')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-9l-1 1H5v2h14V4z"/></svg></button></td>
-          </tr>`).join(''),document.getElementById('ing-count').textContent=`${ingredients.length} ingrédients`,updateStats()}
-function saveRecipe(){const e=document.getElementById('recipe-name').value.trim(),t=document.getElementById('recipe-emoji').value.trim(),r=document.getElementById('recipe-category').value,i=document.getElementById('recipe-classic').checked,n=Array.from(document.querySelectorAll('#recipe-ings tr')).map(e=>({id:e.dataset.id||Date.now(),name:e.querySelector('.form-input')?.value||'',qty:parseFloat(e.querySelector('input[type="number"]')?.value||0)||0,unit:e.querySelector('select')?.value||'ml'}));if(!e||!t)return showToast('Veuillez remplir tous les champs');const o={id:Date.now(),name:e,emoji:t,category:r,classic:i,ings:n};recipes.push(o),localStorage.setItem('recipes',JSON.stringify(recipes)),closeModal('add-recipe'),renderAllRecipes(),renderRecipes(getFiltered()),showToast('Recette ajoutée')}
-function saveIngredient(){const e=document.getElementById('ing-name').value.trim(),t=document.getElementById('ing-unit').value,r=parseFloat(document.getElementById('ing-qty').value)||0,i=parseFloat(document.getElementById('ing-cost').value)||0;if(!e||r<=0||i<=0)return showToast('Veuillez remplir tous les champs');const n={id:Date.now(),name:e,unit:t,qty:r,cost:i,stock:0};ingredients.push(n),localStorage.setItem('ingredients',JSON.stringify(ingredients)),closeModal('add-ingredient'),renderIngredients(),showToast('Ingrédient ajouté')}
-function calcRecipeCost(e){return(e.ings.reduce((e,t)=>{const r=ingredients.find(e=>e.name===t.name);return e+(r?r.cost*t.qty/r.qty:0)},0)||0).toFixed(2)}
-function calcRecipeMargin(e){const t=parseFloat(calcRecipeCost(e))||0;return t>0?(t*2.5/t).toFixed(1):'N/A'}
-function updateStats(){const e=recipes.filter(e=>e.ings.length>0),t=e.reduce((e,t)=>e+parseFloat(calcRecipeCost(t)),0)/e.length||0,r=e.reduce((e,t)=>e+parseFloat(calcRecipeMargin(t)),0)/e.length||0;document.getElementById('stat-recipes').textContent=recipes.length,document.getElementById('stat-ing').textContent=ingredients.length,document.getElementById('stat-margin').textContent=r.toFixed(1),document.getElementById('stat-cost').textContent=t.toFixed(0)}
-function getFiltered(){return'*'===currentFilter?recipes:recipes.filter(e=>e.category===currentFilter)}
-function filterRecipes(e){currentFilter=e,document.querySelectorAll('.chip').forEach(t=>t.dataset.filter===e?t.classList.add('active'):t.classList.remove('active')),renderRecipes(getFiltered())}
-function setView(e){currentView=e,'grid'===e?(document.getElementById('grid-btn').classList.add('active'),document.getElementById('list-btn').classList.remove('active')):(document.getElementById('list-btn').classList.add('active'),document.getElementById('grid-btn').classList.remove('active')),renderRecipes(getFiltered())}
-function loadRecipeCalculator(){const e=document.getElementById('recipe-select').value,t=recipes.find(t=>t.id==e);if(!t)return;const r=document.getElementById('calc-content');r.innerHTML='',r.style.display='block';const i=document.createElement('input');i.type='number',i.placeholder='Quantité (portions)',i.className='form-input',i.value='1',i.style.marginBottom='16px';const n=()=>{const e=parseFloat(i.value)||1,t=document.querySelector('[style*="margin-top:16px;display:block"]');t&&(t.innerHTML=`<div class="cost-summary">
-            <div class="cost-item">
-              <div class="cost-item-label">Coût COGS</div>
-              <div class="cost-item-value">${(parseFloat(calcRecipeCost(o))*e).toFixed(2)}€</div>
-            </div>
-            <div class="cost-item">
-              <div class="cost-item-label">PVT (x2.5)</div>
-              <div class="cost-item-value">${(parseFloat(calcRecipeCost(o))*e*2.5).toFixed(2)}€</div>
-            </div>
-            <div class="cost-item">
-              <div class="cost-item-label">Marge</div>
-              <div class="cost-item-value profit">${(parseFloat(calcRecipeCost(o))*e*1.5).toFixed(2)}€</div>
-            </div>
-            <div class="cost-item">
-              <div class="cost-item-label">Marge %</div>
-              <div class="cost-item-value profit">${((parseFloat(calcRecipeMargin(o))-1)*100).toFixed(0)}%</div>
-            </div>
-          </div>
-          <div class="ing-grid">${t.ings.map(t=>{const r=ingredients.find(e=>e.name===t.name);return`<div class="ing-group">
-              <div class="ing-group-title">${t.name}</div>
-              <div class="ing-grid-row">
-                <span class="ing-grid-name">Quantité de base</span>
-                <span class="ing-grid-qty">${t.qty}${r?.unit||''}</span>
-              </div>
-              <div class="ing-grid-row">
-                <span class="ing-grid-name">Utilisée</span>
-                <span class="ing-grid-qty">${(t.qty*e).toFixed(2)}${r?.unit||''}</span>
-              </div>
-              <div class="ing-grid-row">
-                <span class="ing-grid-name">Coüt</span>
-                <span class="ing-grid-qty">${((r?.cost||0)*t.qty*e/r?.qty).toFixed(2)}€</span>
-              </div>
-              <div class="ing-grid-row" style="margin-bottom:0">
-                <span class="ing-grid-name">Stock</span>
-                <span class="ing-grid-qty ${(r?.stock||0)<(t.qty*e)?'text-error':'text-success'}">${r?.stock||0}${r?.unit||''}</span>
-              </div>
-            </div>`}).join('')}
-          </div>`)};const o=t;r.appendChild(i),i.addEventListener('input',n),n()}
-function showRecipeDetail(e){const t=recipes.find(t=>t.id==e);if(!t)return;const r=document.getElementById('recipe-detail-content');r.innerHTML=`
-    <div class="recipe-detail-header">
-      <div class="detail-emoji">${t.emoji}</div>
-      <div class="detail-title">
-        <h2 class="detail-name">${t.name}</h2>
-        <p class="detail-category">${t.category}</p>
-        <div class="detail-meta">
-          <div class="detail-meta-item">
-            <span class="detail-meta-label">Coüt</span>
-            <span class="detail-meta-value price">${calcRecipeCost(t)}€</span>
-          </div>
-          <div class="detail-meta-item">
-            <span class="detail-meta-label">Marge</span>
-            <span class="detail-meta-value">${calcRecipeMargin(t)}x</span>
-          </div>
-          <div class="detail-meta-item">
-            <span class="detail-meta-label">Ingrédients</span>
-            <span class="detail-meta-value">${t.ings.length}</span>
-          </div>
+    <!-- ── VUE 1 : Chercher dans la bibliothèque ── -->
+    <div id="picker-search-view">
+      <input class="ing-search-box" type="search" id="ing-search-pick"
+        placeholder="Rechercher dans la bibliothèque…"
+        oninput="filterIngPicker(this.value)">
+      <div class="ing-pick-list" id="ing-pick-list"></div>
+
+      <!-- Bouton créer nouvel ingrédient -->
+      <button class="add-ing-btn" style="margin-bottom:14px" onclick="showCreateIngView()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Créer un nouvel ingrédient
+      </button>
+
+      <!-- Quantité + coût -->
+      <div class="qty-row">
+        <span class="qty-label">Quantité dans la recette</span>
+        <input class="qty-input" type="number" id="ing-qty-input"
+          min="0.1" step="0.5" placeholder="5"
+          oninput="updateCostPreview()">
+        <span class="qty-unit">cl</span>
+      </div>
+      <div class="cost-preview" id="cost-preview">Sélectionnez un ingrédient ci-dessus</div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeRecipeIngModal()">Annuler</button>
+        <button class="btn btn-primary" onclick="confirmAddRecipeIng()">Ajouter à la recette</button>
+      </div>
+    </div>
+
+    <!-- ── VUE 2 : Créer un nouvel ingrédient ── -->
+    <div id="picker-create-view" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Nom de l'ingrédient *</label>
+        <input class="form-input" type="text" id="new-ing-name" placeholder="ex: Sirop de violette" maxlength="60">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Catégorie</label>
+          <select class="form-select" id="new-ing-cat">
+            <option value="spirits">Spiritueux</option>
+            <option value="liqueur">Liqueur</option>
+            <option value="juice">Jus</option>
+            <option value="syrup" selected>Sirop</option>
+            <option value="mixer">Mixer / Eau</option>
+            <option value="fresh">Frais</option>
+            <option value="other">Autre</option>
+          </select>
         </div>
-        <div class="detail-action">
-          <button class="btn btn-primary" onclick="closeModal('recipe-detail'); showCalculatorWithRecipe('${e}')">Calculer</button>
-          <button class="btn btn-secondary" onclick="deleteRecipe('${e}')">Supprimer</button>
+        <div class="form-group">
+          <label class="form-label">Marque</label>
+          <input class="form-input" type="text" id="new-ing-brand" placeholder="ex: Monin">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Contenance (cl)</label>
+          <input class="form-input" type="number" id="new-ing-size" placeholder="70" min="1" step="1"
+            oninput="updateNewIngPpc()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prix bouteille (€)</label>
+          <input class="form-input" type="number" id="new-ing-price" placeholder="12.90" min="0" step="0.1"
+            oninput="updateNewIngPpc()">
+        </div>
+      </div>
+      <!-- Prix/cl calculé -->
+      <div style="background:rgba(200,169,110,.08);border:1px solid rgba(200,169,110,.12);border-radius:var(--radius-sm);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <span style="font-size:12px;color:var(--text-3)">Prix calculé au cl</span>
+        <span style="font-size:16px;font-weight:800;color:var(--gold)" id="new-ing-ppc-display">—</span>
+      </div>
+      <!-- Toggle recette maison inline -->
+      <button class="maison-toggle" id="new-ing-maison-toggle" onclick="toggleMaisonBuilder('inline')">
+        <span class="maison-toggle-icon">🏠</span>
+        <div class="maison-toggle-text">
+          <strong>Ingrédient maison</strong>
+          <small>Sirop, infusion… avec recette de fabrication</small>
+        </div>
+        <span class="maison-toggle-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></span>
+      </button>
+      <div id="new-ing-maison-builder" style="display:none">
+        <div id="new-ing-maison-content"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Quantité dans la recette (cl)</label>
+        <input class="form-input" type="number" id="new-ing-qty" placeholder="5" min="0.1" step="0.5">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="showSearchIngView()">← Retour</button>
+        <button class="btn btn-primary" onclick="createAndAddIngredient()">Créer et ajouter</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ MODAL: ACCESS CODE ══ -->
+<div class="modal-overlay" id="access-modal" onclick="closeModalOnOverlay(event)">
+  <div class="modal" style="text-align:center">
+    <div class="modal-header">
+      <span class="modal-title">Accès Beta / VIP</span>
+      <button class="modal-close" onclick="closeAccessModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="font-size:48px;margin-bottom:16px">🔑</div>
+    <p style="color:var(--text-2);font-size:13px;margin-bottom:24px;line-height:1.7">
+      Entrez votre code d'accès pour débloquer les recettes illimitées,
+      la gestion d'équipe et l'import/export Excel.
+    </p>
+    <div class="form-group">
+      <input class="form-input" type="text" id="access-code-input"
+        placeholder="MIXTURA-BETA-XXXX"
+        style="text-align:center;letter-spacing:.12em;font-weight:600;text-transform:uppercase"
+        oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeAccessModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="validateAccessCode()">Valider le code</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ─── Lang ── */
+let currentLang = localStorage.getItem('mixtura_lang')||'fr';
+function toggleLang(){
+  currentLang=currentLang==='fr'?'en':'fr';
+  localStorage.setItem('mixtura_lang',currentLang);
+  document.getElementById('lang-label').textContent=currentLang.toUpperCase();
+  document.querySelector('.search-input').placeholder=
+    currentLang==='fr'?'Rechercher une recette…':'Search a recipe…';
+  renderRecipes(getFiltered());
+}
+function tCat(c){
+  return ({fr:{classic:'Classique',signature:'Signature',mocktail:'Mocktail',shot:'Shot',hot:'Chaud'},
+           en:{classic:'Classic',signature:'Signature',mocktail:'Mocktail',shot:'Shot',hot:'Hot'}}
+    [currentLang]||{})[c]||c;
+}
+function tCatIng(c){
+  return ({spirits:'Spiritueux',liqueur:'Liqueur',juice:'Jus',syrup:'Sirop',
+           mixer:'Mixer',fresh:'Frais',other:'Autre'})[c]||c;
+}
+function tGlass(g){
+  return ({highball:'Highball',coupe:'Coupe',rocks:'Rocks',martini:'Verre Martini',
+           flute:'Flûte',shot:'Shot'})[g]||g;
+}
+
+/* ─── State ── */
+const S={
+  plan:localStorage.getItem('mixtura_plan')||'visitor',
+  view:'grid', filterCat:'all', filterIngCat:'all',
+  searchQuery:'', selectedEmoji:'🍹',
+  currentScreen:'dashboard', editingIngId:null, currentRecipe:null,
+};
+const QUOTA={visitor:2,beta:Infinity,vip:Infinity};
+const VALID_CODES={'MIXTURA-BETA-2025':'beta','MIXTURA-VIP-2025':'vip'};
+
+/* ─── Classic recipes ── */
+const CLASSIC_RECIPES=[
+  {id:'c1',name:'Mojito',emoji:'🍹',category:'classic',glassType:'highball',
+   garnish:'Menthe + citron vert',
+   description:'Le classique cubain par excellence. Frais, herbacé et légèrement sucré.',
+   tags:['cubain','fresh','summer'],foodCost:1.45,sellingPrice:12,
+   ingredients:[
+     {id:'i1',name:'Rhum blanc',quantityCl:5,pricePerCl:0.21,unit:'cl'},
+     {id:'i2',name:'Jus de citron vert',quantityCl:3,pricePerCl:0.04,unit:'cl'},
+     {id:'i3',name:'Sirop de sucre de canne',quantityCl:2,pricePerCl:0.05,unit:'cl'},
+     {id:'i4',name:'Eau gazeuse',quantityCl:6,pricePerCl:0.02,unit:'cl'},
+     {id:'i5',name:'Menthe fraîche',quantityCl:0,qty:8,unit:'feuilles',pricePerCl:0},
+   ],
+   steps:['Déposer la menthe dans le verre avec le sirop','Écraser délicatement avec un pilon',
+     'Ajouter le jus de citron vert pressé','Remplir de glace pilée et verser le rhum',
+     'Compléter à l\'eau gazeuse froide','Garnir d\'une tige de menthe'],
+  },
+  {id:'c2',name:'Negroni',emoji:'🥃',category:'classic',glassType:'rocks',
+   garnish:'Zeste d\'orange',
+   description:'Le roi des apéritifs italiens. Puissant, amer et élégant.',
+   tags:['italien','bitter','aperitif'],foodCost:2.30,sellingPrice:14,
+   ingredients:[
+     {id:'i6',name:'Gin',quantityCl:3,pricePerCl:0.43,unit:'cl'},
+     {id:'i7',name:'Campari',quantityCl:3,pricePerCl:0.29,unit:'cl'},
+     {id:'i8',name:'Vermouth rouge',quantityCl:3,pricePerCl:0.11,unit:'cl'},
+   ],
+   steps:['Remplir un verre rocks de glaçons',
+     'Verser gin, Campari et vermouth à parts égales',
+     'Remuer 30 secondes avec une cuillère à mélange',
+     'Exprimer un zeste d\'orange et déposer en garniture'],
+  },
+  {id:'c3',name:'Margarita',emoji:'🍸',category:'classic',glassType:'coupe',
+   garnish:'Sel sur le bord + citron',
+   description:'Le cocktail mexicain intemporel. Équilibre parfait entre tequila, acide et sucre.',
+   tags:['mexicain','citrus','tequila'],foodCost:1.85,sellingPrice:12,
+   ingredients:[
+     {id:'i9',name:'Tequila blanche',quantityCl:4.5,pricePerCl:0.29,unit:'cl'},
+     {id:'i10',name:'Triple Sec (Cointreau)',quantityCl:2,pricePerCl:0.65,unit:'cl'},
+     {id:'i2',name:'Jus de citron vert',quantityCl:2.5,pricePerCl:0.04,unit:'cl'},
+   ],
+   steps:['Givrer le bord du verre avec sel et citron vert',
+     'Mettre tous les ingrédients dans un shaker avec glace',
+     'Shaker vigoureusement 15 secondes',
+     'Filtrer dans le verre givré et garnir d\'une rondelle de citron'],
+  },
+  {id:'c4',name:'Gin Tonic',emoji:'🥂',category:'classic',glassType:'highball',
+   garnish:'Concombre + poivre noir',
+   description:'Simple et sophistiqué. Toute la puissance du gin révélée par le tonic.',
+   tags:['british','light','simple'],foodCost:1.25,sellingPrice:10,
+   ingredients:[
+     {id:'i6',name:'Gin',quantityCl:4,pricePerCl:0.43,unit:'cl'},
+     {id:'i11',name:'Tonic Water',quantityCl:12,pricePerCl:0.09,unit:'cl'},
+   ],
+   steps:['Remplir un verre ballon de glaçons de grande taille',
+     'Verser le gin sur les glaçons',
+     'Ajouter le tonic froid en versant sur le dos d\'une cuillère',
+     'Remuer très délicatement pour préserver les bulles',
+     'Garnir selon le profil du gin'],
+  },
+  {id:'c5',name:'Espresso Martini',emoji:'☕',category:'classic',glassType:'martini',
+   garnish:'3 grains de café torréfiés',
+   description:'Le cocktail après-dîner par excellence. Caféiné, velouté et légèrement sucré.',
+   tags:['coffee','après-dîner','festif'],foodCost:2.00,sellingPrice:14,
+   ingredients:[
+     {id:'i12',name:'Vodka',quantityCl:4,pricePerCl:0.22,unit:'cl'},
+     {id:'i13',name:'Kahlúa',quantityCl:2,pricePerCl:0.36,unit:'cl'},
+     {id:'i14',name:'Espresso (refroidi)',quantityCl:3,pricePerCl:0.10,unit:'cl'},
+     {id:'i3',name:'Sirop de sucre de canne',quantityCl:1,pricePerCl:0.05,unit:'cl'},
+   ],
+   steps:['Préparer un espresso et le laisser refroidir',
+     'Mettre tous les ingrédients dans un shaker rempli de glace',
+     'Shaker fort et longtemps pour créer la mousse',
+     'Double filtrer dans un verre martini glacé',
+     'Déposer 3 grains de café sur la mousse'],
+  },
+];
+
+/* ─── Default ingredients ── */
+const DEFAULT_INGREDIENTS=[
+  {id:'d1',name:'Rhum blanc Havana 3 ans',category:'spirits',brand:'Havana Club',bottleSizeCl:70,bottlePrice:14.90,supplier:'Metro'},
+  {id:'d2',name:'Gin Hendrick\'s',category:'spirits',brand:'Hendrick\'s',bottleSizeCl:70,bottlePrice:29.90,supplier:'Metro'},
+  {id:'d3',name:'Vodka Grey Goose',category:'spirits',brand:'Grey Goose',bottleSizeCl:70,bottlePrice:31.90,supplier:'Pro à Pro'},
+  {id:'d4',name:'Tequila Patron Silver',category:'spirits',brand:'Patron',bottleSizeCl:70,bottlePrice:42.50,supplier:'Metro'},
+  {id:'d5',name:'Campari',category:'liqueur',brand:'Campari',bottleSizeCl:70,bottlePrice:20.50,supplier:'Metro'},
+  {id:'d6',name:'Kahlúa',category:'liqueur',brand:'Kahlúa',bottleSizeCl:70,bottlePrice:24.90,supplier:'Metro'},
+  {id:'d7',name:'Vermouth rouge Martini',category:'liqueur',brand:'Martini',bottleSizeCl:75,bottlePrice:8.50,supplier:'Colruyt'},
+  {id:'d8',name:'Cointreau Triple Sec',category:'liqueur',brand:'Cointreau',bottleSizeCl:35,bottlePrice:22.90,supplier:'Metro'},
+  {id:'d9',name:'Jus de citron vert',category:'juice',brand:'Réalcitron',bottleSizeCl:25,bottlePrice:3.20,supplier:'Colruyt'},
+  {id:'d10',name:'Sirop de sucre de canne',category:'syrup',brand:'Monin',bottleSizeCl:70,bottlePrice:6.50,supplier:'Metro'},
+  {id:'d11',name:'Tonic Water Fever-Tree',category:'mixer',brand:'Fever-Tree',bottleSizeCl:20,bottlePrice:1.80,supplier:'Colruyt'},
+  {id:'d12',name:'Eau gazeuse San Pellegrino',category:'mixer',brand:'San Pellegrino',bottleSizeCl:75,bottlePrice:1.50,supplier:'Colruyt'},
+  // ── Crèmes liquides (frais) ──
+  {id:'d13',name:'Crème liquide 35%',category:'fresh',brand:'Elle & Vire',bottleSizeCl:25,bottlePrice:2.20,supplier:'Colruyt'},
+  {id:'d14',name:'Crème de coco',category:'mixer',brand:'Kara',bottleSizeCl:40,bottlePrice:3.50,supplier:'Metro'},
+  // ── Crèmes de liqueurs ──
+  {id:'d15',name:'Crème de cacao brune',category:'liqueur',brand:'Bols',bottleSizeCl:70,bottlePrice:14.90,supplier:'Metro'},
+  {id:'d16',name:'Crème de cacao blanche',category:'liqueur',brand:'Bols',bottleSizeCl:70,bottlePrice:14.90,supplier:'Metro'},
+  {id:'d17',name:'Crème de menthe verte',category:'liqueur',brand:'Bols',bottleSizeCl:70,bottlePrice:13.50,supplier:'Metro'},
+  {id:'d18',name:'Crème de cassis',category:'liqueur',brand:'Cartron',bottleSizeCl:70,bottlePrice:12.90,supplier:'Metro'},
+  {id:'d19',name:'Crème de mûre',category:'liqueur',brand:'Cartron',bottleSizeCl:70,bottlePrice:12.90,supplier:'Metro'},
+  {id:'d20',name:'Crème de pêche',category:'liqueur',brand:'Cartron',bottleSizeCl:70,bottlePrice:13.20,supplier:'Metro'},
+  {id:'d21',name:'Baileys Irish Cream',category:'liqueur',brand:'Baileys',bottleSizeCl:70,bottlePrice:18.90,supplier:'Colruyt'},
+];
+
+function loadUserRecipes(){try{return JSON.parse(localStorage.getItem('mixtura_recipes')||'[]')}catch{return[]}}
+function saveUserRecipes(r){localStorage.setItem('mixtura_recipes',JSON.stringify(r))}
+function getAllRecipes(){return[...CLASSIC_RECIPES,...loadUserRecipes()]}
+function loadUserIngredients(){try{return JSON.parse(localStorage.getItem('mixtura_ingredients')||'[]')}catch{return[]}}
+function saveUserIngredients(r){localStorage.setItem('mixtura_ingredients',JSON.stringify(r))}
+function getAllIngredients(){return[...DEFAULT_INGREDIENTS,...loadUserIngredients()]}
+
+/* ─── Stats ── */
+function updateStats(){
+  const all=getAllRecipes(),allIng=getAllIngredients(),userR=loadUserRecipes();
+  const withCost=all.filter(r=>r.foodCost);
+  const avgCost=withCost.length?(withCost.reduce((s,r)=>s+r.foodCost,0)/withCost.length).toFixed(2):'—';
+  const withM=all.filter(r=>r.foodCost&&r.sellingPrice);
+  const avgM=withM.length?'×'+(withM.reduce((s,r)=>s+(r.sellingPrice/r.foodCost),0)/withM.length).toFixed(1):'—';
+  document.getElementById('stat-recipes').textContent=all.length;
+  document.getElementById('stat-recipes-sub').textContent=`dont ${CLASSIC_RECIPES.length} classiques`;
+  document.getElementById('stat-cost').innerHTML=avgCost!=='—'?`${avgCost}<span>€</span>`:avgCost;
+  document.getElementById('stat-margin').textContent=avgM;
+  document.getElementById('stat-ing').textContent=allIng.length;
+  document.getElementById('ing-count-badge').textContent=allIng.length;
+  document.getElementById('ing-section-count').textContent=`${allIng.length} ingrédients`;
+  document.getElementById('section-count').textContent=`${all.length} recettes`;
+  const fab=document.getElementById('fab-btn');
+  if(S.plan==='visitor'&&userR.length>=2){fab.style.opacity='.4';fab.title='Limite atteinte — passez en Beta'}
+  else{fab.style.opacity='1';fab.title=S.currentScreen==='ingredients'?'Ajouter un ingrédient':'Ajouter une recette'}
+}
+function updatePlanBadge(){
+  const p={visitor:{name:'Visiteur',desc:'2 recettes max',icon:'🔓'},
+           beta:{name:'Beta',desc:'Accès complet',icon:'⭐'},
+           vip:{name:'VIP',desc:'Tout débloqué',icon:'💎'}}[S.plan];
+  document.getElementById('plan-name').textContent=p.name;
+  document.getElementById('plan-desc').textContent=p.desc;
+  document.querySelector('.plan-icon').textContent=p.icon;
+  document.getElementById('access-banner').style.display=S.plan==='visitor'?'flex':'none';
+}
+
+/* ─── Navigation ── */
+function navigate(screen){
+  S.currentScreen=screen;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.screen===screen));
+  document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
+  const backBtn=document.getElementById('back-btn');
+  const searchC=document.getElementById('search-container');
+  const fabBtn=document.getElementById('fab-btn');
+  if(screen==='dashboard'){
+    document.getElementById('screen-dashboard').classList.add('active');
+    document.getElementById('topbar-title').textContent='Dashboard';
+    backBtn.classList.remove('visible');searchC.style.display='';fabBtn.style.display='';
+    renderRecipes(getFiltered());
+  } else if(screen==='ingredients'){
+    document.getElementById('screen-ingredients').classList.add('active');
+    document.getElementById('topbar-title').textContent='Ingrédients';
+    backBtn.classList.remove('visible');searchC.style.display='none';fabBtn.style.display='';
+    renderIngredients();
+  } else {
+    showToast(`Section "${screen}" — prochaine version ✦`);
+    document.getElementById('screen-dashboard').classList.add('active');
+    S.currentScreen='dashboard';
+    document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.screen==='dashboard'));
+  }
+  closeSidebar();
+}
+
+function openRecipe(id){
+  const r=getAllRecipes().find(x=>x.id===id);
+  if(!r) return;
+  S.currentScreen='recipe-detail';S.currentRecipe=r;
+  document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
+  document.getElementById('screen-recipe').classList.add('active');
+  document.getElementById('topbar-title').textContent=r.name;
+  document.getElementById('back-btn').classList.add('visible');
+  document.getElementById('search-container').style.display='none';
+  document.getElementById('fab-btn').style.display='none';
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  renderRecipeDetail(r);
+  closeSidebar();
+}
+
+function goBack(){navigate('dashboard')}
+function fabAction(){if(S.currentScreen==='ingredients')openAddIngModal();else openAddModal()}
+
+/* ─── Recipe grid ── */
+function getFiltered(){
+  let r=getAllRecipes();
+  if(S.filterCat!=='all')r=r.filter(x=>x.category===S.filterCat);
+  if(S.searchQuery){const q=S.searchQuery.toLowerCase();r=r.filter(x=>x.name.toLowerCase().includes(q)||(x.tags||[]).some(t=>t.toLowerCase().includes(q)))}
+  return r;
+}
+function filterByCategory(el,cat){
+  document.querySelectorAll('.filter-chips .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');S.filterCat=cat;renderRecipes(getFiltered());
+}
+function filterRecipes(q){S.searchQuery=q;renderRecipes(getFiltered())}
+function setView(v){
+  S.view=v;
+  document.getElementById('grid-btn').classList.toggle('active',v==='grid');
+  document.getElementById('list-btn').classList.toggle('active',v==='list');
+  renderRecipes(getFiltered());
+}
+function renderRecipes(recipes){
+  const grid=document.getElementById('recipe-grid');
+  grid.className='recipe-grid'+(S.view==='list'?' list-view':'');
+  if(!recipes.length){
+    grid.innerHTML=`<div class="empty-state"><div class="empty-icon">🍹</div>
+      <h3>Aucune recette trouvée</h3><p>Essayez une autre recherche ou ajoutez votre première recette.</p></div>`;
+    return;
+  }
+  grid.innerHTML=recipes.map(buildCard).join('');
+}
+function buildCard(r){
+  const isC=CLASSIC_RECIPES.some(c=>c.id===r.id);
+  const costHtml=r.foodCost?`<div class="cost-value">€${r.foodCost.toFixed(2)}</div>`:`<div class="cost-value no-price">Non renseigné</div>`;
+  const mHtml=(r.foodCost&&r.sellingPrice)?`<div class="card-margin"><span class="margin-value">×${(r.sellingPrice/r.foodCost).toFixed(1)}</span></div>`:'';
+  const tagsHtml=(r.tags||[]).map(t=>`<span class="card-tag">${t}</span>`).join('');
+  return `<div class="recipe-card${S.view==='list'?' list-view':''}" onclick="openRecipe('${r.id}')">
+    ${isC?`<span class="classic-badge">Classique</span>`:''}
+    <div class="card-header">
+      <div class="card-emoji">${r.emoji||'🍹'}</div>
+      ${S.view==='grid'?`<button class="card-menu-btn" onclick="event.stopPropagation();showToast('Menu contextuel — prochaine version')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/>
+        </svg></button>`:''}
+    </div>
+    <div class="card-body">
+      <div class="card-name">${r.name}</div>
+      <div class="card-category">${tCat(r.category)}</div>
+    </div>
+    ${S.view==='grid'?`<div class="card-tags">${tagsHtml}</div>`:''}
+    <div class="card-footer">
+      <div class="card-cost"><span class="cost-label">Food cost</span>${costHtml}</div>${mHtml}
+    </div>
+  </div>`;
+}
+
+/* ─── Recipe detail ── */
+function recalcFoodCost(ingredients){
+  if(!ingredients||!ingredients.length) return null;
+  const total=ingredients.reduce((s,ing)=>{
+    if(ing.quantityCl>0&&ing.pricePerCl) return s+(ing.quantityCl*ing.pricePerCl);
+    return s;
+  },0);
+  return total>0?Math.round(total*100)/100:null;
+}
+
+function renderRecipeDetail(r){
+  const isC=CLASSIC_RECIPES.some(c=>c.id===r.id);
+  // Auto food cost from ingredients if available
+  const autoFC=recalcFoodCost(r.ingredients);
+  const displayFC = autoFC!==null ? autoFC : r.foodCost;
+  const margin=(displayFC&&r.sellingPrice)?(r.sellingPrice/displayFC).toFixed(1):null;
+
+  /* ── Cost summary ── */
+  const costSummary=`<div class="cost-summary">
+    <div class="cost-box">
+      <div class="cost-box-label">Food Cost</div>
+      <div class="cost-box-value gold" id="detail-foodcost">${displayFC?'€'+displayFC.toFixed(2):'—'}</div>
+    </div>
+    <div class="cost-box">
+      <div class="cost-box-label">Prix de vente</div>
+      <div class="cost-box-value" id="detail-price">${r.sellingPrice?'€'+r.sellingPrice.toFixed(2):'—'}</div>
+    </div>
+    <div class="cost-box">
+      <div class="cost-box-label">Marge</div>
+      <div class="cost-box-value green" id="detail-margin">${margin?'×'+margin:'—'}</div>
+    </div>
+  </div>`;
+
+  /* ── Edit zone (user recipes only) ── */
+  let editZone='';
+  if(!isC){
+    editZone=`<div class="edit-section">
+      <div class="edit-section-title">✏️ Modifier la recette</div>
+      <div class="edit-row">
+        <span class="edit-label">Nom</span>
+        <input class="edit-field" type="text" value="${r.name}" maxlength="60"
+          onchange="saveRecipeField('${r.id}','name',this.value)">
+      </div>
+      <div class="edit-row">
+        <span class="edit-label">Description</span>
+        <input class="edit-field" type="text" value="${r.description||''}" maxlength="120"
+          placeholder="Notes, profil aromatique…"
+          onchange="saveRecipeField('${r.id}','description',this.value)">
+      </div>
+      <div class="edit-row">
+        <span class="edit-label">Prix de vente</span>
+        <input class="edit-field-sm" type="number" min="0" step="0.5"
+          value="${r.sellingPrice||''}" placeholder="0.00"
+          onchange="saveRecipeField('${r.id}','sellingPrice',parseFloat(this.value)||null)">
+        <span style="font-size:12px;color:var(--text-3)">€</span>
+      </div>
+    </div>`;
+  }
+
+  /* ── Ingredients section (editable for user recipes) ── */
+  let ingSection='';
+  const hasIng=r.ingredients&&r.ingredients.length>0;
+
+  if(isC){
+    // Classique : tableau lecture seule + calculateur stock
+    if(hasIng){
+      const rows=r.ingredients.map((ing,i)=>`<tr>
+        <td><div class="ing-name">${ing.name}</div>${ing.unit!=='cl'?`<div class="ing-unit">${ing.unit}</div>`:''}</td>
+        <td class="center"><span class="ing-base-qty">${ing.quantityCl>0?ing.quantityCl+'cl':(ing.qty||0)+' '+ing.unit}</span></td>
+        <td class="center"><div class="stock-input-wrap">
+          <input class="stock-input" type="number" min="0" step="0.5" placeholder="—" id="stock-${i}"
+            oninput="recalcStock(${i},'${r.id}')" title="Quantité restante de ${ing.name}">
+          <span class="stock-unit">${ing.quantityCl>0?'cl':ing.unit}</span>
+        </div></td>
+        <td><span class="ing-adjusted" id="adj-${i}">${ing.quantityCl>0?ing.quantityCl+'cl':(ing.qty||0)+' '+ing.unit}</span></td>
+        <td style="text-align:right"><span style="font-size:12px;color:var(--text-3)">${ing.pricePerCl&&ing.quantityCl>0?'€'+(ing.pricePerCl*ing.quantityCl).toFixed(2):'—'}</span></td>
+      </tr>`).join('');
+      ingSection=`<div class="calc-section">
+        <div class="calc-section-header"><span class="calc-section-icon">⚗️</span><span class="calc-section-title">Calculateur de stock — Produit en croix</span></div>
+        <div class="calc-section-sub">Indiquez la <span class="calc-highlight">quantité restante</span> d'un ingrédient — les autres s'adaptent automatiquement.</div>
+        <table class="ing-table">
+          <thead><tr><th>Ingrédient</th><th class="center">Base</th><th class="center">Il me reste</th><th class="center">→ Adapter à</th><th>Coût</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="portions-result" id="portions-result" style="display:none">
+          <span class="portions-icon">🍶</span>
+          <div class="portions-text">
+            <div class="portions-main" id="portions-main">—</div>
+            <div class="portions-sub" id="portions-sub">—</div>
+          </div>
+          <button class="portions-reset" onclick="resetCalc('${r.id}')">Réinitialiser</button>
+        </div>
+      </div>`;
+    }
+  } else {
+    // Recette perso : liste éditable + calculateur stock
+    const ingRows = hasIng ? r.ingredients.map((ing,i)=>`
+      <div class="recipe-ing-row">
+        <div style="flex:1;min-width:0">
+          <div class="recipe-ing-name">${ing.name}</div>
+          ${ing.pricePerCl?`<div style="font-size:11px;color:var(--text-3)">€${ing.pricePerCl.toFixed(3)}/cl</div>`:''}
+        </div>
+        <span class="recipe-ing-qty">${ing.quantityCl>0?ing.quantityCl+'cl':(ing.qty||0)+' '+ing.unit}</span>
+        <span class="recipe-ing-cost">${ing.pricePerCl&&ing.quantityCl>0?'€'+(ing.pricePerCl*ing.quantityCl).toFixed(2):'—'}</span>
+        <button class="recipe-ing-remove" onclick="removeRecipeIngredient('${r.id}',${i})" title="Retirer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>`).join('') : '';
+
+    // Calculateur stock si ingrédients présents
+    let calcRows = '';
+    if(hasIng){
+      calcRows = r.ingredients.map((ing,i)=>`<tr>
+        <td><div class="ing-name">${ing.name}</div></td>
+        <td class="center"><span class="ing-base-qty">${ing.quantityCl>0?ing.quantityCl+'cl':(ing.qty||0)+' '+ing.unit}</span></td>
+        <td class="center"><div class="stock-input-wrap">
+          <input class="stock-input" type="number" min="0" step="0.5" placeholder="—" id="stock-${i}"
+            oninput="recalcStock(${i},'${r.id}')">
+          <span class="stock-unit">cl</span>
+        </div></td>
+        <td><span class="ing-adjusted" id="adj-${i}">${ing.quantityCl>0?ing.quantityCl+'cl':(ing.qty||0)+' '+ing.unit}</span></td>
+      </tr>`).join('');
+    }
+
+    ingSection=`<div class="calc-section">
+      <div class="calc-section-header">
+        <span class="calc-section-icon">🧪</span>
+        <span class="calc-section-title">Ingrédients</span>
+      </div>
+      <div id="recipe-ing-list">
+        ${hasIng ? ingRows : `<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px">Aucun ingrédient — ajoutez-en ci-dessous</div>`}
+      </div>
+      <div class="foodcost-auto" id="foodcost-auto-row" style="${hasIng?'':'display:none'}">
+        <span class="foodcost-auto-label">Food cost calculé</span>
+        <span class="foodcost-auto-value" id="foodcost-auto-val">${displayFC?'€'+displayFC.toFixed(2):'€0.00'}</span>
+      </div>
+      <button class="add-ing-btn" onclick="openRecipeIngModal('${r.id}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Ajouter un ingrédient depuis la bibliothèque
+      </button>
+      ${hasIng?`<div class="calc-section" style="margin-top:16px;background:var(--navy-900)">
+        <div class="calc-section-header"><span class="calc-section-icon">⚗️</span><span class="calc-section-title">Calculateur de stock</span></div>
+        <div class="calc-section-sub">Entrez la quantité restante d'un ingrédient — les autres se recalculent.</div>
+        <table class="ing-table">
+          <thead><tr><th>Ingrédient</th><th class="center">Base</th><th class="center">Il me reste</th><th class="center">→ Adapter</th></tr></thead>
+          <tbody>${calcRows}</tbody>
+        </table>
+        <div class="portions-result" id="portions-result" style="display:none">
+          <span class="portions-icon">🍶</span>
+          <div class="portions-text">
+            <div class="portions-main" id="portions-main">—</div>
+            <div class="portions-sub" id="portions-sub">—</div>
+          </div>
+          <button class="portions-reset" onclick="resetCalc('${r.id}')">Réinitialiser</button>
+        </div>
+      </div>`:''}
+    </div>`;
+  }
+
+  /* ── Steps ── */
+  let stepsHtml='';
+  if(r.steps&&r.steps.length){
+    stepsHtml=`<div class="steps-section">
+      <div class="section-header" style="margin-bottom:12px">
+        <span class="section-title">Préparation</span>
+        <span class="section-count">${r.steps.length} étapes</span>
+      </div>
+      ${r.steps.map((s,i)=>`<div class="step-item"><div class="step-num">${i+1}</div><div class="step-text">${s}</div></div>`).join('')}
+    </div>`;
+  }
+
+  document.getElementById('recipe-detail-content').innerHTML=`
+    <div class="detail-hero">
+      <div class="detail-emoji">${r.emoji||'🍹'}</div>
+      <div class="detail-meta">
+        <div class="detail-name">${r.name}</div>
+        ${r.description?`<div class="detail-desc">${r.description}</div>`:''}
+        <div class="detail-chips">
+          <span class="detail-chip gold">${tCat(r.category)}</span>
+          ${r.glassType?`<span class="detail-chip">🥃 ${tGlass(r.glassType)}</span>`:''}
+          ${r.garnish?`<span class="detail-chip">🌿 ${r.garnish}</span>`:''}
+          ${isC?`<span class="detail-chip gold">★ Classique</span>`:''}
         </div>
       </div>
     </div>
-    <div style="margin-top:24px">
-      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text-1)">Ingrédients</h3>
-      <table class="ing-table">
-        <tbody>
-          ${t.ings.map(e=>{const r=ingredients.find(t=>t.name===e.name);return`<tr>
-            <td><div class="ing-name">${e.name}</div>${r?`<div class="ing-unit">${r.unit}</div>`:'<div class="ing-unit">?</div>'}</td>
-            <td class="center"><span class="ing-base-qty">${e.qty>0?e.qty+' '+(r?.unit||''):'('+(r?.qty||0)+' '+r?.unit+')'}</span></td>
-            <td class="center"><div style="display:flex;align-items:center;justify-content:center;gap:4px"><span class="ing-adjusted">${(e.qty*(r?r.cost/r.qty:0)).toFixed(2)}€</span></div></td>
-          </tr>`}).join('')}
-        </tbody>
-      </table>
-    </div>
-  `,openModal('recipe-detail')}
-function deleteRecipe(e){recipes=recipes.filter(t=>t.id!==e),localStorage.setItem('recipes',JSON.stringify(recipes)),renderAllRecipes(),renderRecipes(getFiltered()),showToast('Recette supprimée')}
-function deleteIngredient(e){ingredients=ingredients.filter(t=>t.id!==e),localStorage.setItem('ingredients',JSON.stringify(ingredients)),renderIngredients(),showToast('Ingrédient supprimé')}
-function updateStock(e,t){const r=ingredients.find(e=>e.id);r&&(r.stock=parseFloat(t)||0,localStorage.setItem('ingredients',JSON.stringify(ingredients)))}
-function addIngredientRow(){const e=document.getElementById('recipe-ings'),t=document.createElement('tr');t.innerHTML=`<td><input class="form-input" type="text" placeholder="Ingrédient"></td><td style="width:80px"><input type="number" style="width:70px;text-align:center" placeholder="Qty"></td>`,e.appendChild(t)}
-function toggleSidebar(){document.querySelector('.sidebar').classList.toggle('open'),document.querySelector('.sidebar-overlay').classList.toggle('visible')}
-function closeSidebar(){document.querySelector('.sidebar').classList.remove('open'),document.querySelector('.sidebar-overlay').classList.remove('visible')}
-function openModal(e){document.getElementById(e)?.classList.add('open')}
-function closeModal(e){document.getElementById(e)?.classList.remove('open')}
-function showRecipeMenu(e){}
-function showAddRecipeModal(){openModal('add-recipe')}
-function showAddIngredientModal(){openModal('add-ingredient')}
-function showUserMenu(){}
-function showSettings(){}
-function showPlanModal(){}
-function showAccessModal(){}
-function toggleLanguage(){}
-function searchRecipes(){}
-function showCalculatorWithRecipe(e){switchScreen('calculator'),document.getElementById('recipe-select').value=e,loadRecipeCalculator()}
-
-/* ──── Toast ──── */
-function showToast(e,t=''){const r=document.getElementById('toast');r.textContent=e;
-  r.className='toast show'+(t?' '+t:'');
-  clearTimeout(r._t);r._t=setTimeout(()=>r.classList.remove('show'),3200);
+    ${costSummary}
+    ${editZone}
+    ${ingSection}
+    ${stepsHtml}
+    <div style="display:flex;gap:10px;margin-top:8px;padding-top:20px;border-top:1px solid rgba(200,169,110,.06)">
+      <button class="btn btn-secondary" style="flex:0;padding:10px 16px;font-size:13px" onclick="goBack()">← Retour</button>
+      ${!isC?`<button class="btn btn-danger" style="flex:0;padding:10px 16px;font-size:13px" onclick="deleteRecipe('${r.id}')">🗑 Supprimer</button>`:''}
+    </div>`;
 }
 
-/* ──── Init ──── */
+/* ── Save single recipe field (name, description, sellingPrice) ── */
+function saveRecipeField(id, field, value){
+  const list=loadUserRecipes();
+  const idx=list.findIndex(r=>r.id===id);
+  if(idx<0) return;
+  list[idx][field]=value;
+  saveUserRecipes(list);
+  S.currentRecipe=list[idx];
+  // Update topbar title if name changed
+  if(field==='name') document.getElementById('topbar-title').textContent=value||'Recette';
+  // Refresh cost summary if price changed
+  if(field==='sellingPrice'){
+    const r=list[idx];
+    const fc=recalcFoodCost(r.ingredients)||r.foodCost;
+    const margin=(fc&&value)?(value/fc).toFixed(1):null;
+    const priceEl=document.getElementById('detail-price');
+    const marginEl=document.getElementById('detail-margin');
+    if(priceEl) priceEl.textContent=value?'€'+parseFloat(value).toFixed(2):'—';
+    if(marginEl) marginEl.textContent=margin?'×'+margin:'—';
+  }
+  showToast('Modification enregistrée ✓','success');
+  updateStats();renderRecipes(getFiltered());
+}
+
+/* ── Add ingredient to recipe ── */
+let _pickerRecipeId=null;
+let _pickerSelectedIng=null;
+
+function openRecipeIngModal(recipeId){
+  _pickerRecipeId=recipeId;
+  _pickerSelectedIng=null;
+  document.getElementById('ing-search-pick').value='';
+  document.getElementById('ing-qty-input').value='';
+  document.getElementById('cost-preview').innerHTML='Sélectionnez un ingrédient ci-dessus';
+  renderIngPicker('');
+  document.getElementById('recipe-ing-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('ing-search-pick').focus(),100);
+}
+function closeRecipeIngModal(){
+  document.getElementById('recipe-ing-modal').classList.remove('open');
+  _pickerRecipeId=null;_pickerSelectedIng=null;
+  resetMaisonBuilder('inline');
+  showSearchIngView();
+}
+
+/* ── Toggle entre les deux vues de la modale ── */
+function showSearchIngView(){
+  document.getElementById('picker-search-view').style.display='';
+  document.getElementById('picker-create-view').style.display='none';
+  document.getElementById('ing-picker-title').textContent='Ajouter un ingrédient';
+  // reset création
+  ['new-ing-name','new-ing-brand','new-ing-size','new-ing-price','new-ing-qty'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('new-ing-ppc-display').textContent='—';
+  document.getElementById('new-ing-cat').value='syrup';
+}
+function showCreateIngView(){
+  document.getElementById('picker-search-view').style.display='none';
+  document.getElementById('picker-create-view').style.display='';
+  document.getElementById('ing-picker-title').textContent='Nouvel ingrédient';
+  setTimeout(()=>document.getElementById('new-ing-name').focus(),80);
+}
+
+/* ── Calcul prix/cl dans la vue création ── */
+function updateNewIngPpc(){
+  const size=parseFloat(document.getElementById('new-ing-size').value);
+  const price=parseFloat(document.getElementById('new-ing-price').value);
+  const el=document.getElementById('new-ing-ppc-display');
+  el.textContent=(size>0&&price>0)?`€${(price/size).toFixed(3)}/cl`:'—';
+}
+
+/* ── Créer l'ingrédient ET l'ajouter à la recette ── */
+function createAndAddIngredient(){
+  const name=document.getElementById('new-ing-name').value.trim();
+  if(!name){showToast('Le nom est requis','error');return;}
+  const size=parseFloat(document.getElementById('new-ing-size').value)||0;
+  const price=parseFloat(document.getElementById('new-ing-price').value)||0;
+  const qty=parseFloat(document.getElementById('new-ing-qty').value)||0;
+  if(!size||!price){showToast('Contenance et prix requis','error');return;}
+  if(!qty){showToast('Entrez la quantité dans la recette','error');return;}
+
+  // 1. Créer et sauvegarder l'ingrédient dans la bibliothèque
+  const inlineSub=getMaisonSubRecipe('inline');
+  const newIng={
+    id:'u'+Date.now(),
+    name,
+    category:document.getElementById('new-ing-cat').value,
+    brand:document.getElementById('new-ing-brand').value.trim(),
+    bottleSizeCl:size,
+    bottlePrice:price,
+    supplier:'',
+    ...(inlineSub?{subRecipe:inlineSub,isMaison:true}:{}),
+  };
+  const ingList=loadUserIngredients();
+  ingList.push(newIng);
+  saveUserIngredients(ingList);
+
+  // 2. L'ajouter directement à la recette
+  const ppc=price/size;
+  const recipeList=loadUserRecipes();
+  const idx=recipeList.findIndex(r=>r.id===_pickerRecipeId);
+  if(idx<0){showToast('Recette introuvable','error');return;}
+  if(!recipeList[idx].ingredients) recipeList[idx].ingredients=[];
+  recipeList[idx].ingredients.push({
+    id:newIng.id,
+    name:newIng.name,
+    quantityCl:qty,
+    pricePerCl:Math.round(ppc*10000)/10000,
+    unit:'cl',
+  });
+  const newFC=recalcFoodCost(recipeList[idx].ingredients);
+  if(newFC!==null) recipeList[idx].foodCost=newFC;
+  saveUserRecipes(recipeList);
+  S.currentRecipe=recipeList[idx];
+
+  closeRecipeIngModal();
+  renderRecipeDetail(recipeList[idx]);
+  updateStats();renderRecipes(getFiltered());
+  showToast(`"${name}" créé et ajouté à la recette ✓`,'success');
+}
+
+function renderIngPicker(query){
+  const all=getAllIngredients();
+  const q=query.toLowerCase();
+  const filtered=q?all.filter(i=>i.name.toLowerCase().includes(q)||(i.brand||'').toLowerCase().includes(q)):all;
+  const list=document.getElementById('ing-pick-list');
+  if(!filtered.length){
+    list.innerHTML=`<div style="padding:20px;text-align:center;color:var(--text-3);font-size:13px">Aucun ingrédient trouvé — ajoutez-le d'abord dans la bibliothèque</div>`;
+    return;
+  }
+  list.innerHTML=filtered.map(ing=>{
+    const ppc=(ing.bottlePrice/ing.bottleSizeCl).toFixed(3);
+    const sel=_pickerSelectedIng&&_pickerSelectedIng.id===ing.id?' selected':'';
+    return `<div class="ing-pick-item${sel}" onclick="selectIngForRecipe('${ing.id}')">
+      <div>
+        <div class="ing-pick-name">${ing.name}</div>
+        <div class="ing-pick-brand">${ing.brand||''} · ${tCatIng(ing.category)}</div>
+      </div>
+      <div class="ing-pick-price">€${ppc}/cl</div>
+    </div>`;
+  }).join('');
+}
+
+function filterIngPicker(q){renderIngPicker(q)}
+
+function selectIngForRecipe(ingId){
+  _pickerSelectedIng=getAllIngredients().find(i=>i.id===ingId);
+  renderIngPicker(document.getElementById('ing-search-pick').value);
+  updateCostPreview();
+  document.getElementById('ing-qty-input').focus();
+}
+
+function updateCostPreview(){
+  const qty=parseFloat(document.getElementById('ing-qty-input').value);
+  const prev=document.getElementById('cost-preview');
+  if(!_pickerSelectedIng){prev.innerHTML='Sélectionnez un ingrédient ci-dessus';return;}
+  const ppc=_pickerSelectedIng.bottlePrice/_pickerSelectedIng.bottleSizeCl;
+  if(!qty||qty<=0){prev.innerHTML=`${_pickerSelectedIng.name} · <span>€${ppc.toFixed(3)}/cl</span> — entrez la quantité`;return;}
+  const cost=(ppc*qty).toFixed(2);
+  prev.innerHTML=`${qty}cl × €${ppc.toFixed(3)}/cl = <span>€${cost}</span>`;
+}
+
+function confirmAddRecipeIng(){
+  if(!_pickerSelectedIng){showToast('Sélectionnez un ingrédient','error');return;}
+  const qty=parseFloat(document.getElementById('ing-qty-input').value);
+  if(!qty||qty<=0){showToast('Entrez une quantité valide','error');return;}
+  const list=loadUserRecipes();
+  const idx=list.findIndex(r=>r.id===_pickerRecipeId);
+  if(idx<0){showToast('Recette introuvable','error');return;}
+  const ppc=_pickerSelectedIng.bottlePrice/_pickerSelectedIng.bottleSizeCl;
+  const newIng={
+    id:_pickerSelectedIng.id,
+    name:_pickerSelectedIng.name,
+    quantityCl:qty,
+    pricePerCl:Math.round(ppc*10000)/10000,
+    unit:'cl',
+  };
+  if(!list[idx].ingredients) list[idx].ingredients=[];
+  list[idx].ingredients.push(newIng);
+  // Auto-update food cost
+  const newFC=recalcFoodCost(list[idx].ingredients);
+  if(newFC!==null) list[idx].foodCost=newFC;
+  saveUserRecipes(list);
+  S.currentRecipe=list[idx];
+  closeRecipeIngModal();
+  renderRecipeDetail(list[idx]);
+  updateStats();renderRecipes(getFiltered());
+  showToast(`${_pickerSelectedIng.name} ajouté ✓`,'success');
+}
+
+/* ── Remove ingredient from recipe ── */
+function removeRecipeIngredient(recipeId, ingIdx){
+  const list=loadUserRecipes();
+  const idx=list.findIndex(r=>r.id===recipeId);
+  if(idx<0) return;
+  list[idx].ingredients.splice(ingIdx,1);
+  const newFC=recalcFoodCost(list[idx].ingredients);
+  list[idx].foodCost=newFC;
+  saveUserRecipes(list);
+  S.currentRecipe=list[idx];
+  renderRecipeDetail(list[idx]);
+  updateStats();renderRecipes(getFiltered());
+  showToast('Ingrédient retiré');
+}
+
+/* ─── Produit en croix ── */
+function recalcStock(changedIdx,recipeId){
+  const r=getAllRecipes().find(x=>x.id===recipeId);
+  if(!r||!r.ingredients) return;
+  const val=parseFloat(document.getElementById(`stock-${changedIdx}`).value);
+  const baseChanged=r.ingredients[changedIdx].quantityCl||0;
+  r.ingredients.forEach((_,i)=>{const a=document.getElementById(`adj-${i}`);if(a)a.classList.remove('changed')});
+  if(isNaN(val)||val<=0||baseChanged<=0){
+    r.ingredients.forEach((ing,i)=>{
+      const a=document.getElementById(`adj-${i}`);
+      if(a)a.textContent=ing.quantityCl>0?`${ing.quantityCl}cl`:`${ing.qty||0} ${ing.unit}`;
+    });
+    document.getElementById('portions-result').style.display='none';
+    return;
+  }
+  const ratio=val/baseChanged;
+  r.ingredients.forEach((ing,i)=>{
+    const a=document.getElementById(`adj-${i}`);
+    if(!a) return;
+    if(i===changedIdx){a.textContent=`${val}cl`;a.classList.add('changed');}
+    else if(ing.quantityCl>0){a.textContent=`${(ing.quantityCl*ratio).toFixed(1)}cl`;a.classList.add('changed');}
+    else if(ing.qty){a.textContent=`${Math.ceil(ing.qty*ratio)} ${ing.unit}`;a.classList.add('changed');}
+  });
+  const portionsEl=document.getElementById('portions-result');
+  portionsEl.style.display='flex';
+  document.getElementById('portions-main').textContent=
+    ratio>=1?`${ratio.toFixed(2)} portion${ratio>=2?'s':''} possible${ratio>=2?'s':''}`
+            :`Fraction de recette (${Math.round(ratio*100)}%)`;
+  document.getElementById('portions-sub').textContent=`Basé sur : ${r.ingredients[changedIdx].name}`;
+}
+function resetCalc(recipeId){
+  const r=getAllRecipes().find(x=>x.id===recipeId);
+  if(!r) return;
+  r.ingredients.forEach((ing,i)=>{
+    const inp=document.getElementById(`stock-${i}`);if(inp)inp.value='';
+    const a=document.getElementById(`adj-${i}`);
+    if(a){a.textContent=ing.quantityCl>0?`${ing.quantityCl}cl`:`${ing.qty||0} ${ing.unit}`;a.classList.remove('changed');}
+  });
+  document.getElementById('portions-result').style.display='none';
+}
+
+/* ─── Ingredients screen ── */
+const CAT_COLORS={spirits:'cat-spirits',liqueur:'cat-liqueur',juice:'cat-juice',syrup:'cat-syrup',mixer:'cat-mixer',fresh:'cat-fresh',other:'cat-other'};
+function filterIngByCategory(el,cat){
+  document.querySelectorAll('#ing-category-filters .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');S.filterIngCat=cat;renderIngredients();
+}
+function renderIngredients(){
+  let list=getAllIngredients();
+  if(S.filterIngCat!=='all')list=list.filter(i=>i.category===S.filterIngCat);
+  const grid=document.getElementById('ing-grid');
+  if(!list.length){
+    grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🧪</div><h3>Aucun ingrédient ici</h3><p>Ajoutez votre premier ingrédient avec le bouton ci-dessus.</p></div>`;
+    return;
+  }
+  grid.innerHTML=list.map(ing=>{
+    const ppc=(ing.bottlePrice/ing.bottleSizeCl).toFixed(3);
+    const isUser=!DEFAULT_INGREDIENTS.find(d=>d.id===ing.id);
+    const maisonChips=ing.isMaison&&ing.subRecipe?.components?.length
+      ? `<div class="ing-sub-recipe-chips">${ing.subRecipe.components.map(c=>`<span class="ing-sub-chip">${c.name} · ${c.qty} ${c.unit}</span>`).join('')}</div>`
+      : '';
+    return `<div class="ing-card" onclick="editIngredient('${ing.id}')">
+      <div class="ing-card-header">
+        <span class="ing-cat-dot ${CAT_COLORS[ing.category]||'cat-other'}"></span>
+        <div style="flex:1;min-width:0">
+          <div class="ing-card-name">${ing.name}${ing.isMaison?' <span class="maison-badge">🏠 Maison</span>':''}</div>
+          <div class="ing-card-brand">${ing.brand||''} · ${tCatIng(ing.category)}</div>
+        </div>
+        ${isUser?`<button onclick="event.stopPropagation();deleteIngredient('${ing.id}')" style="color:var(--text-3);padding:4px;border-radius:4px;font-size:12px" title="Supprimer">✕</button>`:''}
+      </div>
+      <div class="ing-card-body">
+        <div><div class="ing-price-big">€${ppc}</div><div class="ing-price-unit">par cl</div></div>
+        <div style="text-align:right"><div class="ing-bottle-size">${ing.bottleSizeCl}cl · €${ing.bottlePrice.toFixed(2)}</div><div class="ing-bottle-label">${ing.supplier||'—'}</div></div>
+      </div>
+      ${maisonChips}
+    </div>`;
+  }).join('');
+}
+
+/* ─── Ingredient CRUD ── */
+function openAddIngModal(){
+  S.editingIngId=null;
+  document.getElementById('ing-modal-title').textContent='Nouvel ingrédient';
+  ['ing-name-input','ing-brand-input','ing-supplier-input'].forEach(id=>document.getElementById(id).value='');
+  ['ing-size-input','ing-bottle-price-input'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ing-price-per-cl-display').value='';
+  document.getElementById('ing-category-input').value='spirits';
+  document.getElementById('ing-modal-actions').innerHTML=
+    `<button class="btn btn-secondary" onclick="closeAddIngModal()">Annuler</button>
+     <button class="btn btn-primary" onclick="saveIngredient()">Enregistrer</button>`;
+  document.getElementById('add-ing-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('ing-name-input').focus(),100);
+}
+function editIngredient(id){
+  const ing=getAllIngredients().find(i=>i.id===id);
+  if(!ing) return;
+  S.editingIngId=id;
+  document.getElementById('ing-modal-title').textContent='Modifier l\'ingrédient';
+  document.getElementById('ing-name-input').value=ing.name;
+  document.getElementById('ing-brand-input').value=ing.brand||'';
+  document.getElementById('ing-size-input').value=ing.bottleSizeCl;
+  document.getElementById('ing-bottle-price-input').value=ing.bottlePrice;
+  document.getElementById('ing-price-per-cl-display').value=`€${(ing.bottlePrice/ing.bottleSizeCl).toFixed(3)} / cl`;
+  document.getElementById('ing-supplier-input').value=ing.supplier||'';
+  document.getElementById('ing-category-input').value=ing.category;
+  const isDefault=!!DEFAULT_INGREDIENTS.find(d=>d.id===id);
+  document.getElementById('ing-modal-actions').innerHTML=
+    `<button class="btn btn-secondary" onclick="closeAddIngModal()">Annuler</button>
+     ${!isDefault?`<button class="btn btn-danger" onclick="deleteIngredient('${id}');closeAddIngModal()">Supprimer</button>`:''}
+     <button class="btn btn-primary" onclick="saveIngredient()">${isDefault?'Dupliquer & modifier':'Enregistrer'}</button>`;
+  document.getElementById('add-ing-modal').classList.add('open');
+}
+function closeAddIngModal(){document.getElementById('add-ing-modal').classList.remove('open');S.editingIngId=null}
+function computePricePerCl(){
+  const size=parseFloat(document.getElementById('ing-size-input').value);
+  const price=parseFloat(document.getElementById('ing-bottle-price-input').value);
+  document.getElementById('ing-price-per-cl-display').value=
+    (size>0&&price>0)?`€${(price/size).toFixed(3)} / cl`:'';
+}
+
+/* ════════════════════════════════════
+   SOUS-RECETTE (ingrédient maison)
+════════════════════════════════════ */
+// context = 'standalone' (modale bibliothèque) | 'inline' (modale recette)
+const _maison = { standalone:[], inline:[] };
+const _maisonActive = { standalone:false, inline:false };
+
+function toggleMaisonBuilder(ctx){
+  _maisonActive[ctx] = !_maisonActive[ctx];
+  const builderId = ctx==='standalone' ? 'ing-maison-builder' : 'new-ing-maison-builder';
+  const toggleId  = ctx==='standalone' ? 'ing-maison-toggle'  : 'new-ing-maison-toggle';
+  const contentId = ctx==='standalone' ? 'ing-maison-content' : 'new-ing-maison-content';
+  document.getElementById(builderId).style.display = _maisonActive[ctx] ? '' : 'none';
+  document.getElementById(toggleId).classList.toggle('active', _maisonActive[ctx]);
+  if(_maisonActive[ctx]){
+    if(!_maison[ctx].length) _maison[ctx]=[{name:'',qty:1,unit:'part',costPerUnit:0}];
+    renderMaisonBuilder(ctx);
+  }
+}
+
+function renderMaisonBuilder(ctx){
+  const contentId = ctx==='standalone' ? 'ing-maison-content' : 'new-ing-maison-content';
+  const yieldId   = ctx==='standalone' ? 'ing-size-input'     : 'new-ing-size';
+  const priceId   = ctx==='standalone' ? 'ing-bottle-price-input' : 'new-ing-price';
+  const comps = _maison[ctx];
+  const total = comps.reduce((s,c)=>s+(parseFloat(c.qty)||0)*(parseFloat(c.costPerUnit)||0),0);
+
+  const rows = comps.map((c,i)=>`
+    <div class="comp-row">
+      <input class="comp-input" type="text" placeholder="Ingrédient" value="${c.name}"
+        oninput="_maison['${ctx}'][${i}].name=this.value">
+      <input class="comp-input" type="number" placeholder="Qté" value="${c.qty||''}" min="0" step="0.1"
+        oninput="_maison['${ctx}'][${i}].qty=parseFloat(this.value)||0;syncMaisonCost('${ctx}')">
+      <input class="comp-input" type="text" placeholder="unité" value="${c.unit||''}"
+        oninput="_maison['${ctx}'][${i}].unit=this.value">
+      <input class="comp-input" type="number" placeholder="€/u" value="${c.costPerUnit||''}" min="0" step="0.01"
+        oninput="_maison['${ctx}'][${i}].costPerUnit=parseFloat(this.value)||0;syncMaisonCost('${ctx}')">
+      <button class="comp-remove" onclick="removeMaisonComp('${ctx}',${i})" title="Retirer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>`).join('');
+
+  document.getElementById(contentId).innerHTML=`
+    <div class="sub-recipe-builder">
+      <div class="sub-recipe-yield">
+        <span class="sub-recipe-yield-label">Cette recette produit</span>
+        <input class="sub-recipe-yield-input" type="number" min="1" step="1"
+          id="${ctx}-yield-input"
+          value="${document.getElementById(yieldId)?document.getElementById(yieldId).value:''}"
+          placeholder="100"
+          oninput="syncMaisonYield('${ctx}',this.value)">
+        <span class="sub-recipe-yield-unit">cl</span>
+      </div>
+      <div class="comp-header">
+        <span>Ingrédient</span><span>Qté</span><span>Unité</span><span>€/unité</span><span></span>
+      </div>
+      ${rows}
+      <button class="add-comp-btn" onclick="addMaisonComp('${ctx}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Ajouter un composant
+      </button>
+      <div class="sub-total-row">
+        <span class="sub-total-label">Coût total de fabrication</span>
+        <span class="sub-total-value" id="${ctx}-sub-total">€${total.toFixed(2)}</span>
+      </div>
+    </div>`;
+}
+
+function addMaisonComp(ctx){
+  _maison[ctx].push({name:'',qty:1,unit:'part',costPerUnit:0});
+  renderMaisonBuilder(ctx);
+  // focus last name input
+  const rows=document.querySelectorAll(`#${ctx==='standalone'?'ing-maison-content':'new-ing-maison-content'} .comp-row`);
+  if(rows.length) rows[rows.length-1].querySelector('input').focus();
+}
+function removeMaisonComp(ctx,i){
+  _maison[ctx].splice(i,1);
+  renderMaisonBuilder(ctx);
+  syncMaisonCost(ctx);
+}
+function syncMaisonCost(ctx){
+  const total=_maison[ctx].reduce((s,c)=>s+(parseFloat(c.qty)||0)*(parseFloat(c.costPerUnit)||0),0);
+  const el=document.getElementById(`${ctx}-sub-total`);
+  if(el) el.textContent=`€${total.toFixed(2)}`;
+  // auto-fill prix bouteille
+  const priceId = ctx==='standalone' ? 'ing-bottle-price-input' : 'new-ing-price';
+  const el2=document.getElementById(priceId);
+  if(el2){ el2.value=total.toFixed(2); }
+  if(ctx==='standalone') computePricePerCl();
+  else updateNewIngPpc();
+}
+function syncMaisonYield(ctx,val){
+  const yieldId = ctx==='standalone' ? 'ing-size-input' : 'new-ing-size';
+  const el=document.getElementById(yieldId);
+  if(el){ el.value=val; }
+  if(ctx==='standalone') computePricePerCl();
+  else updateNewIngPpc();
+}
+function getMaisonSubRecipe(ctx){
+  if(!_maisonActive[ctx]) return null;
+  return { components: _maison[ctx].filter(c=>c.name.trim()) };
+}
+function resetMaisonBuilder(ctx){
+  _maison[ctx]=[];_maisonActive[ctx]=false;
+  const builderId = ctx==='standalone' ? 'ing-maison-builder' : 'new-ing-maison-builder';
+  const toggleId  = ctx==='standalone' ? 'ing-maison-toggle'  : 'new-ing-maison-toggle';
+  document.getElementById(builderId).style.display='none';
+  document.getElementById(toggleId).classList.remove('active');
+}
+
+function saveIngredient(){
+  const name=document.getElementById('ing-name-input').value.trim();
+  if(!name){showToast('Le nom est requis','error');return}
+  const size=parseFloat(document.getElementById('ing-size-input').value)||0;
+  const price=parseFloat(document.getElementById('ing-bottle-price-input').value)||0;
+  const subRecipe=getMaisonSubRecipe('standalone');
+  const obj={name,category:document.getElementById('ing-category-input').value,
+    brand:document.getElementById('ing-brand-input').value.trim(),
+    bottleSizeCl:size,bottlePrice:price,
+    supplier:document.getElementById('ing-supplier-input').value.trim(),
+    ...(subRecipe?{subRecipe,isMaison:true}:{})};
+  const list=loadUserIngredients();
+  const isDefault=S.editingIngId?!!DEFAULT_INGREDIENTS.find(d=>d.id===S.editingIngId):false;
+  if(S.editingIngId&&!isDefault){
+    const idx=list.findIndex(i=>i.id===S.editingIngId);
+    if(idx>=0){list[idx]={...list[idx],...obj};saveUserIngredients(list);showToast('Ingrédient mis à jour ✓','success')}
+  } else {
+    list.push({id:'u'+Date.now(),...obj});saveUserIngredients(list);
+    showToast(isDefault?'Ingrédient dupliqué ✓':subRecipe?`"${name}" maison créé ✓`:'Ingrédient ajouté ✓','success');
+  }
+  resetMaisonBuilder('standalone');
+  closeAddIngModal();updateStats();renderIngredients();
+}
+function deleteIngredient(id){
+  saveUserIngredients(loadUserIngredients().filter(i=>i.id!==id));
+  updateStats();renderIngredients();showToast('Ingrédient supprimé');
+}
+
+/* ─── Recipe CRUD ── */
+function openAddModal(){
+  if(S.plan==='visitor'&&loadUserRecipes().length>=QUOTA.visitor){
+    showToast('Limite atteinte — passez en Beta','error');showAccessModal();return;
+  }
+  document.getElementById('add-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('recipe-name-input').focus(),100);
+}
+function closeAddModal(){
+  document.getElementById('add-modal').classList.remove('open');
+  ['recipe-name-input','recipe-desc-input','recipe-cost-input','recipe-price-input'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('recipe-category-input').value='signature';
+  S.selectedEmoji='🍹';
+  document.querySelectorAll('.emoji-opt').forEach(e=>e.classList.remove('selected'));
+  document.querySelector('.emoji-opt[data-emoji="🍹"]').classList.add('selected');
+}
+function selectEmoji(el){
+  document.querySelectorAll('.emoji-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');S.selectedEmoji=el.dataset.emoji;
+}
+function saveRecipe(){
+  const name=document.getElementById('recipe-name-input').value.trim();
+  if(!name){showToast('Le nom est requis','error');return}
+  const userR=loadUserRecipes();
+  userR.push({id:'u'+Date.now(),name,emoji:S.selectedEmoji,
+    category:document.getElementById('recipe-category-input').value,
+    glassType:document.getElementById('recipe-glass-input').value,
+    description:document.getElementById('recipe-desc-input').value.trim(),
+    foodCost:parseFloat(document.getElementById('recipe-cost-input').value)||null,
+    sellingPrice:parseFloat(document.getElementById('recipe-price-input').value)||null,
+    tags:[],ingredients:[],steps:[],createdAt:Date.now()});
+  saveUserRecipes(userR);closeAddModal();updateStats();renderRecipes(getFiltered());
+  showToast('Recette créée ✓ — cliquez dessus pour la détailler','success');
+}
+function deleteRecipe(id){
+  if(!confirm('Supprimer cette recette ?')) return;
+  saveUserRecipes(loadUserRecipes().filter(r=>r.id!==id));
+  goBack();updateStats();showToast('Recette supprimée');
+}
+
+/* ─── Access code ── */
+function showAccessModal(){document.getElementById('access-modal').classList.add('open');setTimeout(()=>document.getElementById('access-code-input').focus(),100)}
+function closeAccessModal(){document.getElementById('access-modal').classList.remove('open');document.getElementById('access-code-input').value=''}
+function validateAccessCode(){
+  const code=document.getElementById('access-code-input').value.trim().toUpperCase();
+  const plan=VALID_CODES[code];
+  if(plan){
+    S.plan=plan;localStorage.setItem('mixtura_plan',plan);
+    closeAccessModal();updatePlanBadge();updateStats();
+    showToast(plan==='vip'?'Accès VIP activé 💎':'Accès Beta activé ⭐ Recettes illimitées !','success');
+  } else {
+    showToast('Code invalide ou expiré','error');
+    const inp=document.getElementById('access-code-input');
+    inp.style.borderColor='var(--error)';setTimeout(()=>inp.style.borderColor='',1500);
+  }
+}
+
+/* ─── Sidebar ── */
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('visible')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('visible')}
+
+/* ─── Modals ── */
+function closeModalOnOverlay(e){if(e.target===e.currentTarget)e.currentTarget.classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'))});
+
+/* ─── Toast ── */
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');t.textContent=msg;
+  t.className='toast show'+(type?' '+type:'');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+/* ─── Init ── */
 updatePlanBadge();updateStats();renderRecipes(getFiltered());
 </script>
 </body>
