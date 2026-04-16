@@ -335,6 +335,32 @@ input,select,textarea{font:inherit;color:inherit}
 .cost-preview{text-align:center;font-size:12px;color:var(--text-3);margin-top:6px;min-height:18px}
 .cost-preview span{color:var(--gold);font-weight:700}
 
+/* ── Autocomplete (nom ingrédient) ── */
+.autocomplete-list{position:absolute;top:100%;left:0;right:0;z-index:20;
+  background:var(--navy-600);border:1px solid rgba(200,169,110,.2);
+  border-radius:var(--radius-sm);margin-top:4px;max-height:220px;overflow-y:auto;
+  box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.autocomplete-item{padding:9px 12px;cursor:pointer;border-top:1px solid rgba(200,169,110,.05);
+  transition:background var(--tr);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.autocomplete-item:first-child{border-top:none}
+.autocomplete-item:hover,.autocomplete-item.active{background:rgba(200,169,110,.1)}
+.autocomplete-item-name{font-size:13px;color:var(--text-1);font-weight:600}
+.autocomplete-item-meta{font-size:11px;color:var(--text-3);margin-top:2px}
+
+/* ── Form sections & ingredient usage table ── */
+.form-section-title{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--gold-dim);margin:18px 0 10px}
+.ing-usage-table{background:rgba(200,169,110,.04);border:1px solid rgba(200,169,110,.1);
+  border-radius:var(--radius-sm);padding:2px 0;max-height:200px;overflow-y:auto}
+.ing-usage-row{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-top:1px solid rgba(200,169,110,.05);gap:10px;
+  cursor:pointer;transition:background var(--tr)}
+.ing-usage-row:first-child{border-top:none}
+.ing-usage-row:hover{background:rgba(200,169,110,.06)}
+.ing-usage-name{font-size:13px;font-weight:600;color:var(--text-1);flex:1}
+.ing-usage-qty{font-size:12px;color:var(--gold);font-weight:700;white-space:nowrap}
+.ing-usage-empty{text-align:center;font-size:12px;color:var(--text-3);padding:16px}
+
 /* ── Sub-recipe builder ── */
 .maison-toggle{display:flex;align-items:center;gap:10px;padding:10px 14px;
   background:var(--navy-700);border:1px solid rgba(200,169,110,.12);
@@ -795,20 +821,25 @@ input,select,textarea{font:inherit;color:inherit}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <div class="form-group">
+    <div class="form-group" style="position:relative">
       <label class="form-label">Nom *</label>
-      <input class="form-input" type="text" id="ing-name-input" placeholder="ex: Rhum blanc Havana 3 ans" maxlength="60">
+      <input class="form-input" type="text" id="ing-name-input"
+        placeholder="ex: Rhum blanc Havana 3 ans" maxlength="60" autocomplete="off"
+        oninput="onIngNameInput(this.value)"
+        onfocus="onIngNameInput(this.value)"
+        onblur="setTimeout(hideIngSuggestions,200)">
+      <div class="autocomplete-list" id="ing-name-suggestions" style="display:none"></div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Catégorie</label>
-        <select class="form-select" id="ing-category-input">
+        <label class="form-label">Type / Catégorie</label>
+        <select class="form-select" id="ing-category-input" onchange="onIngCategoryChange()">
           <option value="spirits">Spiritueux</option>
           <option value="liqueur">Liqueur</option>
           <option value="juice">Jus</option>
           <option value="syrup">Sirop</option>
           <option value="mixer">Mixer / Eau</option>
-          <option value="fresh">Frais</option>
+          <option value="fresh">Frais (fruits/herbes)</option>
           <option value="other">Autre</option>
         </select>
       </div>
@@ -817,23 +848,52 @@ input,select,textarea{font:inherit;color:inherit}
         <input class="form-input" type="text" id="ing-brand-input" placeholder="ex: Havana Club">
       </div>
     </div>
+
+    <div class="form-section-title">Prix à l'achat</div>
     <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Contenance (cl)</label>
-        <input class="form-input" type="number" id="ing-size-input" placeholder="70" min="1" step="1" oninput="computePricePerCl()">
+      <div class="form-group" style="flex:1.2">
+        <label class="form-label">Quantité</label>
+        <input class="form-input" type="number" id="ing-size-input" placeholder="70"
+          min="0" step="any" oninput="computePricePerUnit()">
       </div>
-      <div class="form-group">
-        <label class="form-label">Prix bouteille (€)</label>
-        <input class="form-input" type="number" id="ing-bottle-price-input" placeholder="14.90" min="0" step="0.1" oninput="computePricePerCl()">
+      <div class="form-group" style="flex:1">
+        <label class="form-label">Unité</label>
+        <select class="form-select" id="ing-unit-input" onchange="onIngUnitChange()">
+          <option value="cl">cl</option>
+          <option value="ml">ml</option>
+          <option value="L">L</option>
+          <option value="g">g</option>
+          <option value="kg">kg</option>
+          <option value="pcs">pcs (pièces)</option>
+          <option value="__custom__">Autre…</option>
+        </select>
       </div>
     </div>
+    <div class="form-group" id="ing-custom-unit-wrap" style="display:none">
+      <label class="form-label">Unité personnalisée</label>
+      <input class="form-input" type="text" id="ing-custom-unit-input"
+        placeholder="ex: feuilles, tranches, sachets…" maxlength="20"
+        oninput="computePricePerUnit()">
+    </div>
     <div class="form-group">
-      <label class="form-label">Prix au cl (calculé auto)</label>
-      <input class="form-input" type="text" id="ing-price-per-cl-display" placeholder="—" readonly style="color:var(--gold);font-weight:700">
+      <label class="form-label">Prix total payé (€)</label>
+      <input class="form-input" type="number" id="ing-bottle-price-input"
+        placeholder="14.90" min="0" step="0.01" oninput="computePricePerUnit()">
+    </div>
+    <div class="form-group">
+      <label class="form-label" id="ing-price-per-unit-label">Prix au cl (calculé auto)</label>
+      <input class="form-input" type="text" id="ing-price-per-cl-display"
+        placeholder="—" readonly style="color:var(--gold);font-weight:700">
     </div>
     <div class="form-group">
       <label class="form-label">Fournisseur</label>
       <input class="form-input" type="text" id="ing-supplier-input" placeholder="ex: Metro Cash & Carry">
+    </div>
+
+    <!-- Table des recettes utilisant cet ingrédient (visible uniquement en édition) -->
+    <div id="ing-usage-section" style="display:none">
+      <div class="form-section-title">Utilisé dans ces recettes</div>
+      <div class="ing-usage-table" id="ing-usage-table"></div>
     </div>
 
     <!-- Toggle recette maison -->
@@ -1550,7 +1610,13 @@ function createAndAddIngredient(){
   const size=parseFloat(document.getElementById('new-ing-size').value)||0;
   const price=parseFloat(document.getElementById('new-ing-price').value)||0;
   const qty=parseFloat(document.getElementById('new-ing-qty').value)||0;
-  if(!size||!price){showToast('Contenance et prix requis','error');return;}
+  const isMaison=_maisonActive['inline'];
+  if(!size){
+    showToast(isMaison?'Renseignez "Cette recette produit" (cl)':'Contenance requise (cl)','error');return;
+  }
+  if(!price){
+    showToast(isMaison?'Remplissez €/unité pour chaque composant':'Prix d\'achat requis','error');return;
+  }
   if(!qty){showToast('Entrez la quantité dans la recette','error');return;}
 
   // 1. Créer et sauvegarder l'ingrédient dans la bibliothèque
@@ -1760,10 +1826,15 @@ function renderIngredients(){
 function openAddIngModal(){
   S.editingIngId=null;
   document.getElementById('ing-modal-title').textContent='Nouvel ingrédient';
-  ['ing-name-input','ing-brand-input','ing-supplier-input'].forEach(id=>document.getElementById(id).value='');
+  ['ing-name-input','ing-brand-input','ing-supplier-input','ing-custom-unit-input'].forEach(id=>document.getElementById(id).value='');
   ['ing-size-input','ing-bottle-price-input'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ing-price-per-cl-display').value='';
   document.getElementById('ing-category-input').value='spirits';
+  document.getElementById('ing-unit-input').value='cl';
+  document.getElementById('ing-custom-unit-wrap').style.display='none';
+  document.getElementById('ing-usage-section').style.display='none';
+  hideIngSuggestions();
+  computePricePerUnit();
   document.getElementById('ing-modal-actions').innerHTML=
     `<button class="btn btn-secondary" onclick="closeAddIngModal()">Annuler</button>
      <button class="btn btn-primary" onclick="saveIngredient()">Enregistrer</button>`;
@@ -1775,13 +1846,29 @@ function editIngredient(id){
   if(!ing) return;
   S.editingIngId=id;
   document.getElementById('ing-modal-title').textContent='Modifier l\'ingrédient';
-  document.getElementById('ing-name-input').value=ing.name;
+  document.getElementById('ing-name-input').value=ing.name||'';
   document.getElementById('ing-brand-input').value=ing.brand||'';
-  document.getElementById('ing-size-input').value=ing.bottleSizeCl;
-  document.getElementById('ing-bottle-price-input').value=ing.bottlePrice;
-  document.getElementById('ing-price-per-cl-display').value=`€${(ing.bottlePrice/ing.bottleSizeCl).toFixed(3)} / cl`;
+  // Unit + quantity (rétrocompatible avec ancien format bottleSizeCl)
+  const knownUnits=['ml','cl','L','g','kg','pcs'];
+  const unit = ing.unit || 'cl';
+  const qty  = ing.quantity != null ? ing.quantity : ing.bottleSizeCl;
+  document.getElementById('ing-size-input').value = (qty!=null && qty!==0) ? qty : '';
+  if(knownUnits.includes(unit)){
+    document.getElementById('ing-unit-input').value=unit;
+    document.getElementById('ing-custom-unit-input').value='';
+  } else {
+    document.getElementById('ing-unit-input').value='__custom__';
+    document.getElementById('ing-custom-unit-input').value=unit;
+  }
+  onIngUnitChange();
+  document.getElementById('ing-bottle-price-input').value = ing.bottlePrice ?? '';
+  computePricePerUnit();
   document.getElementById('ing-supplier-input').value=ing.supplier||'';
-  document.getElementById('ing-category-input').value=ing.category;
+  document.getElementById('ing-category-input').value=ing.category||'spirits';
+  // Table des recettes utilisant l'ingrédient
+  document.getElementById('ing-usage-section').style.display='';
+  renderIngUsageInRecipes(id, ing.name);
+  hideIngSuggestions();
   const isDefault=!!DEFAULT_INGREDIENTS.find(d=>d.id===id);
   document.getElementById('ing-modal-actions').innerHTML=
     `<button class="btn btn-secondary" onclick="closeAddIngModal()">Annuler</button>
@@ -1789,12 +1876,123 @@ function editIngredient(id){
      <button class="btn btn-primary" onclick="saveIngredient()">${isDefault?'Dupliquer & modifier':'Enregistrer'}</button>`;
   document.getElementById('add-ing-modal').classList.add('open');
 }
-function closeAddIngModal(){document.getElementById('add-ing-modal').classList.remove('open');S.editingIngId=null}
-function computePricePerCl(){
+function closeAddIngModal(){document.getElementById('add-ing-modal').classList.remove('open');S.editingIngId=null;hideIngSuggestions()}
+
+/* ─── Unités & prix par unité ── */
+function getCurrentIngUnit(){
+  const sel=document.getElementById('ing-unit-input').value;
+  if(sel==='__custom__') return document.getElementById('ing-custom-unit-input').value.trim()||'u';
+  return sel;
+}
+function onIngUnitChange(){
+  const sel=document.getElementById('ing-unit-input').value;
+  document.getElementById('ing-custom-unit-wrap').style.display = sel==='__custom__' ? '' : 'none';
+  computePricePerUnit();
+}
+function onIngCategoryChange(){/* reserved: suggest default unit per category */}
+function computePricePerUnit(){
   const size=parseFloat(document.getElementById('ing-size-input').value);
   const price=parseFloat(document.getElementById('ing-bottle-price-input').value);
+  const unit=getCurrentIngUnit();
+  document.getElementById('ing-price-per-unit-label').textContent=`Prix au ${unit} (calculé auto)`;
   document.getElementById('ing-price-per-cl-display').value=
-    (size>0&&price>0)?`€${(price/size).toFixed(3)} / cl`:'';
+    (size>0&&price>0)?`€${(price/size).toFixed(3)} / ${unit}`:'';
+}
+// Alias rétrocompatible
+function computePricePerCl(){computePricePerUnit()}
+
+/* ─── Conversion vers cl pour les liquides ── */
+function toClFromQuantity(qty,unit){
+  if(!qty) return 0;
+  if(unit==='cl') return qty;
+  if(unit==='ml') return qty/10;
+  if(unit==='L')  return qty*100;
+  return 0;
+}
+
+/* ─── Autocomplete sur le nom (suggère les ingrédients existants) ── */
+function onIngNameInput(q){
+  const wrap=document.getElementById('ing-name-suggestions');
+  q=(q||'').trim().toLowerCase();
+  if(q.length<2){wrap.style.display='none';return}
+  const matches=getAllIngredients()
+    .filter(i=>{
+      if(S.editingIngId&&i.id===S.editingIngId) return false;
+      return (i.name||'').toLowerCase().includes(q)||(i.brand||'').toLowerCase().includes(q);
+    })
+    .slice(0,8);
+  if(!matches.length){wrap.style.display='none';return}
+  wrap.innerHTML=matches.map(i=>{
+    const qty = i.quantity != null ? i.quantity : i.bottleSizeCl;
+    const unit = i.unit || (i.bottleSizeCl ? 'cl' : '');
+    const metaBits=[i.brand, (qty&&unit)?`${qty} ${unit}`:'', i.bottlePrice?`€${Number(i.bottlePrice).toFixed(2)}`:''].filter(Boolean);
+    const meta = metaBits.join(' · ');
+    return `<div class="autocomplete-item" onmousedown="pickIngSuggestion('${i.id}')">
+      <div>
+        <div class="autocomplete-item-name">${escapeHtml(i.name)}</div>
+        ${meta?`<div class="autocomplete-item-meta">${escapeHtml(meta)}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  wrap.style.display='';
+}
+function pickIngSuggestion(id){
+  const ing=getAllIngredients().find(i=>i.id===id);
+  if(!ing) return;
+  document.getElementById('ing-name-input').value=ing.name||'';
+  document.getElementById('ing-brand-input').value=ing.brand||'';
+  document.getElementById('ing-category-input').value=ing.category||'spirits';
+  const knownUnits=['ml','cl','L','g','kg','pcs'];
+  const unit=ing.unit||'cl';
+  const qty=ing.quantity!=null?ing.quantity:ing.bottleSizeCl;
+  if(qty!=null) document.getElementById('ing-size-input').value=qty;
+  if(knownUnits.includes(unit)){
+    document.getElementById('ing-unit-input').value=unit;
+    document.getElementById('ing-custom-unit-input').value='';
+  } else {
+    document.getElementById('ing-unit-input').value='__custom__';
+    document.getElementById('ing-custom-unit-input').value=unit;
+  }
+  onIngUnitChange();
+  if(ing.bottlePrice!=null) document.getElementById('ing-bottle-price-input').value=ing.bottlePrice;
+  if(ing.supplier) document.getElementById('ing-supplier-input').value=ing.supplier;
+  hideIngSuggestions();
+  computePricePerUnit();
+}
+function hideIngSuggestions(){const el=document.getElementById('ing-name-suggestions');if(el)el.style.display='none'}
+
+/* ─── Table des recettes utilisant l'ingrédient ── */
+function renderIngUsageInRecipes(ingId,ingName){
+  const box=document.getElementById('ing-usage-table');
+  const all=getAllRecipes();
+  const matches=[];
+  const normName=(ingName||'').trim().toLowerCase();
+  all.forEach(r=>{
+    (r.ingredients||[]).forEach(li=>{
+      const sameId=li.id===ingId;
+      const sameName=normName&&(li.name||'').trim().toLowerCase()===normName;
+      if(sameId||sameName){
+        const qty = li.qty != null ? li.qty : li.quantityCl;
+        const unit = li.unit || 'cl';
+        matches.push({recipe:r, qty, unit});
+      }
+    });
+  });
+  if(!matches.length){
+    box.innerHTML='<div class="ing-usage-empty">Pas encore utilisé dans une recette</div>';
+    return;
+  }
+  box.innerHTML=matches.map(m=>
+    `<div class="ing-usage-row" onclick="closeAddIngModal();openRecipe('${m.recipe.id}')">
+      <div class="ing-usage-name">${escapeHtml(m.recipe.name)}</div>
+      <div class="ing-usage-qty">${m.qty} ${escapeHtml(m.unit)}</div>
+    </div>`
+  ).join('');
+}
+
+/* ─── Échappement HTML basique ── */
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 
 /* ════════════════════════════════════
