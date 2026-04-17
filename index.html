@@ -436,6 +436,55 @@ input,select,textarea{font:inherit;color:inherit}
   border-radius:20px;color:var(--text-3);border:1px solid rgba(255,255,255,.06)}
 
 /* ══════════════════════════════════════
+   SETTINGS SCREEN
+══════════════════════════════════════ */
+.settings-wrap{max-width:720px;margin:0 auto;padding:8px 0 40px 0}
+.settings-card{background:var(--navy-800);border:1px solid rgba(200,169,110,.08);
+  border-radius:var(--radius);padding:20px 22px;margin-bottom:16px}
+.settings-card-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;
+  color:var(--text-1);margin:0 0 4px 0;letter-spacing:.02em}
+.settings-card-sub{font-size:12px;color:var(--text-3);margin:0 0 16px 0}
+.profile-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.profile-row{display:flex;align-items:center;gap:12px;padding:12px 14px;
+  background:var(--navy-700);border:1px solid rgba(200,169,110,.08);
+  border-radius:10px;cursor:pointer;transition:all var(--tr)}
+.profile-row:hover{border-color:rgba(200,169,110,.2)}
+.profile-row.active{border-color:var(--gold);background:rgba(200,169,110,.06)}
+.profile-avatar{width:36px;height:36px;border-radius:50%;background:var(--gold);
+  color:var(--navy-900);display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:14px;flex-shrink:0}
+.profile-info{flex:1;min-width:0}
+.profile-name{font-size:14px;font-weight:700;color:var(--text-1);margin:0}
+.profile-meta{font-size:11px;color:var(--text-3);margin-top:2px}
+.profile-current-chip{font-size:10px;padding:2px 8px;border-radius:20px;
+  background:rgba(200,169,110,.12);color:var(--gold);border:1px solid rgba(200,169,110,.2);
+  font-weight:700;letter-spacing:.05em}
+.profile-del-btn{background:none;border:none;color:var(--text-3);cursor:pointer;padding:4px;
+  border-radius:6px;opacity:0;transition:all var(--tr)}
+.profile-row:hover .profile-del-btn{opacity:1}
+.profile-del-btn:hover{color:var(--error);background:rgba(220,50,50,.08)}
+.settings-row{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-top:1px solid rgba(255,255,255,.04);gap:12px}
+.settings-row:first-child{border-top:none}
+.settings-row-label{font-size:13px;color:var(--text-2);flex:1}
+.settings-row-value{font-size:12px;color:var(--text-3)}
+.settings-btn{padding:8px 14px;background:rgba(200,169,110,.1);
+  border:1px solid rgba(200,169,110,.25);border-radius:8px;color:var(--gold);
+  cursor:pointer;font-size:12px;font-weight:600;transition:all var(--tr)}
+.settings-btn:hover{background:rgba(200,169,110,.18);border-color:var(--gold)}
+.settings-btn.danger{color:#e48080;border-color:rgba(220,50,50,.2);background:rgba(220,50,50,.06)}
+.settings-btn.danger:hover{background:rgba(220,50,50,.12);border-color:rgba(220,50,50,.35)}
+.settings-input{background:var(--navy-700);border:1px solid rgba(200,169,110,.15);
+  border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-1);outline:none;width:100%}
+.settings-input:focus{border-color:var(--gold)}
+.add-profile-form{display:flex;gap:8px;align-items:stretch;margin-top:8px}
+.add-profile-form .settings-input{flex:1}
+.firebase-notice{margin-top:14px;padding:12px 14px;background:rgba(100,160,255,.06);
+  border:1px dashed rgba(100,160,255,.3);border-radius:10px;font-size:12px;color:var(--text-2);
+  display:flex;gap:10px;align-items:flex-start}
+.firebase-notice-icon{font-size:16px;line-height:1}
+
+/* ══════════════════════════════════════
    INGREDIENTS SCREEN
 ══════════════════════════════════════ */
 .ing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
@@ -749,6 +798,11 @@ input,select,textarea{font:inherit;color:inherit}
       </div>
       <div class="ing-grid" id="ing-grid"></div>
     </div>
+  </div>
+
+  <!-- ══ SCREEN: SETTINGS ══ -->
+  <div class="screen" id="screen-settings">
+    <div class="content" id="settings-content"></div>
   </div>
 
 </main>
@@ -1276,6 +1330,11 @@ function navigate(screen){
     document.getElementById('topbar-title').textContent='Ingrédients';
     backBtn.classList.remove('visible');searchC.style.display='none';fabBtn.style.display='';
     renderIngredients();
+  } else if(screen==='settings'){
+    document.getElementById('screen-settings').classList.add('active');
+    document.getElementById('topbar-title').textContent='Paramètres';
+    backBtn.classList.remove('visible');searchC.style.display='none';fabBtn.style.display='none';
+    renderSettings();
   } else {
     showToast(`Section "${screen}" — prochaine version ✦`);
     document.getElementById('screen-dashboard').classList.add('active');
@@ -1423,7 +1482,7 @@ function renderRecipeDetail(r){
     // Classique : tableau lecture seule + calculateur stock
     if(hasIng){
       const rows=r.ingredients.map((ing,i)=>`<tr>
-        <td><div class="ing-name">${ing.name}</div>${ing.unit!=='cl'?`<div class="ing-unit">${ing.unit}</div>`:''}</td>
+        <td><div class="ing-name">${ing.name}</div>${ing.unit!=='cl'?`<div class="ing-unit">${ing.unit}</div>`:''}${maisonChipsForRecipeIng(ing)}</td>
         <td class="center"><span class="ing-base-qty">${ing.quantityCl>0?ing.quantityCl+'cl':(ing.qty||0)+' '+ing.unit}</span></td>
         <td class="center"><div class="stock-input-wrap">
           <input class="stock-input" type="number" min="0" step="0.5" placeholder="—" id="stock-${i}"
@@ -1457,6 +1516,7 @@ function renderRecipeDetail(r){
         <div style="flex:1;min-width:0">
           <div class="recipe-ing-name">${ing.name}</div>
           ${ing.pricePerCl?`<div style="font-size:11px;color:var(--text-3)">€${ing.pricePerCl.toFixed(3)}/cl</div>`:''}
+          ${maisonChipsForRecipeIng(ing)}
         </div>
         <span class="recipe-ing-qty">${ing.quantityCl>0?ing.quantityCl+'cl':(ing.qty||0)+' '+ing.unit}</span>
         <span class="recipe-ing-cost">${ing.pricePerCl&&ing.quantityCl>0?'€'+(ing.pricePerCl*ing.quantityCl).toFixed(2):'—'}</span>
@@ -1806,6 +1866,20 @@ function resetCalc(recipeId){
     if(a){a.textContent=ing.quantityCl>0?`${ing.quantityCl}cl`:`${ing.qty||0} ${ing.unit}`;a.classList.remove('changed');}
   });
   document.getElementById('portions-result').style.display='none';
+}
+
+/* ─── Maison breakdown chips (read-only in recipe detail) ── */
+function maisonChipsForRecipeIng(ing){
+  const lib=_findLibIng(ing.name,ing.id);
+  if(!lib||!lib.isMaison||!lib.subRecipe||!lib.subRecipe.components||!lib.subRecipe.components.length) return '';
+  const baseQty = ing.quantityCl>0 ? ing.quantityCl : (parseFloat(ing.qty)||0);
+  const yieldQty = parseFloat(lib.quantity)||0;
+  const ratio = yieldQty>0 ? (baseQty/yieldQty) : 1;
+  const chips = lib.subRecipe.components.map(c=>{
+    const q=(parseFloat(c.qty)||0)*ratio;
+    return `<span class="ing-sub-chip">${c.name} · ${_formatBatchQty(q,c.unit)}</span>`;
+  }).join('');
+  return `<div class="ing-sub-recipe-chips" title="Composition de l'ingrédient maison (pour cette dose)">${chips}</div>`;
 }
 
 /* ─── Batch mode (mass production) ── */
@@ -2444,6 +2518,274 @@ function validateAccessCode(){
   }
 }
 
+/* ════════════════════════════════════════
+   PROFILES / ACCOUNTS (hybride local + cloud-ready)
+   - API générique : Accounts.list/create/switch/delete/current
+   - Impl. actuelle : multi-profil localStorage
+   - Cloud prévu : Supabase (projet yvwgrgwxnrspimsvjewn)
+════════════════════════════════════════ */
+const Accounts = {
+  KEY_LIST: 'mixtura_profiles',
+  KEY_CURRENT: 'mixtura_profile_current',
+  list(){
+    try{
+      const raw=localStorage.getItem(this.KEY_LIST);
+      const arr=raw?JSON.parse(raw):null;
+      if(arr && Array.isArray(arr) && arr.length) return arr;
+    }catch(e){}
+    const seed=[{id:'p_default',name:'Moi',createdAt:Date.now()}];
+    localStorage.setItem(this.KEY_LIST, JSON.stringify(seed));
+    if(!localStorage.getItem(this.KEY_CURRENT)) localStorage.setItem(this.KEY_CURRENT,'p_default');
+    return seed;
+  },
+  current(){
+    const id=localStorage.getItem(this.KEY_CURRENT)||'p_default';
+    return this.list().find(p=>p.id===id) || this.list()[0];
+  },
+  create(name){
+    const n=(name||'').trim(); if(!n) throw new Error('Nom requis');
+    const list=this.list();
+    if(list.some(p=>p.name.toLowerCase()===n.toLowerCase())) throw new Error('Nom déjà utilisé');
+    const p={id:'p'+Date.now(),name:n,createdAt:Date.now()};
+    list.push(p); localStorage.setItem(this.KEY_LIST,JSON.stringify(list));
+    return p;
+  },
+  switch(id){
+    const list=this.list();
+    if(!list.find(p=>p.id===id)) throw new Error('Profil introuvable');
+    this._snapshot(this.current().id);
+    localStorage.setItem(this.KEY_CURRENT,id);
+    this._restore(id);
+  },
+  delete(id){
+    const list=this.list();
+    if(list.length<=1) throw new Error('Impossible de supprimer le seul profil');
+    const cur=localStorage.getItem(this.KEY_CURRENT);
+    ['ingredients','recipes','plan'].forEach(k=>localStorage.removeItem('mixtura_'+k+'__'+id));
+    const next=list.filter(p=>p.id!==id);
+    localStorage.setItem(this.KEY_LIST,JSON.stringify(next));
+    if(cur===id){
+      const nextId=next[0].id;
+      localStorage.setItem(this.KEY_CURRENT,nextId);
+      this._restore(nextId);
+    }
+  },
+  _snapshot(profileId){
+    ['ingredients','recipes','plan'].forEach(k=>{
+      const live='mixtura_'+k; const v=localStorage.getItem(live);
+      if(v!=null) localStorage.setItem(live+'__'+profileId, v);
+    });
+  },
+  _restore(profileId){
+    ['ingredients','recipes','plan'].forEach(k=>{
+      const live='mixtura_'+k; const per=live+'__'+profileId;
+      const v=localStorage.getItem(per);
+      if(v!=null) localStorage.setItem(live, v); else localStorage.removeItem(live);
+    });
+    S.plan=localStorage.getItem('mixtura_plan')||'visitor';
+  },
+  initialsOf(p){
+    const n=(p.name||'').trim(); if(!n) return '?';
+    const parts=n.split(/\s+/).filter(Boolean);
+    return (parts[0][0]+(parts[1]?parts[1][0]:'')).toUpperCase();
+  },
+};
+
+/* Auth placeholder (Supabase à brancher) */
+const Auth = {
+  status(){return {signedIn:false, email:null, provider:null};},
+  async signIn(){showToast('Connexion Supabase — à activer (projet yvwgrgwxnrspimsvjewn)','error');},
+  async signOut(){showToast('Aucune session active','');},
+};
+
+/* ─── Settings screen render ── */
+function renderSettings(){
+  const root=document.getElementById('settings-content');
+  const profiles=Accounts.list();
+  const current=Accounts.current();
+  const auth=Auth.status();
+  const userR=loadUserRecipes().length;
+  const userI=loadUserIngredients().length;
+  const plan=S.plan;
+
+  const profileRows = profiles.map(p=>{
+    const isCur = p.id===current.id;
+    return `<div class="profile-row ${isCur?'active':''}" onclick="switchProfile('${p.id}')">
+      <div class="profile-avatar">${Accounts.initialsOf(p)}</div>
+      <div class="profile-info">
+        <div class="profile-name">${escapeHtml(p.name)}</div>
+        <div class="profile-meta">${isCur?`${userR} recette${userR>1?'s':''} · ${userI} ingrédient${userI>1?'s':''}`:'Cliquer pour activer'}</div>
+      </div>
+      ${isCur?`<span class="profile-current-chip">ACTIF</span>`:''}
+      <button class="profile-del-btn" onclick="event.stopPropagation();deleteProfile('${p.id}')" title="Supprimer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14H7L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+      </button>
+    </div>`;
+  }).join('');
+
+  root.innerHTML = `<div class="settings-wrap">
+    <div class="settings-card">
+      <h3 class="settings-card-title">Profils</h3>
+      <p class="settings-card-sub">Chaque profil a sa propre bibliothèque de recettes et d'ingrédients, stockée localement.</p>
+      <div class="profile-list">${profileRows}</div>
+      <div class="add-profile-form">
+        <input class="settings-input" id="new-profile-name" type="text" placeholder="Nom du nouveau profil (ex : Bar de l'hôtel)" maxlength="40">
+        <button class="settings-btn" onclick="createProfile()">Créer</button>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <h3 class="settings-card-title">Compte en ligne</h3>
+      <p class="settings-card-sub">Pour synchroniser entre appareils et partager une bibliothèque d'équipe.</p>
+      <div class="settings-row">
+        <span class="settings-row-label">Statut</span>
+        <span class="settings-row-value">${auth.signedIn?`Connecté (${escapeHtml(auth.email||'')})`:'Non connecté'}</span>
+      </div>
+      ${auth.signedIn
+        ? `<div style="margin-top:12px"><button class="settings-btn danger" onclick="signOut()">Se déconnecter</button></div>`
+        : `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+             <button class="settings-btn" onclick="signIn()">Se connecter (Supabase)</button>
+             <button class="settings-btn" onclick="showAccessModal()">Code Beta / VIP</button>
+           </div>`}
+      <div class="firebase-notice">
+        <span class="firebase-notice-icon">☁️</span>
+        <div>Backend cible : <strong>Supabase</strong> (projet <code>yvwgrgwxnrspimsvjewn</code>). SDK à brancher pour activer l'auth et la synchro.</div>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <h3 class="settings-card-title">Plan</h3>
+      <div class="settings-row">
+        <span class="settings-row-label">Plan actuel</span>
+        <span class="settings-row-value">${plan==='vip'?'💎 VIP — Tout débloqué':plan==='beta'?'⭐ Beta — Recettes illimitées':'🔓 Visiteur — 2 recettes max'}</span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-row-label">Activer un code</span>
+        <button class="settings-btn" onclick="showAccessModal()">Saisir un code</button>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <h3 class="settings-card-title">Données locales</h3>
+      <p class="settings-card-sub">Profil "${escapeHtml(current.name)}" — tout est stocké dans ce navigateur.</p>
+      <div class="settings-row">
+        <span class="settings-row-label">Recettes enregistrées</span>
+        <span class="settings-row-value">${userR}</span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-row-label">Ingrédients enregistrés</span>
+        <span class="settings-row-value">${userI}</span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-row-label">Exporter tout (JSON)</span>
+        <button class="settings-btn" onclick="exportProfileData()">Télécharger</button>
+      </div>
+      <div class="settings-row">
+        <span class="settings-row-label">Importer (JSON)</span>
+        <label class="settings-btn" for="import-file">Choisir un fichier</label>
+        <input type="file" id="import-file" accept="application/json" style="display:none" onchange="importProfileData(event)">
+      </div>
+      <div class="settings-row">
+        <span class="settings-row-label">Tout réinitialiser (ce profil)</span>
+        <button class="settings-btn danger" onclick="resetProfileData()">Réinitialiser</button>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <h3 class="settings-card-title">À propos</h3>
+      <div class="settings-row">
+        <span class="settings-row-label">MIXTURA</span>
+        <span class="settings-row-value">v0.9 — PWA</span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-row-label">Source</span>
+        <span class="settings-row-value">github.com/monsterXV10/recalib</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ─── Settings actions ── */
+function createProfile(){
+  const inp=document.getElementById('new-profile-name');
+  const name=(inp?.value||'').trim();
+  if(!name){showToast('Entrez un nom','error');return;}
+  try{
+    const p=Accounts.create(name);
+    inp.value='';
+    showToast(`Profil "${p.name}" créé ✓`,'success');
+    renderSettings();
+  }catch(e){showToast(e.message,'error');}
+}
+function switchProfile(id){
+  const cur=Accounts.current();
+  if(id===cur.id) return;
+  try{
+    Accounts.switch(id);
+    const p=Accounts.current();
+    showToast(`Bascule sur "${p.name}" ✓`,'success');
+    updatePlanBadge();updateStats();renderRecipes(getFiltered());
+    renderSettings();
+  }catch(e){showToast(e.message,'error');}
+}
+function deleteProfile(id){
+  const list=Accounts.list();
+  const p=list.find(x=>x.id===id); if(!p) return;
+  if(list.length<=1){showToast('Impossible — il ne reste qu\'un profil','error');return;}
+  if(!confirm(`Supprimer le profil "${p.name}" et toutes ses données ? Irréversible.`)) return;
+  try{
+    Accounts.delete(id);
+    showToast(`Profil "${p.name}" supprimé`);
+    updatePlanBadge();updateStats();renderRecipes(getFiltered());
+    renderSettings();
+  }catch(e){showToast(e.message,'error');}
+}
+function signIn(){Auth.signIn();}
+function signOut(){Auth.signOut().then(()=>renderSettings());}
+function exportProfileData(){
+  const cur=Accounts.current();
+  const data={
+    version:1, exportedAt:new Date().toISOString(), profile:cur,
+    ingredients:loadUserIngredients(), recipes:loadUserRecipes(), plan:S.plan,
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`mixtura-${cur.name.replace(/\s+/g,'_')}-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),500);
+  showToast('Export téléchargé ✓','success');
+}
+function importProfileData(ev){
+  const f=ev.target.files&&ev.target.files[0]; if(!f) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data||typeof data!=='object') throw new Error('Fichier invalide');
+      if(!confirm('Remplacer les données du profil actif par le fichier importé ?')) return;
+      if(Array.isArray(data.ingredients)) localStorage.setItem('mixtura_ingredients',JSON.stringify(data.ingredients));
+      if(Array.isArray(data.recipes))     localStorage.setItem('mixtura_recipes',JSON.stringify(data.recipes));
+      if(data.plan) localStorage.setItem('mixtura_plan',data.plan);
+      S.plan=localStorage.getItem('mixtura_plan')||'visitor';
+      updatePlanBadge();updateStats();renderRecipes(getFiltered());
+      renderSettings();
+      showToast('Import réussi ✓','success');
+    }catch(e){showToast('Import invalide : '+e.message,'error');}
+  };
+  reader.readAsText(f);
+  ev.target.value='';
+}
+function resetProfileData(){
+  if(!confirm('Supprimer TOUTES les recettes et ingrédients de ce profil ? Irréversible.')) return;
+  localStorage.removeItem('mixtura_ingredients');
+  localStorage.removeItem('mixtura_recipes');
+  updateStats();renderRecipes(getFiltered());renderSettings();
+  showToast('Données du profil effacées');
+}
+
 /* ─── Sidebar ── */
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('visible')}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('visible')}
@@ -2460,6 +2802,7 @@ function showToast(msg,type=''){
 }
 
 /* ─── Init ── */
+Accounts.list(); // seed default profile on first run
 updatePlanBadge();updateStats();renderRecipes(getFiltered());
 </script>
 </body>
