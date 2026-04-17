@@ -385,18 +385,28 @@ input,select,textarea{font:inherit;color:inherit}
   outline:none;text-align:center;transition:all var(--tr)}
 .sub-recipe-yield-input:focus{border-color:var(--gold)}
 .sub-recipe-yield-unit{font-size:12px;color:var(--text-3)}
-.comp-row{display:grid;grid-template-columns:1fr 60px 50px 70px 24px;gap:6px;
-  align-items:center;margin-bottom:8px}
+.comp-row{display:grid;grid-template-columns:1fr 48px 60px 80px 24px;gap:5px;
+  align-items:center;margin-bottom:6px}
+.comp-row-cost{grid-column:1/-1;font-size:11px;color:var(--gold);text-align:right;
+  font-weight:700;padding:0 30px 6px 0;margin-top:-4px}
 .comp-input{background:var(--navy-700);border:1px solid rgba(200,169,110,.1);
-  border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text-1);
+  border-radius:6px;padding:6px 7px;font-size:12px;color:var(--text-1);
   outline:none;width:100%;transition:all var(--tr)}
 .comp-input:focus{border-color:rgba(200,169,110,.3)}
+.comp-select{background:var(--navy-700);border:1px solid rgba(200,169,110,.1);
+  border-radius:6px;padding:6px 4px;font-size:11px;color:var(--text-1);
+  outline:none;width:100%;cursor:pointer}
+.comp-select:focus{border-color:rgba(200,169,110,.3)}
+.comp-price-wrap{position:relative}
+.comp-price-wrap .comp-input{padding-right:28px}
+.comp-price-suffix{position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  font-size:10px;color:var(--gold-dim);font-weight:600;pointer-events:none}
 .comp-cost-preview{font-size:11px;font-weight:700;color:var(--gold);text-align:center}
 .comp-remove{width:24px;height:24px;display:flex;align-items:center;justify-content:center;
   border-radius:5px;color:var(--text-3);cursor:pointer;transition:all var(--tr)}
 .comp-remove:hover{background:rgba(224,92,106,.15);color:var(--error)}
 .comp-remove svg{width:13px;height:13px}
-.comp-header{display:grid;grid-template-columns:1fr 60px 50px 70px 24px;gap:6px;
+.comp-header{display:grid;grid-template-columns:1fr 48px 60px 80px 24px;gap:5px;
   margin-bottom:6px}
 .comp-header span{font-size:10px;font-weight:600;text-transform:uppercase;
   letter-spacing:.08em;color:var(--text-3)}
@@ -1094,52 +1104,56 @@ const S={
 const QUOTA={visitor:2,beta:Infinity,vip:Infinity};
 const VALID_CODES={'MIXTURA-BETA-2025':'beta','MIXTURA-VIP-2025':'vip'};
 
-/* ─── Classic recipes ── */
+/* ─── Classic recipes (standards IBA + pop) ── */
 const CLASSIC_RECIPES=[
   {id:'c1',name:'Mojito',emoji:'🍹',category:'classic',glassType:'highball',
-   garnish:'Menthe + citron vert',
-   description:'Le classique cubain par excellence. Frais, herbacé et légèrement sucré.',
-   tags:['cubain','fresh','summer'],foodCost:1.45,sellingPrice:12,
+   ibaCategory:'Contemporary Classics',
+   garnish:'Menthe fraîche + tranche de citron vert',
+   description:'Le rafraîchissement cubain selon les standards internationaux IBA.',
+   tags:['rhum','long drink','frais','cubain'],foodCost:1.45,sellingPrice:12,
    ingredients:[
-     {id:'i1',name:'Rhum blanc',quantityCl:5,pricePerCl:0.21,unit:'cl'},
-     {id:'i2',name:'Jus de citron vert',quantityCl:3,pricePerCl:0.04,unit:'cl'},
-     {id:'i3',name:'Sirop de sucre de canne',quantityCl:2,pricePerCl:0.05,unit:'cl'},
+     {id:'i1',name:'Rhum blanc cubain',quantityCl:4.5,pricePerCl:0.21,unit:'cl'},
+     {id:'i2',name:'Jus de citron vert frais',quantityCl:2,pricePerCl:0.04,unit:'cl'},
+     {id:'i3',name:'Sucre de canne blanc',quantityCl:0,qty:2,unit:'cuillères',pricePerCl:0.05},
+     {id:'i5',name:'Menthe fraîche',quantityCl:0,qty:6,unit:'feuilles',pricePerCl:0},
      {id:'i4',name:'Eau gazeuse',quantityCl:6,pricePerCl:0.02,unit:'cl'},
-     {id:'i5',name:'Menthe fraîche',quantityCl:0,qty:8,unit:'feuilles',pricePerCl:0},
    ],
-   steps:['Déposer la menthe dans le verre avec le sirop','Écraser délicatement avec un pilon',
-     'Ajouter le jus de citron vert pressé','Remplir de glace pilée et verser le rhum',
-     'Compléter à l\'eau gazeuse froide','Garnir d\'une tige de menthe'],
+   steps:['Mélanger le sucre avec le jus de citron et la menthe',
+     'Ajouter un splash d\'eau gazeuse et piler délicatement',
+     'Ajouter le rhum et des glaçons pilés',
+     'Compléter à l\'eau gazeuse froide',
+     'Garnir d\'une tige de menthe et d\'une tranche de citron vert'],
   },
   {id:'c2',name:'Negroni',emoji:'🥃',category:'classic',glassType:'rocks',
-   garnish:'Zeste d\'orange',
-   description:'Le roi des apéritifs italiens. Puissant, amer et élégant.',
-   tags:['italien','bitter','aperitif'],foodCost:2.30,sellingPrice:14,
+   ibaCategory:'The Unforgettables',
+   garnish:'Tranche d\'orange',
+   description:'Le classique italien par excellence, équilibré et amer.',
+   tags:['amer','stirred','pre-dinner','italien'],foodCost:2.30,sellingPrice:14,
    ingredients:[
      {id:'i6',name:'Gin',quantityCl:3,pricePerCl:0.43,unit:'cl'},
      {id:'i7',name:'Campari',quantityCl:3,pricePerCl:0.29,unit:'cl'},
-     {id:'i8',name:'Vermouth rouge',quantityCl:3,pricePerCl:0.11,unit:'cl'},
+     {id:'i8',name:'Vermouth rouge doux',quantityCl:3,pricePerCl:0.11,unit:'cl'},
    ],
-   steps:['Remplir un verre rocks de glaçons',
-     'Verser gin, Campari et vermouth à parts égales',
-     'Remuer 30 secondes avec une cuillère à mélange',
-     'Exprimer un zeste d\'orange et déposer en garniture'],
+   steps:['Verser tous les ingrédients directement dans un verre old fashioned rempli de glace',
+     'Remuer doucement 30 secondes',
+     'Garnir d\'une demi-tranche d\'orange'],
   },
   {id:'c3',name:'Margarita',emoji:'🍸',category:'classic',glassType:'coupe',
-   garnish:'Sel sur le bord + citron',
-   description:'Le cocktail mexicain intemporel. Équilibre parfait entre tequila, acide et sucre.',
-   tags:['mexicain','citrus','tequila'],foodCost:1.85,sellingPrice:12,
+   ibaCategory:'Contemporary Classics',
+   garnish:'Bord givré au sel',
+   description:'La recette officielle IBA privilégie le 100% Agave Tequila.',
+   tags:['tequila','sour','citrique','mexicain'],foodCost:1.85,sellingPrice:12,
    ingredients:[
-     {id:'i9',name:'Tequila blanche',quantityCl:4.5,pricePerCl:0.29,unit:'cl'},
-     {id:'i10',name:'Triple Sec (Cointreau)',quantityCl:2,pricePerCl:0.65,unit:'cl'},
-     {id:'i2',name:'Jus de citron vert',quantityCl:2.5,pricePerCl:0.04,unit:'cl'},
+     {id:'i9',name:'Tequila 100% Agave',quantityCl:5,pricePerCl:0.29,unit:'cl'},
+     {id:'i10',name:'Triple Sec',quantityCl:2,pricePerCl:0.65,unit:'cl'},
+     {id:'i2',name:'Jus de citron vert frais',quantityCl:1.5,pricePerCl:0.04,unit:'cl'},
    ],
-   steps:['Givrer le bord du verre avec sel et citron vert',
-     'Mettre tous les ingrédients dans un shaker avec glace',
-     'Shaker vigoureusement 15 secondes',
-     'Filtrer dans le verre givré et garnir d\'une rondelle de citron'],
+   steps:['Shaker tous les ingrédients avec de la glace',
+     'Filtrer dans un verre à cocktail givré au sel',
+     'Servir sans glace (Up)'],
   },
   {id:'c4',name:'Gin Tonic',emoji:'🥂',category:'classic',glassType:'highball',
+   ibaCategory:null,
    garnish:'Concombre + poivre noir',
    description:'Simple et sophistiqué. Toute la puissance du gin révélée par le tonic.',
    tags:['british','light','simple'],foodCost:1.25,sellingPrice:10,
@@ -1154,14 +1168,15 @@ const CLASSIC_RECIPES=[
      'Garnir selon le profil du gin'],
   },
   {id:'c5',name:'Espresso Martini',emoji:'☕',category:'classic',glassType:'martini',
-   garnish:'3 grains de café torréfiés',
-   description:'Le cocktail après-dîner par excellence. Caféiné, velouté et légèrement sucré.',
-   tags:['coffee','après-dîner','festif'],foodCost:2.00,sellingPrice:14,
+   ibaCategory:'New Era Drinks',
+   garnish:'3 grains de café',
+   description:'Un cocktail moderne devenu un incontournable mondial.',
+   tags:['vodka','caféine','after-dinner'],foodCost:2.00,sellingPrice:14,
    ingredients:[
-     {id:'i12',name:'Vodka',quantityCl:4,pricePerCl:0.22,unit:'cl'},
-     {id:'i13',name:'Kahlúa',quantityCl:2,pricePerCl:0.36,unit:'cl'},
-     {id:'i14',name:'Espresso (refroidi)',quantityCl:3,pricePerCl:0.10,unit:'cl'},
-     {id:'i3',name:'Sirop de sucre de canne',quantityCl:1,pricePerCl:0.05,unit:'cl'},
+     {id:'i12',name:'Vodka',quantityCl:5,pricePerCl:0.22,unit:'cl'},
+     {id:'i13',name:'Liqueur de café',quantityCl:3,pricePerCl:0.36,unit:'cl'},
+     {id:'i14',name:'Café Espresso frais',quantityCl:3,pricePerCl:0.10,unit:'cl'},
+     {id:'i3',name:'Sirop de sucre (optionnel)',quantityCl:1,pricePerCl:0.05,unit:'cl'},
    ],
    steps:['Préparer un espresso et le laisser refroidir',
      'Mettre tous les ingrédients dans un shaker rempli de glace',
@@ -1833,6 +1848,7 @@ function openAddIngModal(){
   document.getElementById('ing-unit-input').value='cl';
   document.getElementById('ing-custom-unit-wrap').style.display='none';
   document.getElementById('ing-usage-section').style.display='none';
+  resetMaisonBuilder('standalone');
   hideIngSuggestions();
   computePricePerUnit();
   document.getElementById('ing-modal-actions').innerHTML=
@@ -1869,6 +1885,22 @@ function editIngredient(id){
   document.getElementById('ing-usage-section').style.display='';
   renderIngUsageInRecipes(id, ing.name);
   hideIngSuggestions();
+  // Recette maison : pré-charger les composants dans le builder
+  if(ing.isMaison && ing.subRecipe && ing.subRecipe.components){
+    _maison['standalone'] = ing.subRecipe.components.map(c=>({
+      name:c.name||'',
+      qty:c.qty||0,
+      unit:c.unit||'g',
+      // rétrocompat : ancien format = costPerUnit direct, nouveau = price (converti via factor)
+      price: (c.price!=null ? c.price : c.costPerUnit) || 0
+    }));
+    _maisonActive['standalone'] = true;
+    document.getElementById('ing-maison-builder').style.display='';
+    document.getElementById('ing-maison-toggle').classList.add('active');
+    renderMaisonBuilder('standalone');
+  } else {
+    resetMaisonBuilder('standalone');
+  }
   const isDefault=!!DEFAULT_INGREDIENTS.find(d=>d.id===id);
   document.getElementById('ing-modal-actions').innerHTML=
     `<button class="btn btn-secondary" onclick="closeAddIngModal()">Annuler</button>
@@ -1961,6 +1993,64 @@ function pickIngSuggestion(id){
 }
 function hideIngSuggestions(){const el=document.getElementById('ing-name-suggestions');if(el)el.style.display='none'}
 
+/* ─── Autocomplete dans le builder maison ── */
+function onMaisonCompNameInput(ctx,i,q){
+  const wrap=document.getElementById(`maison-${ctx}-${i}-sug`);
+  if(!wrap) return;
+  q=(q||'').trim().toLowerCase();
+  if(q.length<2){wrap.style.display='none';return}
+  const matches=getAllIngredients()
+    .filter(x=>{
+      if(S.editingIngId && x.id===S.editingIngId) return false;
+      return (x.name||'').toLowerCase().includes(q)||(x.brand||'').toLowerCase().includes(q);
+    })
+    .slice(0,6);
+  if(!matches.length){wrap.style.display='none';return}
+  wrap.innerHTML=matches.map(x=>{
+    const qty = x.quantity != null ? x.quantity : x.bottleSizeCl;
+    const unit = x.unit || (x.bottleSizeCl ? 'cl' : '');
+    const price = x.bottlePrice ? `€${Number(x.bottlePrice).toFixed(2)}` : '';
+    const metaBits=[x.brand, (qty&&unit)?`${qty} ${unit}`:'', price].filter(Boolean);
+    return `<div class="autocomplete-item" onmousedown="pickMaisonCompSuggestion('${ctx}',${i},'${x.id}')">
+      <div>
+        <div class="autocomplete-item-name">${escapeHtml(x.name)}</div>
+        ${metaBits.length?`<div class="autocomplete-item-meta">${escapeHtml(metaBits.join(' · '))}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  wrap.style.display='';
+}
+function pickMaisonCompSuggestion(ctx,i,ingId){
+  const ing=getAllIngredients().find(x=>x.id===ingId);
+  if(!ing) return;
+  const comp=_maison[ctx][i];
+  comp.name=ing.name;
+  // Inférer unité + prix au format €/kg ou €/L selon l'unité de l'ingrédient choisi
+  const ingUnit=ing.unit || (ing.bottleSizeCl ? 'cl' : 'g');
+  const ingQty= ing.quantity!=null ? ing.quantity : ing.bottleSizeCl;
+  const ingPrice=parseFloat(ing.bottlePrice)||0;
+  const ingUnitInfo=COMP_UNITS.find(u=>u.v===ingUnit);
+  if(ingUnitInfo && ingQty>0 && ingPrice>0){
+    // Adopter l'unité de l'ingrédient si incompatible avec celle du composant
+    const currentUnitInfo=COMP_UNITS.find(u=>u.v===comp.unit);
+    if(!currentUnitInfo || currentUnitInfo.family!==ingUnitInfo.family){
+      comp.unit=ingUnit;
+    }
+    // Prix à la référence : bottlePrice / (ingQty × factor_to_ref)
+    const refQty=ingQty * ingUnitInfo.factorToRef;
+    if(refQty>0){
+      comp.price = Math.round((ingPrice/refQty)*100)/100;
+    }
+  }
+  hideMaisonSuggestions(ctx,i);
+  renderMaisonBuilder(ctx);
+  syncMaisonCost(ctx);
+}
+function hideMaisonSuggestions(ctx,i){
+  const el=document.getElementById(`maison-${ctx}-${i}-sug`);
+  if(el) el.style.display='none';
+}
+
 /* ─── Table des recettes utilisant l'ingrédient ── */
 function renderIngUsageInRecipes(ingId,ingName){
   const box=document.getElementById('ing-usage-table');
@@ -2010,9 +2100,37 @@ function toggleMaisonBuilder(ctx){
   document.getElementById(builderId).style.display = _maisonActive[ctx] ? '' : 'none';
   document.getElementById(toggleId).classList.toggle('active', _maisonActive[ctx]);
   if(_maisonActive[ctx]){
-    if(!_maison[ctx].length) _maison[ctx]=[{name:'',qty:1,unit:'part',costPerUnit:0}];
+    if(!_maison[ctx].length) _maison[ctx]=[{name:'',qty:1,unit:'g',price:0}];
     renderMaisonBuilder(ctx);
   }
+}
+
+/* ─── Unités composants + conversion prix ── */
+const COMP_UNITS = [
+  {v:'g',  label:'g',  family:'mass',   factorToRef:0.001},   // qty×0.001 = kg
+  {v:'kg', label:'kg', family:'mass',   factorToRef:1},       // qty×1     = kg
+  {v:'ml', label:'ml', family:'volume', factorToRef:0.001},   // qty×0.001 = L
+  {v:'cl', label:'cl', family:'volume', factorToRef:0.01},
+  {v:'L',  label:'L',  family:'volume', factorToRef:1},
+  {v:'pcs',label:'pcs',family:'count',  factorToRef:1},
+  {v:'feuilles',label:'feuilles',family:'count',factorToRef:1},
+  {v:'cuillères',label:'cuillères',family:'count',factorToRef:1},
+  {v:'trait',label:'trait',family:'count',factorToRef:1},
+];
+function compPriceSuffix(unit){
+  const u=COMP_UNITS.find(x=>x.v===unit);
+  if(!u) return '€/u';
+  if(u.family==='mass')   return '€/kg';
+  if(u.family==='volume') return '€/L';
+  return '€/'+(unit==='pcs'?'pc':unit.replace(/s$/,''));
+}
+function compCost(c){
+  const qty=parseFloat(c.qty)||0;
+  const price=parseFloat(c.price!=null?c.price:c.costPerUnit)||0;
+  const u=COMP_UNITS.find(x=>x.v===c.unit);
+  // fallback ancien format : costPerUnit direct
+  if(!u) return qty*price;
+  return qty * u.factorToRef * price;
 }
 
 function renderMaisonBuilder(ctx){
@@ -2020,24 +2138,42 @@ function renderMaisonBuilder(ctx){
   const yieldId   = ctx==='standalone' ? 'ing-size-input'     : 'new-ing-size';
   const priceId   = ctx==='standalone' ? 'ing-bottle-price-input' : 'new-ing-price';
   const comps = _maison[ctx];
-  const total = comps.reduce((s,c)=>s+(parseFloat(c.qty)||0)*(parseFloat(c.costPerUnit)||0),0);
+  const total = comps.reduce((s,c)=>s+compCost(c),0);
 
-  const rows = comps.map((c,i)=>`
+  const unitOpts = (sel)=>COMP_UNITS.map(u=>
+    `<option value="${u.v}"${u.v===sel?' selected':''}>${u.label}</option>`).join('');
+
+  const rows = comps.map((c,i)=>{
+    const suffix=compPriceSuffix(c.unit||'g');
+    const rowCost=compCost(c);
+    const priceVal = (c.price!=null?c.price:c.costPerUnit)||'';
+    return `
     <div class="comp-row">
-      <input class="comp-input" type="text" placeholder="Ingrédient" value="${c.name}"
-        oninput="_maison['${ctx}'][${i}].name=this.value">
+      <div style="position:relative">
+        <input class="comp-input" type="text" placeholder="Ingrédient" value="${c.name||''}"
+          oninput="_maison['${ctx}'][${i}].name=this.value;onMaisonCompNameInput('${ctx}',${i},this.value)"
+          onblur="setTimeout(()=>hideMaisonSuggestions('${ctx}',${i}),180)">
+        <div class="autocomplete-list" id="maison-${ctx}-${i}-sug" style="display:none;top:100%"></div>
+      </div>
       <input class="comp-input" type="number" placeholder="Qté" value="${c.qty||''}" min="0" step="0.1"
         oninput="_maison['${ctx}'][${i}].qty=parseFloat(this.value)||0;syncMaisonCost('${ctx}')">
-      <input class="comp-input" type="text" placeholder="unité" value="${c.unit||''}"
-        oninput="_maison['${ctx}'][${i}].unit=this.value">
-      <input class="comp-input" type="number" placeholder="€/u" value="${c.costPerUnit||''}" min="0" step="0.01"
-        oninput="_maison['${ctx}'][${i}].costPerUnit=parseFloat(this.value)||0;syncMaisonCost('${ctx}')">
+      <select class="comp-select"
+        onchange="_maison['${ctx}'][${i}].unit=this.value;renderMaisonBuilder('${ctx}');syncMaisonCost('${ctx}')">
+        ${unitOpts(c.unit||'g')}
+      </select>
+      <div class="comp-price-wrap">
+        <input class="comp-input" type="number" placeholder="0.00" value="${priceVal}" min="0" step="0.01"
+          oninput="_maison['${ctx}'][${i}].price=parseFloat(this.value)||0;syncMaisonCost('${ctx}')">
+        <span class="comp-price-suffix">${suffix}</span>
+      </div>
       <button class="comp-remove" onclick="removeMaisonComp('${ctx}',${i})" title="Retirer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
-    </div>`).join('');
+      ${rowCost>0?`<div class="comp-row-cost">= €${rowCost.toFixed(3)}</div>`:''}
+    </div>`;
+  }).join('');
 
   document.getElementById(contentId).innerHTML=`
     <div class="sub-recipe-builder">
@@ -2051,7 +2187,7 @@ function renderMaisonBuilder(ctx){
         <span class="sub-recipe-yield-unit">cl</span>
       </div>
       <div class="comp-header">
-        <span>Ingrédient</span><span>Qté</span><span>Unité</span><span>€/unité</span><span></span>
+        <span>Ingrédient</span><span>Qté</span><span>Unité</span><span>Prix</span><span></span>
       </div>
       ${rows}
       <button class="add-comp-btn" onclick="addMaisonComp('${ctx}')">
@@ -2068,7 +2204,7 @@ function renderMaisonBuilder(ctx){
 }
 
 function addMaisonComp(ctx){
-  _maison[ctx].push({name:'',qty:1,unit:'part',costPerUnit:0});
+  _maison[ctx].push({name:'',qty:1,unit:'g',price:0});
   renderMaisonBuilder(ctx);
   // focus last name input
   const rows=document.querySelectorAll(`#${ctx==='standalone'?'ing-maison-content':'new-ing-maison-content'} .comp-row`);
@@ -2080,10 +2216,21 @@ function removeMaisonComp(ctx,i){
   syncMaisonCost(ctx);
 }
 function syncMaisonCost(ctx){
-  const total=_maison[ctx].reduce((s,c)=>s+(parseFloat(c.qty)||0)*(parseFloat(c.costPerUnit)||0),0);
+  const total=_maison[ctx].reduce((s,c)=>s+compCost(c),0);
   const el=document.getElementById(`${ctx}-sub-total`);
   if(el) el.textContent=`€${total.toFixed(2)}`;
-  // auto-fill prix bouteille
+  // Repeindre les coûts par ligne sans recréer le DOM entier
+  _maison[ctx].forEach((c,i)=>{
+    const row=document.querySelectorAll(`#${ctx==='standalone'?'ing-maison-content':'new-ing-maison-content'} .comp-row`)[i];
+    if(!row) return;
+    const cost=compCost(c);
+    let tag=row.querySelector('.comp-row-cost');
+    if(cost>0){
+      if(!tag){tag=document.createElement('div');tag.className='comp-row-cost';row.appendChild(tag);}
+      tag.textContent=`= €${cost.toFixed(3)}`;
+    } else if(tag){ tag.remove(); }
+  });
+  // auto-fill prix "bouteille"
   const priceId = ctx==='standalone' ? 'ing-bottle-price-input' : 'new-ing-price';
   const el2=document.getElementById(priceId);
   if(el2){ el2.value=total.toFixed(2); }
