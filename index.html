@@ -606,6 +606,7 @@ input,select,textarea{font:inherit;color:inherit}
   .ing-table{display:block;overflow-x:auto}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div id="app">
@@ -2591,12 +2592,103 @@ const Accounts = {
   },
 };
 
-/* Auth placeholder (Supabase à brancher) */
+/* ─── Supabase (auth + sync cloud) ── */
+const SUPABASE_URL = 'https://yvwgrgwxnrspimsvjewn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Ea7j_qfa3V67wM7h01uOEg_gaFFdIKf';
+let _supa = null, _supaUser = null;
+async function initSupabase(){
+  if(_supa) return _supa;
+  // charge le SDK v2 à la demande
+  if(!window.supabase){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      s.onload=res; s.onerror=rej; document.head.appendChild(s);
+    });
+  }
+  _supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
+  });
+  _supa.auth.onAuthStateChange((evt,session)=>{
+    _supaUser = session?.user || null;
+    if(S.currentScreen==='settings') renderSettings();
+    if(evt==='SIGNED_IN'){ showToast('Connecté ✓','success'); cloudPullAll().catch(()=>{}); }
+    if(evt==='SIGNED_OUT'){ showToast('Déconnecté'); }
+  });
+  const { data } = await _supa.auth.getSession();
+  _supaUser = data?.session?.user || null;
+  return _supa;
+}
 const Auth = {
-  status(){return {signedIn:false, email:null, provider:null};},
-  async signIn(){showToast('Connexion Supabase — à activer (projet yvwgrgwxnrspimsvjewn)','error');},
-  async signOut(){showToast('Aucune session active','');},
+  status(){ return { signedIn:!!_supaUser, email:_supaUser?.email||null, provider:'supabase' }; },
+  async signInEmail(){
+    try{
+      await initSupabase();
+      const email=prompt('Ton email (lien magique envoyé par Supabase) :');
+      if(!email) return;
+      const { error } = await _supa.auth.signInWithOtp({
+        email:email.trim(),
+        options:{ emailRedirectTo: location.href.split('#')[0] }
+      });
+      if(error) throw error;
+      showToast('Lien envoyé à '+email+' ✉️','success');
+    }catch(e){ showToast('Erreur connexion : '+(e.message||e),'error'); }
+  },
+  async signInGoogle(){
+    try{
+      await initSupabase();
+      const { error } = await _supa.auth.signInWithOAuth({
+        provider:'google',
+        options:{ redirectTo: location.href.split('#')[0] }
+      });
+      if(error) throw error;
+    }catch(e){ showToast('Erreur Google : '+(e.message||e),'error'); }
+  },
+  async signOut(){
+    try{
+      await initSupabase();
+      await _supa.auth.signOut();
+    }catch(e){ showToast('Erreur déconnexion : '+(e.message||e),'error'); }
+  },
 };
+// Tentative d'init silencieuse au chargement (pour restaurer la session)
+setTimeout(()=>{ initSupabase().catch(()=>{}); }, 300);
+
+/* ─── Sync cloud (jsonb per-row) ──
+   Tables attendues côté Supabase :
+     profiles(id uuid pk references auth.users, display_name, created_at)
+     ingredients(id uuid pk, user_id uuid, data jsonb, updated_at)
+     recipes(id uuid pk, user_id uuid, data jsonb, updated_at)
+   RLS : auth.uid() = user_id (cf. SQL fourni dans supabase-schema.sql).          */
+async function cloudPullAll(){
+  if(!_supa||!_supaUser) return;
+  try{
+    const [ing, rec] = await Promise.all([
+      _supa.from('ingredients').select('data').eq('user_id',_supaUser.id),
+      _supa.from('recipes').select('data').eq('user_id',_supaUser.id),
+    ]);
+    if(ing.error||rec.error) throw (ing.error||rec.error);
+    if(Array.isArray(ing.data)) localStorage.setItem('mixtura_ingredients',
+      JSON.stringify(ing.data.map(r=>r.data).filter(Boolean)));
+    if(Array.isArray(rec.data)) localStorage.setItem('mixtura_recipes',
+      JSON.stringify(rec.data.map(r=>r.data).filter(Boolean)));
+    updateStats(); renderRecipes(getFiltered());
+    showToast('Cloud synchronisé ↓','success');
+  }catch(e){ showToast('Sync cloud : '+(e.message||e),'error'); }
+}
+async function cloudPushAll(){
+  if(!_supa||!_supaUser){ showToast('Connecte-toi d\'abord','error'); return; }
+  try{
+    const ings=loadUserIngredients(), recs=loadUserRecipes();
+    const up = (table,list)=>_supa.from(table).upsert(
+      list.map(x=>({ id:x.id||undefined, user_id:_supaUser.id, data:x, updated_at:new Date().toISOString() })),
+      { onConflict:'id' }
+    );
+    const r1=await up('ingredients',ings); if(r1.error) throw r1.error;
+    const r2=await up('recipes',recs);     if(r2.error) throw r2.error;
+    showToast(`Cloud mis à jour ↑ (${ings.length}+${recs.length})`,'success');
+  }catch(e){ showToast('Push cloud : '+(e.message||e),'error'); }
+}
 
 /* ─── Settings screen render ── */
 function renderSettings(){
@@ -2644,9 +2736,14 @@ function renderSettings(){
         <span class="settings-row-value">${auth.signedIn?`Connecté (${escapeHtml(auth.email||'')})`:'Non connecté'}</span>
       </div>
       ${auth.signedIn
-        ? `<div style="margin-top:12px"><button class="settings-btn danger" onclick="signOut()">Se déconnecter</button></div>`
+        ? `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+             <button class="settings-btn" onclick="cloudPullAll()">↓ Tirer du cloud</button>
+             <button class="settings-btn" onclick="cloudPushAll()">↑ Pousser vers cloud</button>
+             <button class="settings-btn danger" onclick="signOut()">Se déconnecter</button>
+           </div>`
         : `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-             <button class="settings-btn" onclick="signIn()">Se connecter (Supabase)</button>
+             <button class="settings-btn" onclick="signInGoogle()">Se connecter avec Google</button>
+             <button class="settings-btn" onclick="signInEmail()">Lien magique (email)</button>
              <button class="settings-btn" onclick="showAccessModal()">Code Beta / VIP</button>
            </div>`}
       <div class="firebase-notice">
@@ -2677,6 +2774,10 @@ function renderSettings(){
       <div class="settings-row">
         <span class="settings-row-label">Ingrédients enregistrés</span>
         <span class="settings-row-value">${userI}</span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-row-label">Exporter en Excel (.xlsx)</span>
+        <button class="settings-btn" onclick="exportProfileXlsx()">Télécharger</button>
       </div>
       <div class="settings-row">
         <span class="settings-row-label">Exporter tout (JSON)</span>
@@ -2742,7 +2843,8 @@ function deleteProfile(id){
     renderSettings();
   }catch(e){showToast(e.message,'error');}
 }
-function signIn(){Auth.signIn();}
+function signInEmail(){Auth.signInEmail();}
+function signInGoogle(){Auth.signInGoogle();}
 function signOut(){Auth.signOut().then(()=>renderSettings());}
 function exportProfileData(){
   const cur=Accounts.current();
@@ -2789,6 +2891,105 @@ function resetProfileData(){
 /* ─── Sidebar ── */
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('visible')}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('visible')}
+
+/* ─── Export Excel (.xlsx) multi-onglets ── */
+function exportProfileXlsx(){
+  if(typeof XLSX==='undefined'){showToast('SheetJS pas chargé — recharge la page','error');return;}
+  const cur=Accounts.current();
+  const ings=loadUserIngredients();
+  const recs=loadUserRecipes();
+  const allRecs=[...CLASSIC_RECIPES, ...recs];
+
+  // Onglet 1 — Recettes (résumé)
+  const recHeader=['ID','Nom','Origine','Catégorie','Verre','Emoji','Description','Prix vente (€)','Food cost (€)','Marge (€)','IBA','Tags','Créée'];
+  const recRows=allRecs.map(r=>{
+    const origin = r.id?.startsWith('c')?'Classique':'Perso';
+    const fc = r.foodCost || (r.ingredients||[]).reduce((s,i)=>s+(i.pricePerCl&&i.quantityCl>0?i.pricePerCl*i.quantityCl:0),0);
+    const sp = r.sellingPrice||0;
+    return [r.id, r.name, origin, r.category||'', r.glassType||'', r.emoji||'',
+      r.description||'', sp?sp.toFixed(2):'', fc?fc.toFixed(2):'',
+      sp&&fc?(sp-fc).toFixed(2):'', r.ibaCategory||'',
+      (r.tags||[]).join(', '),
+      r.createdAt?new Date(r.createdAt).toISOString().slice(0,10):''];
+  });
+
+  // Onglet 2 — Recettes × Ingrédients (détail ligne par ligne)
+  const riHeader=['Recette','Ingrédient','Quantité','Unité','cl','€/cl','Coût ligne (€)'];
+  const riRows=[];
+  allRecs.forEach(r=>{
+    (r.ingredients||[]).forEach(ing=>{
+      const qty = ing.quantityCl>0?ing.quantityCl:(ing.qty||0);
+      const unit = ing.quantityCl>0?'cl':(ing.unit||'');
+      const cost = ing.pricePerCl&&ing.quantityCl>0?(ing.pricePerCl*ing.quantityCl):0;
+      riRows.push([r.name, ing.name, qty, unit, ing.quantityCl||'',
+        ing.pricePerCl?ing.pricePerCl.toFixed(4):'', cost?cost.toFixed(3):'']);
+    });
+  });
+
+  // Onglet 3 — Étapes
+  const stHeader=['Recette','N°','Étape'];
+  const stRows=[];
+  allRecs.forEach(r=>{
+    (r.steps||[]).forEach((s,i)=>{
+      const txt=typeof s==='string'?s:(s.text||JSON.stringify(s));
+      stRows.push([r.name, i+1, txt]);
+    });
+  });
+
+  // Onglet 4 — Ingrédients (bibliothèque)
+  const ingHeader=['ID','Nom','Catégorie','Marque','Contenance (cl)','Prix bouteille (€)','€/cl','Fournisseur','Maison','Yield (cl)'];
+  const ingRows=ings.map(i=>{
+    const ppcl = i.bottleSizeCl>0?(i.bottlePrice||0)/i.bottleSizeCl:0;
+    return [i.id||'', i.name, i.category||'', i.brand||'', i.bottleSizeCl||'',
+      i.bottlePrice||'', ppcl?ppcl.toFixed(4):'', i.supplier||'',
+      i.isMaison?'Oui':'Non', i.isMaison?(i.quantity||''):''];
+  });
+
+  // Onglet 5 — Composants ingrédients maison
+  const cmpHeader=['Ingrédient maison','Composant','Qté','Unité','Prix unité','Coût (€)'];
+  const cmpRows=[];
+  ings.filter(x=>x.isMaison&&x.subRecipe?.components).forEach(x=>{
+    x.subRecipe.components.forEach(c=>{
+      const cost = (typeof compCost==='function') ? compCost(c) : 0;
+      const p = c.price!=null?c.price:c.costPerUnit;
+      cmpRows.push([x.name, c.name||'', c.qty||0, c.unit||'', p||'', cost?cost.toFixed(3):'']);
+    });
+  });
+
+  // Onglet 6 — Résumé
+  const sumRows=[
+    ['Profil', cur.name],
+    ['Exporté le', new Date().toLocaleString('fr-FR')],
+    ['Recettes classiques', CLASSIC_RECIPES.length],
+    ['Recettes personnelles', recs.length],
+    ['Ingrédients (bibliothèque)', ings.length],
+    ['Ingrédients maison', ings.filter(x=>x.isMaison).length],
+    ['Plan', S.plan],
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const addSheet=(name,header,rows)=>{
+    const ws=XLSX.utils.aoa_to_sheet([header, ...rows]);
+    // largeurs auto approximatives
+    const widths=header.map((_,c)=>{
+      let m=header[c].length;
+      rows.forEach(r=>{ const v=String(r[c]??''); if(v.length>m) m=v.length; });
+      return {wch:Math.min(Math.max(m+2,8),50)};
+    });
+    ws['!cols']=widths;
+    XLSX.utils.book_append_sheet(wb,ws,name);
+  };
+  addSheet('Résumé',      ['Clé','Valeur'], sumRows);
+  addSheet('Recettes',    recHeader, recRows);
+  addSheet('Ingr. recettes', riHeader, riRows);
+  addSheet('Étapes',      stHeader, stRows);
+  addSheet('Bibliothèque',ingHeader, ingRows);
+  addSheet('Composants maison', cmpHeader, cmpRows);
+
+  const fname=`mixtura-${cur.name.replace(/\s+/g,'_')}-${new Date().toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  showToast('Export Excel téléchargé ✓','success');
+}
 
 /* ─── Modals ── */
 function closeModalOnOverlay(e){if(e.target===e.currentTarget)e.currentTarget.classList.remove('open')}
