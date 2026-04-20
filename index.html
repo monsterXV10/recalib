@@ -574,36 +574,60 @@ function sbDebouncedPush(){
   clearTimeout(sbSyncTimer);
   sbSyncTimer=setTimeout(sbPush, 1500);
 }
-function openLoginModal(){
+function openLoginModal(mode='login'){
   const m=document.getElementById('modal');
   document.getElementById('modalTitle').textContent='Connexion';
-  document.getElementById('modalContent').innerHTML=`
-    <p style="color:var(--text-2);font-size:14px;margin-bottom:16px">Entrez votre email pour recevoir un code à 6 chiffres.</p>
-    <div class="field"><label>Email</label><input id="loginEmail" type="email" placeholder="vous@example.com" autofocus></div>
-    <div id="otpStep" style="display:none">
-      <div class="field" style="margin-top:10px"><label>Code reçu par email</label><input id="loginOtp" type="text" inputmode="numeric" maxlength="6" placeholder="123456"></div>
-    </div>
-    <div class="form-actions"><button class="btn btn-primary btn-block" id="btnLoginAction">Envoyer le code ✉️</button></div>`;
-  let otpSent = false;
-  document.getElementById('btnLoginAction').addEventListener('click', async()=>{
-    const email=document.getElementById('loginEmail').value.trim();
-    if(!email){toast('Email requis');return;}
-    if(!otpSent){
-      const{error}=await sb.auth.signInWithOtp({email, options:{shouldCreateUser:true}});
-      if(error){toast('Erreur: '+error.message);return;}
-      otpSent=true;
-      document.getElementById('otpStep').style.display='block';
-      document.getElementById('loginEmail').readOnly=true;
-      document.getElementById('btnLoginAction').textContent='Vérifier le code ✓';
-      toast('✉️ Code envoyé ! Vérifiez votre email.');
-    } else {
-      const token=document.getElementById('loginOtp').value.trim();
-      if(!token){toast('Code requis');return;}
-      const{error}=await sb.auth.verifyOtp({email, token, type:'email'});
-      if(error){toast('Code invalide: '+error.message);return;}
-      closeModal();
-    }
-  });
+  const renderLoginForm=(md)=>{
+    const isLogin=md==='login';
+    document.getElementById('modalContent').innerHTML=`
+      <button type="button" id="btnGoogle" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;border-radius:var(--radius-sm);border:1px solid rgba(200,169,110,.3);background:var(--navy-700);color:var(--text-1);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:16px">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continuer avec Google
+      </button>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div style="flex:1;height:1px;background:rgba(200,169,110,.15)"></div>
+        <span style="color:var(--text-3);font-size:12px">ou</span>
+        <div style="flex:1;height:1px;background:rgba(200,169,110,.15)"></div>
+      </div>
+      <div class="field"><label>Email</label><input id="loginEmail" type="email" placeholder="vous@example.com" autofocus></div>
+      <div class="field"><label>Mot de passe</label><input id="loginPwd" type="password" placeholder="••••••••"></div>
+      ${!isLogin?`<div class="field"><label>Confirmer le mot de passe</label><input id="loginPwd2" type="password" placeholder="••••••••"></div>`:''}
+      <div class="form-actions" style="flex-direction:column;gap:8px">
+        <button class="btn btn-primary btn-block" id="btnLoginAction">${isLogin?'Se connecter':'Créer le compte'}</button>
+        <button type="button" class="btn btn-ghost btn-block btn-sm" id="btnToggleMode" style="font-size:13px;color:var(--text-2)">
+          ${isLogin?'Pas encore de compte ? <b>Inscription</b>':'Déjà un compte ? <b>Se connecter</b>'}
+        </button>
+      </div>`;
+    document.getElementById('btnGoogle').addEventListener('click', async()=>{
+      const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}});
+      if(error) toast('Erreur Google: '+error.message);
+    });
+    document.getElementById('btnToggleMode').addEventListener('click',()=>renderLoginForm(isLogin?'signup':'login'));
+    document.getElementById('btnLoginAction').addEventListener('click', async()=>{
+      const email=document.getElementById('loginEmail').value.trim();
+      const pwd=document.getElementById('loginPwd').value;
+      if(!email||!pwd){toast('Email et mot de passe requis');return;}
+      if(isLogin){
+        const{error}=await sb.auth.signInWithPassword({email,password:pwd});
+        if(error){
+          if(error.message.includes('Invalid login')||error.message.includes('invalid')){
+            toast('Email ou mot de passe incorrect');
+          } else { toast('Erreur: '+error.message); }
+          return;
+        }
+        closeModal();
+      } else {
+        const pwd2=document.getElementById('loginPwd2').value;
+        if(pwd!==pwd2){toast('Les mots de passe ne correspondent pas');return;}
+        if(pwd.length<6){toast('Mot de passe trop court (min. 6 caractères)');return;}
+        const{error}=await sb.auth.signUp({email,password:pwd});
+        if(error){toast('Erreur: '+error.message);return;}
+        toast('✅ Compte créé ! Vérifiez votre email pour confirmer.');
+        closeModal();
+      }
+    });
+  };
+  renderLoginForm(mode);
   m.classList.add('show');
 }
 const BUILD = '2026-04-19';
