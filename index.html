@@ -729,42 +729,56 @@ function applyI18n(){
 }
 
 /* State */
+// On initialise à vide pour que les données viennent uniquement de la DB ou du cache
 const DEFAULT_STATE = {
-  lang:'fr',
-  cocktails:[
-    {id:'c1', name:'Mojito', glass:'highball', family:'long-drink', alcohol:'rhum', menu:'Classiques',
-     ingredients:[
-       {name:'Rhum blanc', qty:5, unit:'cl'},
-       {name:'Jus de citron vert', qty:3, unit:'cl'},
-       {name:'Sirop de sucre', qty:2, unit:'cl'},
-       {name:'Menthe fraîche', qty:8, unit:'feuilles'},
-       {name:'Eau gazeuse', qty:6, unit:'cl'}
-     ], steps:'Écraser la menthe, ajouter citron et sucre, verser le rhum, compléter à l\'eau gazeuse'},
-    {id:'c2', name:'Negroni', glass:'old-fashioned', family:'short-drink', alcohol:'gin', menu:'Classiques',
-     ingredients:[
-       {name:'Gin', qty:3, unit:'cl'},
-       {name:'Campari', qty:3, unit:'cl'},
-       {name:'Vermouth rouge', qty:3, unit:'cl'}
-     ], steps:'Verser directement au verre, remuer, zeste d\'orange'}
-  ],
-  ingredients:[
-    {id:'i1', name:'Rhum blanc', category:'spirits', type:'bought', unit:'cl', bottleSize:70, bottlePrice:14.9, stock:2, stockUnit:'bouteilles', minStock:1},
-    {id:'i2', name:'Sirop de sucre', category:'syrup', type:'homemade', unit:'cl', stock:50, stockUnit:'cl', minStock:20,
-     recipe:[{name:'Sucre', qty:500, unit:'g'},{name:'Eau', qty:500, unit:'ml'}],
-     steps:'Chauffer à feu doux jusqu\'à dissolution complète'}
-  ],
-  batches:[],
-  settings:{firstName:'', lastName:'', email:'', phone:'', venue:'', address:'', city:'', country:'', aiKey:''}
+  lang: 'fr',
+  cocktails: [], 
+  ingredients: [],
+  batches: [],
+  settings: {firstName:'', lastName:'', email:'', phone:'', venue:'', address:'', city:'', country:'', aiKey:''}
 };
+
 let state = load();
+
 function load(){
-  try{
+  try {
     const raw = localStorage.getItem(LS_KEY);
     if(!raw) return structuredClone(DEFAULT_STATE);
+    // On fusionne avec le state par défaut pour garantir la structure
     return {...structuredClone(DEFAULT_STATE), ...JSON.parse(raw)};
-  }catch(e){return structuredClone(DEFAULT_STATE)}
+  } catch(e) {
+    return structuredClone(DEFAULT_STATE);
+  }
 }
-function save(){localStorage.setItem(LS_KEY,JSON.stringify(state));sbDebouncedPush();}
+
+/* ── Synchronisation Supabase ── */
+
+async function sbPull(){
+  if(!sb || !sbUser) return;
+  try {
+    // On récupère les ingrédients et les recettes (table 'recipes') en parallèle
+    const [ir, rr] = await Promise.all([
+      sb.from('ingredients').select('data').eq('user_id', sbUser.id),
+      sb.from('recipes').select('data').eq('user_id', sbUser.id)
+    ]);
+
+    // On extrait le contenu du champ 'data' pour chaque ligne
+    if(ir.data) state.ingredients = ir.data.map(r => r.data);
+    if(rr.data) state.cocktails = rr.data.map(r => r.data);
+
+    // Sauvegarde locale pour le mode hors-ligne
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+
+    // Mise à jour de l'interface selon l'écran actuel
+    if(currentScreen === 'Ingredients') renderIngredients();
+    if(currentScreen === 'Cocktails') renderCocktails();
+    
+    toast('☁️ Données chargées depuis le cloud');
+  } catch(e) {
+    console.error('Erreur sbPull:', e);
+    toast('❌ Erreur de synchronisation');
+  }
+}
 
 /* Nav */
 const SCREENS = ['Home','Cocktails','Ingredients','Batch','Settings'];
@@ -1718,61 +1732,88 @@ function importXlsx(file){
     try{
       const wb = XLSX.read(e.target.result, {type:'array'});
 
-      // Import Ingrédients
-      const ingSheet = wb.Sheets['Ingrédients'] || wb.Sheets[wb.SheetNames[1]];
+      // Helper : normalise une clé (sans accents, minuscules, sans espaces)
+      const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+
+      // Cherche une valeur dans un row avec clé flexible
+      const getCol = (row, ...variants) => {
+        const normMap = {};
+        Object.keys(row).forEach(k => normMap[norm(k)] = row[k]);
+        for(const v of variants){
+          const val = row[v] ?? normMap[norm(v)];
+          if(val !== undefined && val !== null && val !== '') return String(val).trim();
+        }
+        return '';
+      };
+
+      // Trouve une feuille par nom (flexible) ou par index
+      const findSheet = (names, fallbackIdx) => {
+        for(const n of names){
+          const found = Object.keys(wb.Sheets).find(k => norm(k)===norm(n));
+          if(found) return wb.Sheets[found];
+        }
+        return wb.Sheets[wb.SheetNames[fallbackIdx]] || null;
+      };
+
+      // ── Import Ingrédients ──
+      const ingSheet = findSheet(['Ingrédients','Ingredients','Ingredient','Ingr','Feuil2','Sheet2'], 1);
       if(ingSheet){
-        const rows = XLSX.utils.sheet_to_json(ingSheet);
+        const rows = XLSX.utils.sheet_to_json(ingSheet, {defval:''});
         let added=0, updated=0;
         rows.forEach(row=>{
-          const name = (row['Nom']||row['Name']||'').trim();
+          const name = getCol(row,'Nom','Name','Ingredient','Ingrédient','Produit','Product');
           if(!name) return;
           const existing = state.ingredients.find(i=>i.name.toLowerCase()===name.toLowerCase());
           const data = {
             id: existing?.id||uid(), name,
-            category: row['Famille']||row['Family']||row['Catégorie']||'misc',
-            type: row['Type']==='homemade'?'homemade':'bought',
-            unit: row['Unité']||row['Unit']||'cl',
-            bottleSize: parseFloat(row['Contenant'])||0,
-            bottlePrice: parseFloat(row['Prix achat (€)']||row['Prix achat']||row['Price'])||0,
-            stock: parseFloat(row['Stock'])||0,
-            stockUnit: row['Unité stock']||row['Stock Unit']||'bouteilles',
-            minStock: parseFloat(row['Seuil mini'])||0,
+            category: getCol(row,'Famille','Family','Catégorie','Category','Cat')||'misc',
+            type: getCol(row,'Type').toLowerCase().includes('maison')||getCol(row,'Type').toLowerCase().includes('home')?'homemade':'bought',
+            unit: getCol(row,'Unité','Unit','Unite')||'cl',
+            bottleSize: parseFloat(getCol(row,'Contenant','Container','Format','Size','Qty','Quantite'))||0,
+            bottlePrice: parseFloat(getCol(row,'Prix achat (€)','Prix achat','Prix','Price','Cost'))||0,
+            stock: parseFloat(getCol(row,'Stock','Stock actuel','Current Stock'))||0,
+            stockUnit: getCol(row,'Unité stock','Stock Unit','StockUnit')||'bouteilles',
+            minStock: parseFloat(getCol(row,'Seuil mini','Min','Minimum','MinStock'))||0,
             recipe:[], steps:''
           };
           if(existing){ Object.assign(existing,data); updated++; }
           else{ state.ingredients.push(data); added++; }
         });
-        toast(`📥 Ingrédients: +${added} ajoutés, ${updated} mis à jour`);
+        if(added||updated) toast(`📥 Ingrédients: +${added} ajoutés, ${updated} mis à jour`);
       }
 
-      // Import Recettes
-      const recSheet = wb.Sheets['Recettes'] || wb.Sheets[wb.SheetNames[0]];
+      // ── Import Recettes ──
+      const recSheet = findSheet(['Recettes','Recipes','Recipe','Cocktails','Feuil1','Sheet1'], 0);
       if(recSheet){
-        const rows = XLSX.utils.sheet_to_json(recSheet);
-        let currentCocktail=null, addedC=0;
+        const rows = XLSX.utils.sheet_to_json(recSheet, {defval:''});
+        let currentCocktail=null, addedC=0, lastRecipeName='';
         rows.forEach(row=>{
-          const name = (row['Nom de la recette']||row['Name']||'').trim();
-          if(name){
-            if(currentCocktail) {
+          const rawName = getCol(row,'Nom de la recette','Recette','Recipe','Name','Nom','Cocktail');
+          // Supporte 2 formats : nom sur chaque ligne (Google Sheets) OU nom seulement 1ère ligne (Excel)
+          const name = rawName || lastRecipeName;
+          if(rawName) lastRecipeName = rawName;
+
+          if(rawName && rawName !== (currentCocktail?.name||'')){
+            if(currentCocktail){
               const ex = state.cocktails.find(c=>c.name.toLowerCase()===currentCocktail.name.toLowerCase());
               if(!ex){ state.cocktails.push(currentCocktail); addedC++; }
             }
             currentCocktail = {
-              id:uid(), name,
-              family: row['Catégorie']||row['Category']||'',
-              glass: row['Verre']||row['Glass']||'',
-              menu: row['Carte']||row['Menu']||'',
-              alcohol: '',
-              steps: row['Description']||row['Steps']||'',
+              id:uid(), name:rawName,
+              family: getCol(row,'Catégorie','Category','Famille','Family','Type'),
+              glass: getCol(row,'Verre','Glass','Gobelet'),
+              menu: getCol(row,'Carte','Menu','Card'),
+              alcohol: getCol(row,'Alcool','Alcohol','Spirit'),
+              steps: getCol(row,'Description','Steps','Étapes','Etapes','Preparation','Préparation'),
               ingredients:[]
             };
           }
-          const ing = (row['Ingrédient']||row['Ingredient']||'').trim();
+          const ing = getCol(row,'Ingrédient','Ingredient','Ingr','Produit');
           if(ing && currentCocktail){
             currentCocktail.ingredients.push({
               name:ing,
-              qty: parseFloat(row['Qté base']||row['Qty']||0)||0,
-              unit: row['Unité']||row['Unit']||'cl'
+              qty: parseFloat(getCol(row,'Qté base','Qty','Quantité','Quantity','Qt','Dose'))||0,
+              unit: getCol(row,'Unité','Unit','Unite')||'cl'
             });
           }
         });
