@@ -543,17 +543,30 @@ function updateAuthUI(){
 async function sbPull(){
   if(!sb||!sbUser) return;
   try{
+    const localHasData = state.ingredients.length>0 || state.cocktails.length>0;
     const [ir,rr]=await Promise.all([
       sb.from('ingredients').select('data').eq('user_id',sbUser.id),
       sb.from('recipes').select('data').eq('user_id',sbUser.id)
     ]);
-    if(ir.data?.length) state.ingredients=ir.data.map(r=>r.data);
-    if(rr.data?.length) state.cocktails=rr.data.map(r=>r.data);
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
+    const cloudIngs = ir.data?.map(r=>r.data)||[];
+    const cloudCocktails = rr.data?.map(r=>r.data)||[];
+    if(!cloudIngs.length && !cloudCocktails.length && localHasData){
+      // Compte vide → pousser les données locales vers le cloud
+      await sbPush();
+      toast('☁️ Données locales transférées sur votre compte !');
+    } else {
+      // Fusionner : cloud prioritaire + éléments locaux absents du cloud
+      const cloudIngIds = new Set(cloudIngs.map(i=>i.id));
+      const cloudCocktailIds = new Set(cloudCocktails.map(c=>c.id));
+      state.ingredients = [...cloudIngs, ...state.ingredients.filter(i=>!cloudIngIds.has(i.id))];
+      state.cocktails   = [...cloudCocktails, ...state.cocktails.filter(c=>!cloudCocktailIds.has(c.id))];
+      localStorage.setItem(LS_KEY, JSON.stringify(state));
+      if(cloudIngIds.size || cloudCocktailIds.size) await sbPush(); // sync fusion vers cloud
+      toast('☁️ Données synchronisées');
+    }
     if(currentScreen==='Ingredients') renderIngredients();
     if(currentScreen==='Cocktails') renderCocktails();
-    toast('☁️ Données chargées depuis le cloud');
-  }catch(e){console.error('sbPull',e);}
+  }catch(e){console.error('sbPull',e); toast('❌ Erreur de synchronisation');}
 }
 async function sbPush(){
   if(!sb||!sbUser) return;
@@ -753,33 +766,6 @@ function load(){
 
 /* ── Synchronisation Supabase ── */
 
-async function sbPull(){
-  if(!sb || !sbUser) return;
-  try {
-    // On récupère les ingrédients et les recettes (table 'recipes') en parallèle
-    const [ir, rr] = await Promise.all([
-      sb.from('ingredients').select('data').eq('user_id', sbUser.id),
-      sb.from('recipes').select('data').eq('user_id', sbUser.id)
-    ]);
-
-    // On extrait le contenu du champ 'data' pour chaque ligne
-    if(ir.data) state.ingredients = ir.data.map(r => r.data);
-    if(rr.data) state.cocktails = rr.data.map(r => r.data);
-
-    // Sauvegarde locale pour le mode hors-ligne
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
-
-    // Mise à jour de l'interface selon l'écran actuel
-    if(currentScreen === 'Ingredients') renderIngredients();
-    if(currentScreen === 'Cocktails') renderCocktails();
-    
-    toast('☁️ Données chargées depuis le cloud');
-  } catch(e) {
-    console.error('Erreur sbPull:', e);
-    toast('❌ Erreur de synchronisation');
-  }
-}
-
 /* Nav */
 const SCREENS = ['Home','Cocktails','Ingredients','Batch','Settings'];
 let currentScreen = 'Home';
@@ -834,7 +820,7 @@ function syncMissingIngredients(usedList){
   let added = 0;
   usedList.forEach(u=>{
     const nm = (u.name||'').trim();
-    if(!nm) return;
+    if(!nm || nm.length < 2) return; // ignore stubs trop courts
     if(existingNames.has(nm.toLowerCase())) return;
     state.ingredients.push({
       id:uid(), name:nm, category:'misc', type:'bought',
@@ -1153,54 +1139,85 @@ function updateSelectionBar(){
 
 function openCocktailForm(c){
   const isNew = !c;
-  if(isNew) c = {id:uid(), name:'', glass:'highball', family:'long-drink', alcohol:'rhum', menu:'', ingredients:[{name:'',qty:0,unit:'cl'}], steps:''};
+  if(isNew) c = {id:uid(), name:'', glass:'', family:'', alcohol:'', menu:'', ingredients:[{name:'',qty:0,unit:'cl'}], steps:''};
   else c = structuredClone(c);
   const m = document.getElementById('modal');
   document.getElementById('modalTitle').textContent = (isNew?t('add'):t('edit'))+' · Cocktail';
   document.getElementById('modalContent').innerHTML = `
-    <div class="field"><label>${t('name')}</label><input id="fName" value="${escapeHtml(c.name)}"></div>
+    <div class="field"><label>${t('name')}</label><input id="fName" value="${escapeHtml(c.name)}" placeholder="ex: Mojito"></div>
     <div class="field-row">
       <div class="field"><label>${t('glass')}</label>
-        <input id="fGlass" list="glassList" value="${escapeHtml(c.glass||'')}">
+        <input id="fGlass" list="glassList" value="${escapeHtml(c.glass||'')}" placeholder="ex: highball">
         <datalist id="glassList">${GLASSES.map(g=>`<option value="${g}">`).join('')}</datalist>
       </div>
       <div class="field"><label>${t('family')}</label>
-        <input id="fFamily" list="famList" value="${escapeHtml(c.family||'')}">
+        <input id="fFamily" list="famList" value="${escapeHtml(c.family||'')}" placeholder="ex: long-drink">
         <datalist id="famList">${FAMILIES.map(g=>`<option value="${g}">`).join('')}</datalist>
       </div>
     </div>
     <div class="field-row">
       <div class="field"><label>${t('alcohol')}</label>
-        <input id="fAlcohol" list="spiritList" value="${escapeHtml(c.alcohol||'')}">
+        <input id="fAlcohol" list="spiritList" value="${escapeHtml(c.alcohol||'')}" placeholder="ex: rhum">
         <datalist id="spiritList">${SPIRITS.map(g=>`<option value="${g}">`).join('')}</datalist>
       </div>
       <div class="field"><label>${t('menu.name')}</label>
-        <input id="fMenu" list="menuList" value="${escapeHtml(c.menu||'')}">
+        <input id="fMenu" list="menuList" value="${escapeHtml(c.menu||'')}" placeholder="ex: Carte été">
         <datalist id="menuList">${uniq(state.cocktails.map(x=>x.menu)).map(g=>`<option value="${escapeHtml(g)}">`).join('')}</datalist>
       </div>
     </div>
     <div class="field"><label>${t('ingredients.plural')}</label>
       <div id="ingRows"></div>
       <button type="button" class="btn btn-ghost btn-sm" id="btnAddRow" style="margin-top:6px">+ ${t('ingredient')}</button>
-      <datalist id="ingListDL">${state.ingredients.map(i=>`<option value="${escapeHtml(i.name)}">`).join('')}</datalist>
       <datalist id="unitsDL">${UNITS.map(u=>`<option value="${u}">`).join('')}</datalist>
     </div>
     <div class="field"><label>${t('steps')}</label>
-      <textarea id="fSteps">${escapeHtml(c.steps||'')}</textarea>
+      <textarea id="fSteps" placeholder="ex: Piler la menthe, ajouter le rhum...">${escapeHtml(c.steps||'')}</textarea>
     </div>
     <div class="form-actions">
       <button class="btn btn-primary btn-block" id="btnSaveC">${t('save')}</button>
     </div>`;
+
+  /* ── Autocomplete ingrédients custom (datalist peu fiable sur mobile) ── */
+  function makeIngAutocomplete(inp){
+    let box = null;
+    function showSuggestions(val){
+      removeSuggestions();
+      const q = val.toLowerCase().trim();
+      if(!q) return;
+      const matches = state.ingredients.filter(i=>(i.name||'').toLowerCase().includes(q)).slice(0,6);
+      if(!matches.length) return;
+      box = document.createElement('div');
+      box.className='ing-suggestions';
+      box.style.cssText='position:absolute;left:0;right:0;top:100%;z-index:9999;background:var(--navy-700);border:1px solid rgba(200,169,110,.3);border-radius:var(--radius-sm);overflow:hidden;box-shadow:var(--shadow)';
+      matches.forEach(i=>{
+        const opt=document.createElement('div');
+        opt.textContent=i.name;
+        opt.style.cssText='padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid rgba(200,169,110,.08)';
+        opt.addEventListener('mousedown',e=>{e.preventDefault(); inp.value=i.name; inp.dispatchEvent(new Event('input')); removeSuggestions();});
+        opt.addEventListener('touchstart',e=>{e.preventDefault(); inp.value=i.name; inp.dispatchEvent(new Event('input')); removeSuggestions();});
+        box.appendChild(opt);
+      });
+      inp.parentElement.style.position='relative';
+      inp.parentElement.appendChild(box);
+    }
+    function removeSuggestions(){ if(box){box.remove();box=null;} }
+    inp.addEventListener('input', ()=>showSuggestions(inp.value));
+    inp.addEventListener('focus', ()=>{ if(inp.value) showSuggestions(inp.value); });
+    inp.addEventListener('blur', ()=>setTimeout(removeSuggestions,200));
+  }
+
   const rows = document.getElementById('ingRows');
   function renderRows(){
     rows.innerHTML='';
     c.ingredients.forEach((ing,i)=>{
       const r = document.createElement('div'); r.className='ing-row';
       r.innerHTML = `
-        <input list="ingListDL" placeholder="${t('name')}" value="${escapeHtml(ing.name||'')}" data-k="name">
+        <input placeholder="${t('name')}" value="${escapeHtml(ing.name||'')}" data-k="name" autocomplete="off">
         <input type="number" step="0.1" placeholder="${t('quantity')}" value="${ing.qty||''}" data-k="qty">
-        <input list="unitsDL" placeholder="${t('unit')}" value="${escapeHtml(ing.unit||'cl')}" data-k="unit">
+        <input list="unitsDL" placeholder="cl" value="${escapeHtml(ing.unit||'cl')}" data-k="unit" style="width:56px">
         <button type="button" class="rm">✕</button>`;
+      const nameInp = r.querySelector('[data-k="name"]');
+      makeIngAutocomplete(nameInp);
       r.querySelectorAll('input').forEach(inp=>{
         inp.addEventListener('input', ()=>{
           c.ingredients[i][inp.dataset.k] = inp.dataset.k==='qty' ? parseFloat(inp.value)||0 : inp.value;
