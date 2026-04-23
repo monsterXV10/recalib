@@ -7,3 +7,14 @@ index.html.bak_*
 .vercel
 .claude/
 Cahier_des_charges_MIXTURA.docx
+*.txt
+*.bat
+*.ps1
+*.py
+*.sql
+*.xlsx
+*.docx
+firebase-guide.md
+README_GITHUB.md
+SCHEMA.md
+cocktail-pwa/
