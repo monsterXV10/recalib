@@ -392,13 +392,20 @@ input,select,textarea{font:inherit;color:inherit;user-select:text;-webkit-user-s
     </div>
 
     <div class="setting-section">
-      <h3 data-i18n="settings.payment">Paiement</h3>
-      <div class="setting-row">
+      <h3>Plan</h3>
+      <div class="setting-row" id="planRow">
         <div>
-          <div class="setting-label" data-i18n="settings.comingSoon">Bientôt disponible</div>
-          <div class="setting-sub" data-i18n="settings.paymentSub">Abonnement Pro en préparation</div>
+          <div class="setting-label" id="planLabel">Démo</div>
+          <div class="setting-sub" id="planSub">Connexion pour accéder au catalogue complet</div>
         </div>
-        <span class="item-badge">Soon</span>
+        <span class="item-badge" id="planBadge">DÉMO</span>
+      </div>
+      <div class="setting-row" id="promoRow" style="display:none">
+        <div style="flex:1">
+          <div class="setting-label">Code promo</div>
+          <input id="promoInput" type="text" placeholder="Ex: MIXPRO2026" style="margin-top:6px;width:100%">
+        </div>
+        <button class="btn btn-ghost btn-sm" id="btnPromo" style="margin-top:22px">Activer</button>
       </div>
     </div>
 
@@ -549,6 +556,7 @@ function updateAuthUI(){
     lbl.textContent=t('settings.notLogged'); sub.textContent=t('settings.accountSub');
     btn.textContent=t('settings.login'); btn.dataset.action='login';
   }
+  updatePlanUI();
 }
 async function sbPull(){
   if(!sb||!sbUser) return;
@@ -755,7 +763,8 @@ function applyI18n(){
 // On initialise à vide pour que les données viennent uniquement de la DB ou du cache
 const DEFAULT_STATE = {
   lang: 'fr',
-  cocktails: [], 
+  plan: 'free',
+  cocktails: [],
   ingredients: [],
   batches: [],
   settings: {firstName:'', lastName:'', email:'', phone:'', venue:'', address:'', city:'', country:'', aiKey:''}
@@ -1034,6 +1043,99 @@ async function runScan(file){
   processScanResult(result);
 }
 
+/* ══════════════════════════════════════════
+   PLANS & CATALOGUE
+══════════════════════════════════════════ */
+const PROMO_CODES = ['MIXPRO2026','MIXTURA_PRO'];
+const PLANS = {
+  demo: { maxCreate:3,  catalogCount:6,    label:'Démo',    badge:'DÉMO',    sub:'Connectez-vous pour accéder au catalogue complet' },
+  free: { maxCreate:20, catalogCount:null, label:'Gratuit', badge:'GRATUIT', sub:'Catalogue complet · 20 cocktails max' },
+  pro:  { maxCreate:Infinity, catalogCount:null, label:'Pro', badge:'PRO ✦', sub:'Accès illimité · Toutes les fonctionnalités' }
+};
+function getPlan(){
+  if(state.plan==='pro') return 'pro';
+  if(sbUser) return 'free';
+  return 'demo';
+}
+
+/* Catalogue de cocktails classiques (lecture seule) */
+const CATALOG = [
+  /* ── 6 cocktails DÉMO ── */
+  {id:'cat_mojito', name:'Mojito', glass:'highball', family:'long-drink', alcohol:'rhum',
+   ingredients:[{name:'Rhum blanc',qty:4,unit:'cl'},{name:'Jus de citron vert',qty:2,unit:'cl'},{name:'Sirop de sucre',qty:2,unit:'cl'},{name:'Menthe fraîche',qty:8,unit:'feuilles'},{name:'Eau gazeuse',qty:8,unit:'cl'}],
+   steps:'Piler la menthe avec le citron et le sirop. Ajouter le rhum, glace pilée, compléter avec l\'eau gazeuse.'},
+  {id:'cat_margarita', name:'Margarita', glass:'coupe', family:'short-drink', alcohol:'tequila',
+   ingredients:[{name:'Tequila',qty:4,unit:'cl'},{name:'Triple sec',qty:2,unit:'cl'},{name:'Jus de citron vert',qty:2,unit:'cl'}],
+   steps:'Shaker avec glace. Servir dans un verre givré au sel.'},
+  {id:'cat_negroni', name:'Negroni', glass:'old-fashioned', family:'short-drink', alcohol:'gin',
+   ingredients:[{name:'Gin',qty:3,unit:'cl'},{name:'Campari',qty:3,unit:'cl'},{name:'Vermouth rouge',qty:3,unit:'cl'}],
+   steps:'Mélanger avec glace au verre. Garnir d\'un zeste d\'orange.'},
+  {id:'cat_spritz', name:'Aperol Spritz', glass:'copa', family:'spritz', alcohol:'champagne',
+   ingredients:[{name:'Aperol',qty:6,unit:'cl'},{name:'Prosecco',qty:9,unit:'cl'},{name:'Eau gazeuse',qty:3,unit:'cl'}],
+   steps:'Verser dans l\'ordre sur glace. Garnir d\'une tranche d\'orange.'},
+  {id:'cat_daiquiri', name:'Daiquiri', glass:'coupe', family:'short-drink', alcohol:'rhum',
+   ingredients:[{name:'Rhum blanc',qty:5,unit:'cl'},{name:'Jus de citron vert',qty:2.5,unit:'cl'},{name:'Sirop de sucre',qty:1.5,unit:'cl'}],
+   steps:'Shaker vigoureusement avec glace. Double-strain dans un verre froid.'},
+  {id:'cat_oldfashioned', name:'Old Fashioned', glass:'old-fashioned', family:'short-drink', alcohol:'whisky',
+   ingredients:[{name:'Bourbon',qty:6,unit:'cl'},{name:'Sirop de sucre',qty:0.5,unit:'cl'},{name:'Angostura bitters',qty:2,unit:'traits'}],
+   steps:'Mélanger au verre avec glace. Garnir d\'un zeste d\'orange et d\'une cerise.'},
+  /* ── Catalogue complet (connecté) ── */
+  {id:'cat_gintonic', name:'Gin Tonic', glass:'copa', family:'long-drink', alcohol:'gin',
+   ingredients:[{name:'Gin',qty:4,unit:'cl'},{name:'Tonic water',qty:12,unit:'cl'}],
+   steps:'Verser le gin sur glace, compléter de tonic. Garnir selon le gin.'},
+  {id:'cat_moscowmule', name:'Moscow Mule', glass:'highball', family:'long-drink', alcohol:'vodka',
+   ingredients:[{name:'Vodka',qty:4,unit:'cl'},{name:'Ginger beer',qty:10,unit:'cl'},{name:'Jus de citron vert',qty:1,unit:'cl'}],
+   steps:'Verser sur glace dans un mug en cuivre. Garnir de citron vert et menthe.'},
+  {id:'cat_whiskysour', name:'Whisky Sour', glass:'old-fashioned', family:'sour', alcohol:'whisky',
+   ingredients:[{name:'Bourbon',qty:5,unit:'cl'},{name:'Jus de citron',qty:2.5,unit:'cl'},{name:'Sirop de sucre',qty:2,unit:'cl'},{name:'Blanc d\'œuf',qty:1,unit:'pièce'}],
+   steps:'Dry shake puis shake avec glace. Double-strain. Garnir de quelques gouttes d\'Angostura.'},
+  {id:'cat_cosmopolitan', name:'Cosmopolitan', glass:'martini', family:'short-drink', alcohol:'vodka',
+   ingredients:[{name:'Vodka citron',qty:4,unit:'cl'},{name:'Triple sec',qty:2,unit:'cl'},{name:'Jus de canneberge',qty:3,unit:'cl'},{name:'Jus de citron vert',qty:1,unit:'cl'}],
+   steps:'Shaker avec glace. Filtrer dans un verre martini. Garnir d\'un zeste de citron.'},
+  {id:'cat_pinacol', name:'Piña Colada', glass:'hurricane', family:'tiki', alcohol:'rhum',
+   ingredients:[{name:'Rhum blanc',qty:4,unit:'cl'},{name:'Lait de coco',qty:4,unit:'cl'},{name:'Jus d\'ananas',qty:8,unit:'cl'}],
+   steps:'Blender avec glace pilée. Garnir d\'une tranche d\'ananas et cerise.'},
+  {id:'cat_tequilasunrise', name:'Tequila Sunrise', glass:'highball', family:'long-drink', alcohol:'tequila',
+   ingredients:[{name:'Tequila',qty:4,unit:'cl'},{name:'Jus d\'orange',qty:10,unit:'cl'},{name:'Grenadine',qty:1,unit:'cl'}],
+   steps:'Verser tequila et jus d\'orange sur glace. Faire couler la grenadine délicatement.'},
+  {id:'cat_bloodymary', name:'Bloody Mary', glass:'highball', family:'long-drink', alcohol:'vodka',
+   ingredients:[{name:'Vodka',qty:4,unit:'cl'},{name:'Jus de tomate',qty:10,unit:'cl'},{name:'Jus de citron',qty:1,unit:'cl'},{name:'Tabasco',qty:2,unit:'gouttes'},{name:'Sauce Worcestershire',qty:2,unit:'traits'}],
+   steps:'Mélanger tous les ingrédients sur glace. Saler, poivrer. Garnir de céleri.'},
+  {id:'cat_french75', name:'French 75', glass:'flûte', family:'long-drink', alcohol:'gin',
+   ingredients:[{name:'Gin',qty:3,unit:'cl'},{name:'Jus de citron',qty:1.5,unit:'cl'},{name:'Sirop de sucre',qty:1,unit:'cl'},{name:'Champagne',qty:6,unit:'cl'}],
+   steps:'Shaker gin, citron, sirop. Verser dans une flûte, compléter de champagne.'},
+  {id:'cat_manhattan', name:'Manhattan', glass:'coupe', family:'short-drink', alcohol:'whisky',
+   ingredients:[{name:'Rye whisky',qty:5,unit:'cl'},{name:'Vermouth rouge',qty:2,unit:'cl'},{name:'Angostura bitters',qty:2,unit:'traits'}],
+   steps:'Mélanger au verre avec glace. Filtrer dans un verre froid. Cerise de Marasquin.'},
+  {id:'cat_sidecar', name:'Sidecar', glass:'coupe', family:'sour', alcohol:'cognac',
+   ingredients:[{name:'Cognac',qty:4,unit:'cl'},{name:'Triple sec',qty:2,unit:'cl'},{name:'Jus de citron',qty:2,unit:'cl'}],
+   steps:'Shaker avec glace. Servir dans un verre dont le bord est givré au sucre.'},
+  {id:'cat_tomcollins', name:'Tom Collins', glass:'highball', family:'long-drink', alcohol:'gin',
+   ingredients:[{name:'Gin',qty:4,unit:'cl'},{name:'Jus de citron',qty:2,unit:'cl'},{name:'Sirop de sucre',qty:1.5,unit:'cl'},{name:'Eau gazeuse',qty:6,unit:'cl'}],
+   steps:'Shaker gin, citron, sirop. Verser sur glace, compléter d\'eau gazeuse. Garnir.'},
+  {id:'cat_hugo', name:'Hugo', glass:'copa', family:'spritz', alcohol:'champagne',
+   ingredients:[{name:'Prosecco',qty:10,unit:'cl'},{name:'Sirop de fleur de sureau',qty:3,unit:'cl'},{name:'Menthe fraîche',qty:5,unit:'feuilles'},{name:'Eau gazeuse',qty:3,unit:'cl'}],
+   steps:'Verser sur glace. Garnir de menthe et d\'une rondelle de citron vert.'},
+  {id:'cat_caipirinha', name:'Caïpirinha', glass:'old-fashioned', family:'short-drink', alcohol:'rhum',
+   ingredients:[{name:'Cachaça',qty:6,unit:'cl'},{name:'Citron vert',qty:0.5,unit:'pièce'},{name:'Sucre roux',qty:2,unit:'cuillère'}],
+   steps:'Écraser le citron avec le sucre. Ajouter la cachaça et la glace pilée.'},
+  {id:'cat_maitai', name:'Mai Tai', glass:'hurricane', family:'tiki', alcohol:'rhum',
+   ingredients:[{name:'Rhum ambré',qty:3,unit:'cl'},{name:'Rhum blanc',qty:3,unit:'cl'},{name:'Triple sec',qty:1.5,unit:'cl'},{name:'Sirop d\'orgeat',qty:1.5,unit:'cl'},{name:'Jus de citron vert',qty:2,unit:'cl'}],
+   steps:'Shaker avec glace. Garnir d\'une feuille de menthe et d\'ananas.'},
+];
+
+function updatePlanUI(){
+  const plan = getPlan();
+  const p = PLANS[plan];
+  const lbl=document.getElementById('planLabel'),sub=document.getElementById('planSub'),badge=document.getElementById('planBadge'),promoRow=document.getElementById('promoRow');
+  if(!lbl) return;
+  lbl.textContent = p.label;
+  sub.textContent = p.sub + (plan!=='demo' ? ` · ${state.cocktails.length}/${plan==='pro'?'∞':p.maxCreate} créés` : '');
+  badge.textContent = p.badge;
+  badge.style.color = plan==='pro' ? 'var(--gold)' : plan==='free' ? 'var(--success)' : 'var(--warn)';
+  if(promoRow) promoRow.style.display = (sbUser && plan!=='pro') ? 'flex' : 'none';
+}
+
 /* Cocktails */
 const GLASSES = ['highball','old-fashioned','coupe','flûte','martini','tumbler','hurricane','shot','copa'];
 const FAMILIES = ['long-drink','short-drink','shot','signature','mocktail','sour','tiki','spritz'];
@@ -1053,16 +1155,34 @@ function renderChips(containerId, kind, key, opts){
   });
 }
 function renderCocktails(){
-  const glasses = uniq(state.cocktails.map(c=>c.glass));
-  const families = uniq(state.cocktails.map(c=>c.family));
-  const alcohols = uniq(state.cocktails.map(c=>c.alcohol));
-
-  renderChips('filterGlass','cocktail','glass',[{v:'all',l:t('all')+' · '+t('glass')}, ...glasses.map(v=>({v,l:v}))]);
-  renderChips('filterFamily','cocktail','family',[{v:'all',l:t('all')+' · '+t('family')}, ...families.map(v=>({v,l:v}))]);
-  renderChips('filterAlcohol','cocktail','alcohol',[{v:'all',l:t('all')+' · '+t('alcohol')}, ...alcohols.map(v=>({v,l:v}))]);
+  const plan = getPlan();
+  const planCfg = PLANS[plan];
+  const container = document.getElementById('cocktailList');
+  container.innerHTML = '';
 
   const q = filters.cocktail.search.toLowerCase().trim();
-  let list = state.cocktails.filter(c=>{
+
+  /* ── Section CATALOGUE ── */
+  const catalogVisible = plan==='demo' ? CATALOG.slice(0,6) : CATALOG;
+  const catalogFiltered = catalogVisible.filter(c=>{
+    if(filters.cocktail.glass!=='all' && c.glass!==filters.cocktail.glass) return false;
+    if(filters.cocktail.family!=='all' && c.family!==filters.cocktail.family) return false;
+    if(filters.cocktail.alcohol!=='all' && c.alcohol!==filters.cocktail.alcohol) return false;
+    if(q && !c.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if(catalogFiltered.length){
+    const hCat = document.createElement('div');
+    hCat.className='section-title';
+    hCat.innerHTML = `📖 Catalogue${plan==='demo'?` <span style="color:var(--warn);font-size:10px">· ${CATALOG.length-6} autres à la connexion</span>`:''}`;
+    container.appendChild(hCat);
+    const lCat = document.createElement('div'); lCat.className='list';
+    catalogFiltered.forEach(c=>lCat.appendChild(renderCocktailItem(c,true)));
+    container.appendChild(lCat);
+  }
+
+  /* ── Section MES COCKTAILS ── */
+  let userList = state.cocktails.filter(c=>{
     if(filters.cocktail.glass!=='all' && c.glass!==filters.cocktail.glass) return false;
     if(filters.cocktail.family!=='all' && c.family!==filters.cocktail.family) return false;
     if(filters.cocktail.alcohol!=='all' && c.alcohol!==filters.cocktail.alcohol) return false;
@@ -1070,71 +1190,103 @@ function renderCocktails(){
     return true;
   });
 
-  const byMenu = {};
-  list.forEach(c=>{ const m=c.menu||'__none__'; (byMenu[m]=byMenu[m]||[]).push(c); });
+  const maxCreate = planCfg.maxCreate;
+  const userCount = state.cocktails.length;
+  const hUser = document.createElement('div');
+  hUser.className='section-title';
+  hUser.innerHTML = `🍸 Mes cocktails <span style="color:var(--text-3);font-weight:400">${userCount}${maxCreate===Infinity?'':'/' +maxCreate}</span>`;
+  container.appendChild(hUser);
 
-  const container = document.getElementById('cocktailList');
-  container.innerHTML = '';
-  if(list.length===0){
-    container.innerHTML = `<div class="empty">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8M12 11v11m7-19-7 8-7-8Z"/></svg>
-      <p>${t('empty.cocktails')}</p></div>`;
-    return;
+  if(userCount >= maxCreate && maxCreate !== Infinity){
+    const limitBanner = document.createElement('div');
+    limitBanner.style.cssText='background:rgba(200,169,110,.08);border:1px solid rgba(200,169,110,.3);border-radius:var(--radius);padding:14px;text-align:center;margin-bottom:10px';
+    limitBanner.innerHTML = plan==='demo'
+      ? `<div style="color:var(--gold);font-weight:600;margin-bottom:6px">Limite démo atteinte (${maxCreate} cocktails)</div><button class="btn btn-primary btn-sm" onclick="document.getElementById('btnLogin').click()">Se connecter pour continuer</button>`
+      : `<div style="color:var(--gold);font-weight:600;margin-bottom:6px">Limite gratuite atteinte (${maxCreate} cocktails)</div><button class="btn btn-primary btn-sm" onclick="go('Settings')">Activer un code Pro</button>`;
+    container.appendChild(limitBanner);
   }
-  const menuNames = Object.keys(byMenu).filter(m=>m!=='__none__').sort();
-  if(menuNames.length){
-    const h = document.createElement('div'); h.className='section-title'; h.textContent = t('menus');
-    container.appendChild(h);
+
+  if(userList.length===0 && !q){
+    const empty = document.createElement('div'); empty.className='empty';
+    empty.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8M12 11v11m7-19-7 8-7-8Z"/></svg><p>${t('empty.cocktails')}</p>`;
+    container.appendChild(empty);
+  } else {
+    const byMenu = {};
+    userList.forEach(c=>{ const m=c.menu||'__none__'; (byMenu[m]=byMenu[m]||[]).push(c); });
+    const menuNames = Object.keys(byMenu).filter(m=>m!=='__none__').sort();
+    menuNames.forEach(menu=>{
+      const group = document.createElement('div');
+      group.className='menu-group open';
+      group.innerHTML=`<div class="menu-group-head"><div class="menu-group-name">${escapeHtml(menu)}</div><div class="menu-group-count">${byMenu[menu].length}</div><div class="menu-group-chevron">${ICON.chevron}</div></div><div class="menu-group-body"><div class="list"></div></div>`;
+      const listEl = group.querySelector('.list');
+      byMenu[menu].forEach(c=>listEl.appendChild(renderCocktailItem(c)));
+      group.querySelector('.menu-group-head').addEventListener('click',()=>group.classList.toggle('open'));
+      container.appendChild(group);
+    });
+    if(byMenu.__none__){
+      const l=document.createElement('div'); l.className='list';
+      byMenu.__none__.forEach(c=>l.appendChild(renderCocktailItem(c)));
+      container.appendChild(l);
+    }
   }
-  menuNames.forEach(menu=>{
-    const group = document.createElement('div');
-    group.className='menu-group open';
-    group.innerHTML = `
-      <div class="menu-group-head">
-        <div class="menu-group-name">${escapeHtml(menu)}</div>
-        <div class="menu-group-count">${byMenu[menu].length}</div>
-        <div class="menu-group-chevron">${ICON.chevron}</div>
-      </div>
-      <div class="menu-group-body"><div class="list"></div></div>`;
-    const listEl = group.querySelector('.list');
-    byMenu[menu].forEach(c=>listEl.appendChild(renderCocktailItem(c)));
-    group.querySelector('.menu-group-head').addEventListener('click', ()=>group.classList.toggle('open'));
-    container.appendChild(group);
-  });
-  if(byMenu.__none__){
-    const h = document.createElement('div'); h.className='section-title';
-    h.textContent = t('none'); container.appendChild(h);
-    const l = document.createElement('div'); l.className='list';
-    byMenu.__none__.forEach(c=>l.appendChild(renderCocktailItem(c)));
-    container.appendChild(l);
-  }
+
+  // Chips filtre depuis catalogue + user
+  const allC=[...CATALOG,...state.cocktails];
+  renderChips('filterGlass','cocktail','glass',[{v:'all',l:t('all')}, ...uniq(allC.map(c=>c.glass)).map(v=>({v,l:v}))]);
+  renderChips('filterFamily','cocktail','family',[{v:'all',l:t('all')}, ...uniq(allC.map(c=>c.family)).map(v=>({v,l:v}))]);
+  renderChips('filterAlcohol','cocktail','alcohol',[{v:'all',l:t('all')}, ...uniq(allC.map(c=>c.alcohol)).map(v=>({v,l:v}))]);
 }
-function renderCocktailItem(c){
+function renderCocktailItem(c, isCatalog=false){
   const el = document.createElement('div');
-  el.className='item' + (selection.has(c.id)?' selected':'');
+  el.className='item' + (selection.has(c.id)?' selected':'') + (isCatalog?' catalog-item':'');
+  if(isCatalog) el.style.cssText='opacity:.85;border-style:dashed';
   el.innerHTML = `
-    <div class="item-check ${selection.size>0?'show':''}">${selection.has(c.id)?ICON.check:''}</div>
-    <div class="item-thumb">🍸</div>
+    <div class="item-check ${selection.size>0&&!isCatalog?'show':''}">${selection.has(c.id)?ICON.check:''}</div>
+    <div class="item-thumb" style="font-size:20px">${isCatalog?'📖':'🍸'}</div>
     <div class="item-body">
       <div class="item-name">${escapeHtml(c.name)}</div>
       <div class="item-meta">${[c.glass,c.family,c.alcohol].filter(Boolean).join(' · ')}</div>
     </div>
     <div class="item-actions">
-      <button class="item-act" data-act="edit" aria-label="edit">${ICON.edit}</button>
-      <button class="item-act del" data-act="del" aria-label="delete">${ICON.del}</button>
+      ${isCatalog
+        ? `<button class="item-act" data-act="add" title="Ajouter à mes cocktails" style="color:var(--gold)">＋</button>`
+        : `<button class="item-act" data-act="edit" aria-label="edit">${ICON.edit}</button>
+           <button class="item-act del" data-act="del" aria-label="delete">${ICON.del}</button>`
+      }
     </div>`;
   el.addEventListener('click', e=>{
     const act = e.target.closest('[data-act]')?.dataset.act;
     if(act==='edit'){ openCocktailForm(c); return; }
     if(act==='del'){ if(confirm(t('confirm.delete'))){ state.cocktails=state.cocktails.filter(x=>x.id!==c.id); save(); renderCocktails(); toast(t('deleted')); } return; }
-    if(selection.size>0){ toggleSel(c.id); }
-    else { openCocktailDetail(c); }
+    if(act==='add'){ addCatalogCocktail(c); return; }
+    if(selection.size>0 && !isCatalog){ toggleSel(c.id); }
+    else { openCocktailDetail(c, isCatalog); }
   });
   let lp;
-  el.addEventListener('touchstart', ()=>{ lp=setTimeout(()=>toggleSel(c.id),450); },{passive:true});
-  el.addEventListener('touchend', ()=>clearTimeout(lp));
-  el.addEventListener('touchmove', ()=>clearTimeout(lp));
+  if(!isCatalog){
+    el.addEventListener('touchstart', ()=>{ lp=setTimeout(()=>toggleSel(c.id),450); },{passive:true});
+    el.addEventListener('touchend', ()=>clearTimeout(lp));
+    el.addEventListener('touchmove', ()=>clearTimeout(lp));
+  }
   return el;
+}
+
+function addCatalogCocktail(c){
+  const plan = getPlan();
+  const maxCreate = PLANS[plan].maxCreate;
+  if(state.cocktails.length >= maxCreate){
+    toast(plan==='demo' ? '🔒 Connectez-vous pour ajouter plus de cocktails' : '🔒 Limite atteinte — activez un code Pro');
+    return;
+  }
+  // Vérifier si déjà dans mes cocktails
+  if(state.cocktails.find(x=>x.name.toLowerCase()===c.name.toLowerCase())){
+    toast('Déjà dans vos cocktails !'); return;
+  }
+  const newC = {...structuredClone(c), id:uid(), _fromCatalog:true};
+  state.cocktails.push(newC);
+  syncMissingIngredients(newC.ingredients||[]);
+  save(); renderCocktails();
+  toast(`✅ "${c.name}" ajouté à vos cocktails`);
 }
 function toggleSel(id){
   if(selection.has(id)) selection.delete(id); else selection.add(id);
@@ -1257,23 +1409,31 @@ function openCocktailForm(c){
   });
   m.classList.add('show');
 }
-function openCocktailDetail(c){
+function openCocktailDetail(c, isCatalog=false){
   const m = document.getElementById('modal');
-  document.getElementById('modalTitle').textContent = c.name;
+  document.getElementById('modalTitle').textContent = (isCatalog?'📖 ':'')+c.name;
   document.getElementById('modalContent').innerHTML = `
     <div style="color:var(--text-3);font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">
       ${[c.glass,c.family,c.alcohol].filter(Boolean).join(' · ')}${c.menu?' · <span style="color:var(--gold)">'+escapeHtml(c.menu)+'</span>':''}
     </div>
     <div class="section-title">${t('ingredients.plural')}</div>
     <div class="list" style="margin-bottom:14px">
-      ${c.ingredients.map(i=>`<div class="item"><div class="item-body"><div class="item-name">${escapeHtml(i.name)}</div></div><div style="color:var(--gold);font-weight:600">${i.qty||''} ${escapeHtml(i.unit||'')}</div></div>`).join('')}
+      ${(c.ingredients||[]).map(i=>`<div class="item"><div class="item-body"><div class="item-name">${escapeHtml(i.name)}</div></div><div style="color:var(--gold);font-weight:600">${i.qty||''} ${escapeHtml(i.unit||'')}</div></div>`).join('')}
     </div>
     ${c.steps?`<div class="section-title">${t('steps')}</div><div style="background:var(--navy-700);padding:14px;border-radius:var(--radius);white-space:pre-wrap;font-size:13.5px;line-height:1.6">${escapeHtml(c.steps)}</div>`:''}
-    <div class="form-actions">
-      <button class="btn btn-ghost" id="btnDEdit">${t('edit')}</button>
-      <button class="btn btn-primary btn-block" id="btnDClose">OK</button>
+    <div class="form-actions" style="${isCatalog?'display:grid;grid-template-columns:1fr 1fr;gap:8px':''}">
+      ${isCatalog
+        ? `<button class="btn btn-ghost" id="btnDClose">Fermer</button>
+           <button class="btn btn-primary" id="btnDAdd">+ Mes cocktails</button>`
+        : `<button class="btn btn-ghost" id="btnDEdit">${t('edit')}</button>
+           <button class="btn btn-primary btn-block" id="btnDClose">OK</button>`
+      }
     </div>`;
-  document.getElementById('btnDEdit').addEventListener('click', ()=>{closeModal(); openCocktailForm(c);});
+  if(isCatalog){
+    document.getElementById('btnDAdd').addEventListener('click', ()=>{ closeModal(); addCatalogCocktail(c); });
+  } else {
+    document.getElementById('btnDEdit').addEventListener('click', ()=>{closeModal(); openCocktailForm(c);});
+  }
   document.getElementById('btnDClose').addEventListener('click', closeModal);
   m.classList.add('show');
 }
@@ -1680,6 +1840,16 @@ document.getElementById('btnLogin').addEventListener('click', async()=>{
     toast('👋 Déconnecté');
   } else openLoginModal();
 });
+document.getElementById('btnPromo').addEventListener('click', ()=>{
+  const code = (document.getElementById('promoInput')?.value||'').trim().toUpperCase();
+  if(PROMO_CODES.includes(code)){
+    state.plan='pro'; save(); updatePlanUI(); renderCocktails();
+    toast('✅ Code activé — bienvenue en Pro !');
+    document.getElementById('promoInput').value='';
+  } else {
+    toast('❌ Code invalide');
+  }
+});
 document.getElementById('btnReset').addEventListener('click', ()=>{
   if(confirm(t('reset.confirm'))){
     localStorage.removeItem(LS_KEY);
@@ -1881,7 +2051,15 @@ fabEl.addEventListener('click', ()=>{
     fabEl.classList.toggle('open', willOpen);
     return;
   }
-  if(currentScreen==='Cocktails') openCocktailForm(null);
+  if(currentScreen==='Cocktails'){
+    const plan = getPlan();
+    const maxCreate = PLANS[plan].maxCreate;
+    if(state.cocktails.length >= maxCreate){
+      toast(plan==='demo' ? '🔒 Connectez-vous pour créer plus de cocktails' : '🔒 Limite atteinte — activez un code Pro');
+      return;
+    }
+    openCocktailForm(null);
+  }
   else if(currentScreen==='Batch') openBatchForm(null);
 });
 fabMenuEl.querySelectorAll('button').forEach(b=>{
