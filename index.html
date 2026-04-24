@@ -1126,6 +1126,15 @@ const CATALOG = [
    ingredients:[{name:'Rhum ambré',qty:3,unit:'cl'},{name:'Rhum blanc',qty:3,unit:'cl'},{name:'Triple sec',qty:1.5,unit:'cl'},{name:'Sirop d\'orgeat',qty:1.5,unit:'cl'},{name:'Jus de citron vert',qty:2,unit:'cl'}],
    steps:'Shaker avec glace. Garnir d\'une feuille de menthe et d\'ananas.'},
 ];
+/* Ingrédients uniques extraits du catalogue (pour l'autocomplete) */
+const CATALOG_INGREDIENTS=(()=>{
+  const seen=new Set(), list=[];
+  CATALOG.forEach(c=>(c.ingredients||[]).forEach(i=>{
+    const key=(i.name||'').toLowerCase().trim();
+    if(key&&key.length>1&&!seen.has(key)){seen.add(key);list.push({name:i.name,unit:i.unit||'cl'});}
+  }));
+  return list.sort((a,b)=>a.name.localeCompare(b.name));
+})();
 
 function updatePlanUI(){
   const plan = getPlan();
@@ -1349,17 +1358,41 @@ function openCocktailForm(c){
       removeSuggestions();
       const q = val.toLowerCase().trim();
       if(!q) return;
-      const matches = state.ingredients.filter(i=>(i.name||'').toLowerCase().includes(q)).slice(0,6);
-      if(!matches.length) return;
+      const personal = state.ingredients.filter(i=>(i.name||'').toLowerCase().includes(q)).slice(0,6);
+      const personalNames = new Set(personal.map(i=>(i.name||'').toLowerCase()));
+      const fromCatalog = CATALOG_INGREDIENTS
+        .filter(i=>i.name.toLowerCase().includes(q)&&!personalNames.has(i.name.toLowerCase()))
+        .slice(0, 6-personal.length);
+      if(!personal.length&&!fromCatalog.length) return;
       box = document.createElement('div');
       box.className='ing-suggestions';
       box.style.cssText='position:absolute;left:0;right:0;top:100%;z-index:9999;background:var(--navy-700);border:1px solid rgba(200,169,110,.3);border-radius:var(--radius-sm);overflow:hidden;box-shadow:var(--shadow)';
-      matches.forEach(i=>{
+      personal.forEach(i=>{
         const opt=document.createElement('div');
         opt.textContent=i.name;
         opt.style.cssText='padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid rgba(200,169,110,.08)';
-        opt.addEventListener('mousedown',e=>{e.preventDefault(); inp.value=i.name; inp.dispatchEvent(new Event('input')); removeSuggestions();});
-        opt.addEventListener('touchstart',e=>{e.preventDefault(); inp.value=i.name; inp.dispatchEvent(new Event('input')); removeSuggestions();});
+        opt.addEventListener('mousedown',e=>{e.preventDefault();inp.value=i.name;inp.dispatchEvent(new Event('input'));removeSuggestions();});
+        opt.addEventListener('touchstart',e=>{e.preventDefault();inp.value=i.name;inp.dispatchEvent(new Event('input'));removeSuggestions();});
+        box.appendChild(opt);
+      });
+      fromCatalog.forEach(i=>{
+        const opt=document.createElement('div');
+        opt.innerHTML=`<span style="font-size:11px;margin-right:5px;opacity:.6">📖</span>${i.name}`;
+        opt.style.cssText='padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid rgba(200,169,110,.08);opacity:.78';
+        const pick=e=>{
+          e.preventDefault();
+          inp.value=i.name;
+          inp.dispatchEvent(new Event('input'));
+          removeSuggestions();
+          if(!state.ingredients.find(x=>(x.name||'').toLowerCase()===i.name.toLowerCase())){
+            state.ingredients.push({id:uid(),name:i.name,category:'misc',type:'bought',
+              unit:i.unit,bottleSize:0,bottlePrice:0,stock:0,stockUnit:'bouteilles',minStock:0,
+              recipe:[],steps:'',incomplete:true,_fromCatalog:true});
+            save();
+          }
+        };
+        opt.addEventListener('mousedown',pick);
+        opt.addEventListener('touchstart',pick);
         box.appendChild(opt);
       });
       inp.parentElement.style.position='relative';
@@ -1476,6 +1509,7 @@ function renderIngredientItem(i){
   const stockTxt = i.stock!=null ? `<span class="${stockClass}">${i.stock} ${escapeHtml(i.stockUnit||'')}</span>` : '';
   let badges = '';
   if(i.incomplete) badges += `<span class="item-badge badge-warn" title="${t('incomplete.tooltip')}">! ${t('incomplete')}</span>`;
+  if(i._fromCatalog&&i.incomplete) badges += `<span class="item-badge" style="opacity:.65">📖 catalogue</span>`;
   if(i.type==='homemade') badges += `<span class="item-badge">${t('homemade')}</span>`;
   el.innerHTML = `
     <div class="item-check ${selection.size>0?'show':''}">${selection.has(i.id)?ICON.check:''}</div>
