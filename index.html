@@ -1221,13 +1221,23 @@ function renderCocktails(){
     return true;
   });
   if(catalogFiltered.length){
+    const catOpen = state.catalogOpen !== false; // replié/déplié, ouvert par défaut
     const hCat = document.createElement('div');
     hCat.className='section-title';
-    hCat.innerHTML = `📖 Catalogue${plan==='demo'?` <span style="color:var(--warn);font-size:10px">· ${CATALOG.length-6} autres à la connexion</span>`:''}`;
+    hCat.style.cssText='cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;-webkit-user-select:none';
+    const chevron = `<svg id="catChevron" style="transition:.2s;transform:rotate(${catOpen?0:180}deg)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>`;
+    hCat.innerHTML = `<span>📖 Catalogue${plan==='demo'?` <span style="color:var(--warn);font-size:10px">· ${CATALOG.length-6} autres à la connexion</span>`:` <span style="color:var(--text-3);font-weight:400;font-size:12px">${catalogFiltered.length}</span>`}</span>${chevron}`;
     container.appendChild(hCat);
     const lCat = document.createElement('div'); lCat.className='list';
+    if(!catOpen) lCat.style.display='none';
     catalogFiltered.forEach(c=>lCat.appendChild(renderCocktailItem(c,true)));
     container.appendChild(lCat);
+    hCat.addEventListener('click',()=>{
+      const open = lCat.style.display==='none';
+      lCat.style.display = open ? '' : 'none';
+      hCat.querySelector('#catChevron').style.transform = `rotate(${open?0:180}deg)`;
+      state.catalogOpen = open; save();
+    });
   }
 
   /* ── Section MES COCKTAILS ── */
