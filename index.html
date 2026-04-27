@@ -542,6 +542,10 @@ function initSupabase(){
     sb.auth.onAuthStateChange(async(event,session)=>{
       sbUser = session?.user||null;
       updateAuthUI();
+      // Nettoyer le hash #access_token de l'URL dès la connexion
+      if((event==='SIGNED_IN'||event==='INITIAL_SESSION') && window.location.hash.includes('access_token')){
+        history.replaceState(null,'',window.location.pathname);
+      }
       if(sbUser && (event==='SIGNED_IN'||event==='INITIAL_SESSION') && sbUser.id !== lastUserId){
         lastUserId = sbUser.id;
         await sbPull();
