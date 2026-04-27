@@ -572,27 +572,17 @@ function updateAuthUI(){
 async function sbPull(){
   if(!sb||!sbUser) return;
   try{
-    const localHasData = state.ingredients.length>0 || state.cocktails.length>0;
     const [ir,rr]=await Promise.all([
       sb.from('ingredients').select('data').eq('user_id',sbUser.id),
       sb.from('recipes').select('data').eq('user_id',sbUser.id)
     ]);
     const cloudIngs = ir.data?.map(r=>r.data)||[];
     const cloudCocktails = rr.data?.map(r=>r.data)||[];
-    if(!cloudIngs.length && !cloudCocktails.length && localHasData){
-      // Compte vide → pousser les données locales vers le cloud
-      await sbPush();
-      toast('☁️ Données locales transférées sur votre compte !');
-    } else {
-      // Fusionner : cloud prioritaire + éléments locaux absents du cloud
-      const cloudIngIds = new Set(cloudIngs.map(i=>i.id));
-      const cloudCocktailIds = new Set(cloudCocktails.map(c=>c.id));
-      state.ingredients = [...cloudIngs, ...state.ingredients.filter(i=>!cloudIngIds.has(i.id))];
-      state.cocktails   = [...cloudCocktails, ...state.cocktails.filter(c=>!cloudCocktailIds.has(c.id))];
-      localStorage.setItem(LS_KEY, JSON.stringify(state));
-      if(cloudIngIds.size || cloudCocktailIds.size) await sbPush(); // sync fusion vers cloud
-      toast('☁️ Données synchronisées');
-    }
+    // Remplacer le local par les données du compte — pas de fusion avec des données d'un autre compte
+    state.ingredients = cloudIngs;
+    state.cocktails   = cloudCocktails;
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+    toast(cloudIngs.length||cloudCocktails.length ? '☁️ Données synchronisées' : '☁️ Compte vide — prêt !');
     if(currentScreen==='Ingredients') renderIngredients();
     if(currentScreen==='Cocktails') renderCocktails();
   }catch(e){console.error('sbPull',e); toast('❌ Erreur de synchronisation');}
