@@ -1996,6 +1996,7 @@ document.getElementById('btnLogin').addEventListener('click', async()=>{
       ]);
     }catch(e){ console.warn('signOut:',e.message); }
     sbUser=null;
+    localStorage.removeItem(LS_KEY); // vider les données du compte déconnecté
     toast('👋 Déconnecté');
     setTimeout(()=>{ location.href=window.location.origin+window.location.pathname; }, 600);
   } else openLoginModal();
