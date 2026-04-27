@@ -1988,15 +1988,10 @@ document.getElementById('btnLogin').addEventListener('click', async()=>{
   if(!sb){toast('⚠️ Remplace SUPABASE_KEY dans le code pour activer la synchro');return;}
   const btn = document.getElementById('btnLogin');
   if(btn.dataset.action==='logout' || sbUser){
-    // signOut avec timeout — ne pas attendre si ça bloque
-    try{
-      await Promise.race([
-        sb.auth.signOut(),
-        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),2000))
-      ]);
-    }catch(e){ console.warn('signOut:',e.message); }
+    // scope:'local' = efface les tokens locaux sans appel réseau → fiable même hors-ligne
+    try{ await sb.auth.signOut({scope:'local'}); }catch(e){ console.warn('signOut:',e.message); }
     sbUser=null;
-    localStorage.removeItem(LS_KEY); // vider les données du compte déconnecté
+    localStorage.removeItem(LS_KEY);
     toast('👋 Déconnecté');
     setTimeout(()=>{ location.href=window.location.origin+window.location.pathname; }, 600);
   } else openLoginModal();
