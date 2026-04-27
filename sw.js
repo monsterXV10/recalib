@@ -3,16 +3,14 @@
    Gestion du cache hors-ligne
 ═══════════════════════════════════════ */
 
-const CACHE_NAME = 'mixtura-v3.7';
+const CACHE_NAME = 'mixtura-v3.8';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './supabase.min.js',
-  './icons/icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './icons/favicon-32.png',
 ];
 
 /* ── Installation : mise en cache des assets ── */
