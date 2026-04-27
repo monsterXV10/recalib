@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -1664,12 +1664,13 @@ function openIngredientForm(i){
     container.innerHTML='';
     const row=document.createElement('div');
     row.style.cssText='display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px';
+    const _is='background:var(--navy-700);border:1px solid rgba(200,169,110,.12);border-radius:var(--radius-sm);color:var(--text-1);padding:8px 10px;font-size:13px;outline:none';
     row.innerHTML=`
-      <input list="ingListDL" placeholder="Nom du produit" value="${escapeHtml(obj.name||'')}" data-k="name" style="flex:2;min-width:120px">
-      <input type="number" step="0.01" placeholder="min" value="${obj.qtyMin!=null?obj.qtyMin:''}" data-k="qtyMin" style="width:58px" title="Quantité minimale">
+      <input list="ingListDL" placeholder="Nom du produit" value="${escapeHtml(obj.name||'')}" data-k="name" style="flex:2;min-width:120px;${_is}">
+      <input type="number" step="0.01" placeholder="min" value="${obj.qtyMin!=null?obj.qtyMin:''}" data-k="qtyMin" style="width:58px;${_is}" title="Quantité minimale">
       <span style="color:var(--text-3);font-size:12px;white-space:nowrap">à</span>
-      <input type="number" step="0.01" placeholder="max" value="${obj.qtyMax!=null?obj.qtyMax:''}" data-k="qtyMax" style="width:58px" title="Quantité maximale (optionnel)">
-      <input list="unitsDL" placeholder="cl" value="${escapeHtml(obj.unit||'cl')}" data-k="unit" style="width:52px">
+      <input type="number" step="0.01" placeholder="max" value="${obj.qtyMax!=null?obj.qtyMax:''}" data-k="qtyMax" style="width:58px;${_is}" title="Quantité maximale (optionnel)">
+      <input list="unitsDL" placeholder="cl" value="${escapeHtml(obj.unit||'cl')}" data-k="unit" style="width:52px;${_is}">
       ${removable?'<button type="button" class="rm">✕</button>':''}`;
     row.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{
       const k=inp.dataset.k;
