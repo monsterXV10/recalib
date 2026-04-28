@@ -389,6 +389,7 @@ input,select,textarea{font:inherit;color:inherit;user-select:text;-webkit-user-s
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
         <input id="batchSearch" type="search" placeholder="Rechercher...">
       </div>
+      <button class="btn btn-ghost btn-sm" id="btnCalc" style="white-space:nowrap;padding:6px 14px;font-size:13px">⚗️ Calculateur</button>
     </div>
     <div id="batchList"></div>
   </div>
@@ -1684,7 +1685,14 @@ function openCocktailDetail(c, isCatalog=false){
 
 /* Ingredients */
 const ING_CATEGORIES = ['spirits','liqueur','wine','juice','syrup','bitter','fruit','herb','dairy','soda','misc'];
-const UNITS = ['cl','ml','l','oz','g','kg','pièce','feuilles','brins','gouttes','traits','cuillère','pincée','zeste'];
+const UNITS = [
+  // ── Volumes ──────────────────────────────────────────
+  'kl','hl','dal','l','dl','cl','ml',
+  // ── Poids ────────────────────────────────────────────
+  'kg','hg','dag','g','dg','cg','mg',
+  // ── Bar / cuisine ────────────────────────────────────
+  'oz','pièce','feuilles','brins','gouttes','traits','cuillère','pincée','zeste'
+];
 
 function renderIngredients(){
   const cats = uniq(state.ingredients.map(i=>i.category));
@@ -2014,6 +2022,210 @@ function openIngredientDetail(i){
 }
 
 /* Batch */
+/* ══════════════════════════════════════════
+   CALCULATEUR DYNAMIQUE
+   Mode A : J'ai X d'un produit → que puis-je faire ?
+   Mode B : J'ai X d'une recette maison → que me manque-t-il ?
+══════════════════════════════════════════ */
+function openCalculator(){
+  const m = document.getElementById('modal');
+  document.getElementById('modalTitle').textContent = '⚗️ Calculateur';
+
+  const ingOptions = state.ingredients.map(i=>`<option value="${i.id}">${escapeHtml(i.name)}</option>`).join('');
+  const homemadeOptions = state.ingredients.filter(i=>i.type==='homemade' && i.recipe?.length)
+    .map(i=>`<option value="${i.id}">${escapeHtml(i.name)}</option>`).join('');
+  const unitOpts = UNITS.filter(u=>['ml','cl','l','oz','g','kg'].includes(u))
+    .map(u=>`<option value="${u}">${u}</option>`).join('');
+
+  document.getElementById('modalContent').innerHTML = `
+    <div style="display:flex;gap:0;border:1px solid rgba(200,169,110,.2);border-radius:var(--radius);overflow:hidden;margin-bottom:18px">
+      <button id="calcTabA" class="calc-tab active" style="flex:1;padding:10px;background:rgba(200,169,110,.15);color:var(--gold);border:none;cursor:pointer;font:inherit;font-size:13px;font-weight:600">
+        📦 Avec ce que j'ai
+      </button>
+      <button id="calcTabB" class="calc-tab" style="flex:1;padding:10px;background:transparent;color:var(--text-2);border:none;cursor:pointer;font:inherit;font-size:13px">
+        🧪 Compléter une recette
+      </button>
+    </div>
+
+    <!-- Mode A -->
+    <div id="calcPanelA">
+      <div class="field">
+        <label>Ingrédient disponible</label>
+        <select id="calcIngA" style="width:100%">${ingOptions}</select>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div class="field" style="flex:1"><label>Quantité disponible</label><input id="calcQtyA" type="number" step="0.1" min="0" value="1"></div>
+        <div class="field" style="width:80px"><label>Unité</label>
+          <select id="calcUnitA">${unitOpts}</select>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" id="btnCalcA">Calculer →</button>
+      <div id="calcResultA" style="margin-top:16px"></div>
+    </div>
+
+    <!-- Mode B -->
+    <div id="calcPanelB" style="display:none">
+      <div class="field">
+        <label>Recette maison</label>
+        <select id="calcIngB" style="width:100%">${homemadeOptions||'<option>— Aucune recette maison —</option>'}</select>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div class="field" style="flex:1"><label>Quantité en stock</label><input id="calcQtyB" type="number" step="0.1" min="0" value="0"></div>
+        <div class="field" style="width:80px"><label>Unité</label>
+          <select id="calcUnitB">${unitOpts}</select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div class="field" style="flex:1"><label>Quantité cible</label><input id="calcQtyBTarget" type="number" step="0.1" min="0" value="1"></div>
+        <div class="field" style="width:80px"><label>Unité</label>
+          <select id="calcUnitBTarget">${unitOpts}</select>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" id="btnCalcB">Calculer →</button>
+      <div id="calcResultB" style="margin-top:16px"></div>
+    </div>
+
+    <div class="form-actions"><button class="btn btn-ghost btn-block" id="btnCalcClose">Fermer</button></div>
+  `;
+
+  // Onglets
+  const tabA = document.getElementById('calcTabA');
+  const tabB = document.getElementById('calcTabB');
+  const panA = document.getElementById('calcPanelA');
+  const panB = document.getElementById('calcPanelB');
+  const switchTab = (a)=>{
+    tabA.style.background = a ? 'rgba(200,169,110,.15)' : 'transparent';
+    tabA.style.color = a ? 'var(--gold)' : 'var(--text-2)';
+    tabB.style.background = a ? 'transparent' : 'rgba(200,169,110,.15)';
+    tabB.style.color = a ? 'var(--text-2)' : 'var(--gold)';
+    panA.style.display = a ? '' : 'none';
+    panB.style.display = a ? 'none' : '';
+  };
+  tabA.addEventListener('click', ()=>switchTab(true));
+  tabB.addEventListener('click', ()=>switchTab(false));
+
+  // ── Mode A : J'ai X → que puis-je faire ? ──
+  document.getElementById('btnCalcA').addEventListener('click', ()=>{
+    const ingId = document.getElementById('calcIngA').value;
+    const qty   = parseFloat(document.getElementById('calcQtyA').value)||0;
+    const unit  = document.getElementById('calcUnitA').value;
+    const ing   = state.ingredients.find(i=>i.id===ingId); if(!ing) return;
+    const availNorm = toCl(qty, unit); // en cl ou g
+    const results = [];
+
+    // Cocktails utilisant cet ingrédient
+    state.cocktails.forEach(c=>{
+      const r = (c.ingredients||[]).find(x=>x.name.toLowerCase()===ing.name.toLowerCase());
+      if(!r || !r.qty) return;
+      const needNorm = toCl(r.qty, r.unit||'cl');
+      if(needNorm <= 0) return;
+      const canMake = Math.floor(availNorm / needNorm);
+      results.push({name: c.name, canMake, needPerUnit: fmtNorm(needNorm, r.unit||'cl'), type:'🍹'});
+    });
+
+    // Recettes maison utilisant cet ingrédient
+    state.ingredients.filter(i=>i.type==='homemade' && i.recipe?.length).forEach(hm=>{
+      const r = (hm.recipe||[]).find(x=>x.name.toLowerCase()===ing.name.toLowerCase());
+      if(!r || !r.qty) return;
+      const needNorm = toCl(r.qty, r.unit||'cl');
+      if(needNorm <= 0) return;
+      const canMake = Math.floor(availNorm / needNorm);
+      results.push({name: hm.name, canMake, needPerUnit: fmtNorm(needNorm, r.unit||'cl'), type:'⚗️'});
+    });
+
+    const resEl = document.getElementById('calcResultA');
+    if(results.length===0){
+      resEl.innerHTML = `<div style="color:var(--text-3);font-size:13px;text-align:center;padding:16px">Aucune recette n'utilise <b>${escapeHtml(ing.name)}</b></div>`;
+      return;
+    }
+    results.sort((a,b)=>b.canMake-a.canMake);
+    resEl.innerHTML = `
+      <div class="section-title">Avec ${fmtNorm(availNorm, unit)} de ${escapeHtml(ing.name)}</div>
+      <table class="batch-table">
+        <thead><tr><th>Recette</th><th>Possible</th><th>Par unité</th></tr></thead>
+        <tbody>${results.map(r=>`
+          <tr>
+            <td>${r.type} ${escapeHtml(r.name)}</td>
+            <td style="color:var(--gold);font-weight:700">${r.canMake > 0 ? `×${r.canMake}` : '<span style="color:#e55">0</span>'}</td>
+            <td style="color:var(--text-3);font-size:12px">${r.needPerUnit}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  });
+
+  // ── Mode B : J'ai X en stock → que me manque-t-il ? ──
+  document.getElementById('btnCalcB').addEventListener('click', ()=>{
+    const ingId   = document.getElementById('calcIngB').value;
+    const stockQty  = parseFloat(document.getElementById('calcQtyB').value)||0;
+    const stockUnit = document.getElementById('calcUnitB').value;
+    const targetQty  = parseFloat(document.getElementById('calcQtyBTarget').value)||0;
+    const targetUnit = document.getElementById('calcUnitBTarget').value;
+    const ing = state.ingredients.find(i=>i.id===ingId);
+    if(!ing || !ing.recipe?.length) return;
+
+    const density = ing.density||null;
+    const stockNorm  = toRefQty(stockQty,  stockUnit,  density);
+    const targetNorm = toRefQty(targetQty, targetUnit, density);
+
+    // Rendement de base de la recette
+    let baseCl;
+    if(ing.mainOutput?.qtyMin){
+      baseCl = toRefQty(ing.mainOutput.qtyMin, ing.mainOutput.unit||'cl', density);
+    } else {
+      baseCl = (ing.recipe||[]).filter(r=>(r.unit||'').trim()!=='%')
+        .reduce((s,r)=>s+toRefQty(r.qty||0, r.unit||'cl', density),0) || 1;
+    }
+
+    const missingNorm = Math.max(0, targetNorm - stockNorm);
+    const ratio = missingNorm / baseCl; // préparations nécessaires
+
+    const resEl = document.getElementById('calcResultB');
+    if(missingNorm <= 0){
+      resEl.innerHTML = `<div style="color:#4caf93;font-weight:600;text-align:center;padding:16px">
+        ✅ Stock suffisant !<br>
+        <span style="color:var(--text-3);font-size:12px;font-weight:400">
+          ${fmtNorm(stockNorm, stockUnit)} en stock ≥ ${fmtNorm(targetNorm, targetUnit)} requis
+        </span></div>`;
+      return;
+    }
+
+    resEl.innerHTML = `
+      <div class="section-title">Pour obtenir ${fmtNorm(targetNorm, targetUnit)} de ${escapeHtml(ing.name)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;text-align:center">
+        <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:4px">En stock</div>
+          <div style="color:var(--gold);font-weight:700">${fmtNorm(stockNorm, stockUnit)}</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:4px">Manquant</div>
+          <div style="color:#e55;font-weight:700">${fmtNorm(missingNorm, targetUnit)}</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:4px">Préparations</div>
+          <div style="color:var(--gold);font-weight:700">×${Math.ceil(ratio)}</div>
+        </div>
+      </div>
+      <div class="section-title">Ingrédients à préparer</div>
+      <table class="batch-table">
+        <thead><tr><th>Ingrédient</th><th>Quantité</th></tr></thead>
+        <tbody>${ing.recipe.map(r=>{
+          const isPercent = (r.unit||'').toLowerCase().includes('%');
+          const scaledNorm = isPercent
+            ? (r.qty||0)/100 * missingNorm
+            : toCl(r.qty||0, r.unit||'cl') * ratio;
+          return `<tr class="sub-row">
+            <td>${escapeHtml(r.name)}</td>
+            <td style="color:var(--gold)">${fmtNorm(scaledNorm, isPercent?'cl':(r.unit||'cl'))}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>`;
+  });
+
+  document.getElementById('btnCalcClose').addEventListener('click', closeModal);
+  m.classList.add('show');
+}
+
 function renderBatches(){
   const q = (document.getElementById('batchSearch').value||'').toLowerCase();
   const list = state.batches.filter(b=>!q || b.name.toLowerCase().includes(q));
@@ -2137,7 +2349,9 @@ function openBatchDetail(b){
   // Convertit normQty en affichage lisible
   const aggregate_display = {};
   Object.entries(aggregate).forEach(([k,v])=>{
-    aggregate_display[k] = {name:v.name, qty:v.normQty, unit:v.origUnit, display: fmtNorm(v.normQty, v.origUnit)};
+    const _scale = toCl(1, v.origUnit);
+    const dispQty = _scale > 0 ? v.normQty / _scale : v.normQty;
+    aggregate_display[k] = {name:v.name, qty:dispQty, unit:v.origUnit, display: fmtNorm(v.normQty, v.origUnit)};
   });
   const homemadeExpand = [];
   Object.values(aggregate_display).forEach(a=>{
@@ -2171,21 +2385,33 @@ function openBatchDetail(b){
 }
 /* Conversion vers cl (unité de base) */
 // ── Domaines d'unités ──────────────────────────────────
-const DOM_VOL = u => ['l','dl','cl','ml','oz'].includes((u||'').toLowerCase().trim());
-const DOM_WT  = u => ['g','kg'].includes((u||'').toLowerCase().trim());
+const DOM_VOL = u => ['kl','hl','dal','l','dl','cl','ml','oz'].includes((u||'').toLowerCase().trim());
+const DOM_WT  = u => ['kg','hg','dag','g','dg','cg','mg'].includes((u||'').toLowerCase().trim());
 
 // Normalise vers cl (volumes) ou g (poids) — même axe numérique pour ratio intra-domaine
 // Unités custom depuis state.customUnits
 function toCl(qty, unit){
   const u = (unit||'cl').toLowerCase().trim();
-  if(u==='l')   return qty * 100;
-  if(u==='dl')  return qty * 10;
-  if(u==='cl')  return qty;
-  if(u==='ml')  return qty * 0.1;
-  if(u==='oz')  return qty * 2.957;   // 1 oz = 2.957 cl (standard bar)
+  // ── Volumes → cl ─────────────────────────────────────
+  // kL > hL > daL > L > dL > cL > mL
+  if(u==='kl')  return qty * 100000;  // 1 kL = 100 000 cl
+  if(u==='hl')  return qty * 10000;   // 1 hL =  10 000 cl
+  if(u==='dal') return qty * 1000;    // 1 daL =  1 000 cl
+  if(u==='l')   return qty * 100;     // 1  L  =    100 cl
+  if(u==='dl')  return qty * 10;      // 1 dL  =     10 cl
+  if(u==='cl')  return qty;           // base volume
+  if(u==='ml')  return qty * 0.1;     // 1 mL  =    0.1 cl
+  if(u==='oz')  return qty * 2.957;   // 1 oz  = 2.957 cl (bar)
+  // ── Poids → g ────────────────────────────────────────
+  // kg > hg > dag > g > dg > cg > mg
+  if(u==='kg')  return qty * 1000;    // 1 kg  = 1 000 g
+  if(u==='hg')  return qty * 100;     // 1 hg  =   100 g
+  if(u==='dag') return qty * 10;      // 1 dag =    10 g
   if(u==='g')   return qty;           // base poids
-  if(u==='kg')  return qty * 1000;    // → g
-  // Unités personnalisées
+  if(u==='dg')  return qty * 0.1;     // 1 dg  =   0.1 g
+  if(u==='cg')  return qty * 0.01;    // 1 cg  =  0.01 g
+  if(u==='mg')  return qty * 0.001;   // 1 mg  = 0.001 g
+  // ── Unités personnalisées ─────────────────────────────
   const cu = (state.customUnits||[]).find(x=>(x.name||'').toLowerCase()===u);
   if(cu) return toCl((cu.equivQty||0) * qty, cu.equivUnit||'cl');
   return qty;
@@ -2222,22 +2448,30 @@ function toRefQty(qty, unit, density){
   return raw;
 }
 
-// Affiche une quantité normalisée dans l'unité la plus lisible
-function fmtNorm(normVal, origUnit){
-  const u = (origUnit||'cl').toLowerCase().trim();
+// Affiche une quantité dans l'unité la plus lisible selon la valeur absolue
+// normVal = valeur en cl (volumes) ou g (poids)
+// unitHint = n'importe quelle unité du même domaine, sert juste à détecter vol/poids/custom
+// Unités utilisées : ml / cl / l  (oz si origUnit était oz)  |  g / kg
+function fmtNorm(normVal, unitHint){
+  const u = (unitHint||'cl').toLowerCase().trim();
   if(DOM_VOL(u)){
-    if(normVal < 1)    return `${(normVal*10).toFixed(1)} ml`;
-    if(normVal >= 100) return `${(normVal/100).toFixed(2)} l`;
-    return `${normVal.toFixed(1)} cl`;
+    if(normVal === 0) return `0 cl`;
+    // oz : reste en oz si l'unité d'origine était oz
+    if(u === 'oz')   return `${(normVal/2.957).toFixed(2)} oz`;
+    // ml → cl → l  (pas de hl ni dl)
+    if(normVal < 1)  return `${(normVal*10).toFixed(2)} ml`;   // < 1 cl → ml
+    if(normVal < 100) return `${normVal.toFixed(2)} cl`;        // < 1 l  → cl
+    return `${(normVal/100).toFixed(2)} l`;                     // ≥ 1 l  → l
   }
   if(DOM_WT(u)){
-    if(normVal >= 1000) return `${(normVal/1000).toFixed(3)} kg`;
-    return `${normVal.toFixed(1)} g`;
+    if(normVal === 0) return `0 g`;
+    // mg → g → kg
+    if(normVal < 0.01) return `${(normVal*1000).toFixed(2)} mg`;  // < 10 mg
+    if(normVal < 1000) return `${normVal.toFixed(2)} g`;
+    return `${(normVal/1000).toFixed(3)} kg`;
   }
-  // Unités custom ou non convertibles
-  const cu = (state.customUnits||[]).find(x=>(x.name||'').toLowerCase()===u);
-  if(cu){ return `${normVal.toFixed(2)} ${origUnit}`; }
-  return `${normVal.toFixed(2)} ${origUnit}`;
+  // Unités custom ou non convertibles → affiche dans l'unité native
+  return `${normVal.toFixed(2)} ${unitHint}`;
 }
 function renderHomemadeTable(h){
   const ing = h.ingredient;
@@ -2255,18 +2489,31 @@ function renderHomemadeTable(h){
   const ratio = requiredCl / baseCl;
   // Nombre de préparations
   const nbPrep = Math.ceil(ratio);
-  // Construire le tableau principal
+  // En-tête : quantité requise dans la meilleure unité
+  const requiredLabel = fmtNorm(requiredCl, h.unit);
+  // Construire le tableau principal — produit en croix
+  // Recette de base produit baseCl → on a besoin de requiredCl
+  // → chaque ingrédient X : baseCl ─── r.qty r.unit    →  requiredCl ─── scaledNorm
+  //                          produit en croix : scaledNorm = toCl(r.qty, r.unit) × (requiredCl / baseCl)
   let html = `<table class="batch-table" style="margin-bottom:6px">
-    <thead><tr><th colspan="2">${escapeHtml(ing.name)} · ${h.required.toFixed(2)} ${escapeHtml(h.unit)} <span style="color:var(--text-3);font-size:11px">(×${ratio.toFixed(1)} prépa.)</span></th></tr></thead>
+    <thead><tr>
+      <th colspan="2">
+        ${escapeHtml(ing.name)} · ${requiredLabel}
+        <span style="color:var(--text-3);font-size:11px">(×${ratio % 1 === 0 ? ratio.toFixed(0) : ratio.toFixed(2)} prépa.)</span>
+      </th>
+    </tr></thead>
     <tbody>
       ${ing.recipe.map(r=>{
         const isPercent = (r.unit||'').toLowerCase().includes('%');
         let displayQty;
         if(isPercent){
-          const qtyInCl = (r.qty||0) / 100 * requiredCl;
-          displayQty = qtyInCl >= 1 ? `${qtyInCl.toFixed(2)} cl` : `${(qtyInCl*10).toFixed(2)} ml`;
+          // % du volume total requis
+          const normScaled = (r.qty||0) / 100 * requiredCl;
+          displayQty = fmtNorm(normScaled, 'cl');
         } else {
-          displayQty = `${((r.qty||0)*ratio).toFixed(2)} ${escapeHtml(r.unit||'')}`;
+          // Produit en croix : normalise en cl/g puis formate dans la meilleure unité
+          const normScaled = toCl(r.qty||0, r.unit||'cl') * ratio;
+          displayQty = fmtNorm(normScaled, r.unit||'cl');
         }
         return `<tr class="sub-row"><td>${escapeHtml(r.name)}</td><td>${displayQty}</td></tr>`;
       }).join('')}
@@ -2277,10 +2524,13 @@ function renderHomemadeTable(h){
   // Récursion : si un ingrédient de la recette est aussi maison → l'expandre
   ing.recipe.forEach(r=>{
     const isPercent = (r.unit||'').toLowerCase().includes('%');
-    const scaledQty = isPercent
+    // produit en croix → normalisé en cl/g
+    const scaledNorm = isPercent
       ? (r.qty||0) / 100 * requiredCl
-      : (r.qty||0) * ratio;
-    const scaledUnit = isPercent ? 'cl' : (r.unit||'cl');
+      : toCl(r.qty||0, r.unit||'cl') * ratio;
+    // on passe en cl/g pour la sous-recette (fmtNorm s'occupera de l'affichage)
+    const scaledQty = scaledNorm;
+    const scaledUnit = isPercent ? 'cl' : (DOM_WT(r.unit||'cl') ? 'g' : 'cl');
     const sub = state.ingredients.find(i=>i.name.toLowerCase()===(r.name||'').toLowerCase() && i.type==='homemade');
     if(sub && sub.recipe?.length){
       html += `<div style="margin-left:16px;border-left:2px solid rgba(200,169,110,.2);padding-left:8px;margin-bottom:10px">`;
@@ -2731,6 +2981,7 @@ document.getElementById('ingredientSearch').addEventListener('input', e=>{
   filters.ingredient.search = e.target.value; renderIngredients();
 });
 document.getElementById('batchSearch').addEventListener('input', ()=>renderBatches());
+document.getElementById('btnCalc').addEventListener('click', ()=>openCalculator());
 
 /* Init */
 applyI18n();
