@@ -28,6 +28,16 @@
   --shadow-gold:0 0 20px rgba(200,169,110,.2);
   --tr:.2s cubic-bezier(.4,0,.2,1);
 }
+/* ── Thème clair ── */
+body.theme-light{
+  --navy-900:#F4F1EC; --navy-800:#FFFFFF; --navy-700:#EAE6DF;
+  --navy-600:#DDD8CF; --navy-500:#CEC8BE;
+  --gold:#8B6914; --gold-dim:#A07820; --gold-glow:rgba(139,105,20,.1);
+  --cream:#1A1208; --cream-dim:#3D3020;
+  --text-1:#1A1208; --text-2:#6B5E4A; --text-3:#9E8E78;
+  --shadow:0 4px 24px rgba(0,0,0,.12);
+  --shadow-gold:0 0 20px rgba(139,105,20,.15);
+}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;
   user-select:none;-webkit-user-select:none}
 html,body{height:100%;background:var(--navy-900);color:var(--text-1);
@@ -473,6 +483,20 @@ input,select,textarea{font:inherit;color:inherit;user-select:text;-webkit-user-s
           <div class="setting-sub" data-i18n="settings.resetSub">Effacer toutes les données locales</div>
         </div>
         <button class="btn btn-danger btn-sm" id="btnReset" data-i18n="settings.reset">Reset</button>
+      </div>
+    </div>
+
+    <div class="setting-section">
+      <h3>Apparence</h3>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Thème</div>
+          <div class="setting-sub">Sombre / Clair</div>
+        </div>
+        <div class="lang-toggle" id="themeToggle">
+          <button data-theme="dark">🌙 Sombre</button>
+          <button data-theme="light">☀️ Clair</button>
+        </div>
       </div>
     </div>
 
@@ -2055,7 +2079,8 @@ function renderSettings(){
   document.getElementById('settAddress').value = state.settings.address||'';
   document.getElementById('settCity').value = state.settings.city||'';
   document.getElementById('settCountry').value = state.settings.country||'';
-  document.querySelectorAll('.lang-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.lang===state.lang));
+  document.querySelectorAll('.lang-toggle button[data-lang]').forEach(b=>b.classList.toggle('active', b.dataset.lang===state.lang));
+  document.querySelectorAll('#themeToggle button').forEach(b=>b.classList.toggle('active', b.dataset.theme===(state.theme||'dark')));
 }
 ['settFirst','settLast','settEmail','settPhone','settVenue','settAddress','settCity','settCountry'].forEach(id=>{
   document.getElementById(id).addEventListener('input', e=>{
@@ -2064,12 +2089,23 @@ function renderSettings(){
     state.settings[map[id]] = e.target.value; save();
   });
 });
-document.querySelectorAll('.lang-toggle button').forEach(b=>{
+document.querySelectorAll('.lang-toggle button[data-lang]').forEach(b=>{
   b.addEventListener('click', ()=>{
     state.lang = b.dataset.lang; save(); applyI18n(); renderSettings(); updateAuthUI();
     document.getElementById('screenTitle').textContent = currentScreen==='Home' ? 'MIXTURA' : t(currentScreen.toLowerCase());
   });
 });
+function applyTheme(theme){
+  document.body.classList.toggle('theme-light', theme==='light');
+}
+document.getElementById('themeToggle').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-theme]');
+  if(!btn) return;
+  state.theme = btn.dataset.theme;
+  save(); applyTheme(state.theme); renderSettings();
+});
+// Appliquer le thème au chargement
+applyTheme(state.theme||'dark');
 document.getElementById('btnLogin').addEventListener('click', async()=>{
   if(!sb){toast('⚠️ Remplace SUPABASE_KEY dans le code pour activer la synchro');return;}
   const btn = document.getElementById('btnLogin');
