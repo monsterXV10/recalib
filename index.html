@@ -496,6 +496,13 @@ input,select,textarea{font:inherit;color:inherit;user-select:text;-webkit-user-s
         </div>
         <button class="btn btn-danger btn-sm" id="btnReset" data-i18n="settings.reset">Reset</button>
       </div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">🔄 Mettre à jour l'app</div>
+          <div class="setting-sub">Vide le cache et recharge la dernière version</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="btnClearCache">Update</button>
+      </div>
     </div>
 
     <div class="setting-section">
@@ -2152,6 +2159,23 @@ document.getElementById('btnReset').addEventListener('click', async()=>{
       renderCocktails(); renderIngredients(); renderBatches(); renderSettings();
       toast('✅ Données restaurées depuis le cloud');
     }
+  }
+});
+document.getElementById('btnClearCache').addEventListener('click', async()=>{
+  toast('🔄 Vidage du cache…');
+  try{
+    // Supprimer tous les caches SW
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k=>caches.delete(k)));
+    // Désinscrire le service worker
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r=>r.unregister()));
+    toast('✅ Cache vidé — rechargement…');
+    setTimeout(()=>location.reload(true), 800);
+  }catch(e){
+    // Fallback si pas de SW
+    toast('✅ Rechargement…');
+    setTimeout(()=>location.reload(true), 500);
   }
 });
 document.getElementById('btnExportIng').addEventListener('click', ()=>download('mixtura-ingredients.json', state.ingredients));
