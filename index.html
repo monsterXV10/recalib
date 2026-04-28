@@ -555,7 +555,7 @@ input,select,textarea{font:inherit;color:inherit;user-select:text;-webkit-user-s
       <span data-i18n="fab.scan">Scanner facture</span>
     </button>
   </div>
-  <input type="file" id="globalInvoiceFile" accept="image/*" capture="environment" hidden>
+  <input type="file" id="globalInvoiceFile" accept="image/*,application/pdf" hidden>
 
   <button class="fab" id="fab" style="display:none">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -1040,33 +1040,35 @@ function fileToBase64(file){
 function showOCRViewer(imageURL, ocrData){
   const m = document.getElementById('modal');
   const lines = (ocrData.lines||[]).filter(l=>l.text.trim().length > 1);
-  const imgW = ocrData.width || 1;
-  const imgH = ocrData.height || 1;
   const selected = new Set(lines.map((_,i)=>i));
 
-  document.getElementById('modalTitle').textContent = String.fromCodePoint(0x2702)+String.fromCodePoint(0xFE0F)+' Selectionne les lignes a garder';
+  document.getElementById('modalTitle').textContent = '✂️ Sélectionne les lignes à garder';
   document.getElementById('modalContent').innerHTML = `
     <div style="font-size:12px;color:var(--text-3);margin-bottom:10px">
-      Appuie pour deselectionner <span style="color:var(--gold)">${lines.length} lignes</span>
+      Appuie sur une ligne pour la désélectionner · <span style="color:var(--gold)">${lines.length} lignes détectées</span>
     </div>
     <div id="ocrImgWrap" style="position:relative;display:block;width:100%;border-radius:var(--radius);overflow:hidden;background:#000;-webkit-user-select:none;user-select:none">
-      <img id="ocrImg" src="${imageURL}" style="width:100%;height:auto;display:block;opacity:.55;pointer-events:none;-webkit-user-drag:none;-webkit-touch-callout:none">
+      <img id="ocrImg" src="${imageURL}" style="width:100%;height:auto;display:block;opacity:.5;pointer-events:none;-webkit-user-drag:none;-webkit-touch-callout:none">
       <div id="ocrOverlay" style="position:absolute;inset:0;pointer-events:auto"></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:10px">
-      <button class="btn btn-ghost btn-sm" id="btnOcrSelAll" style="flex:1">Tout selectionner</button>
-      <button class="btn btn-ghost btn-sm" id="btnOcrSelNone" style="flex:1">Tout deselectionner</button>
+      <button class="btn btn-ghost btn-sm" id="btnOcrSelAll" style="flex:1">Tout sélectionner</button>
+      <button class="btn btn-ghost btn-sm" id="btnOcrSelNone" style="flex:1">Tout désélectionner</button>
     </div>
     <div class="form-actions" style="margin-top:8px">
-      <button class="btn btn-primary btn-block" id="btnOcrValidate">Analyser la selection</button>
+      <button class="btn btn-primary btn-block" id="btnOcrValidate">✅ Analyser la sélection</button>
     </div>`;
   m.classList.add('show');
 
   const overlay = document.getElementById('ocrOverlay');
-  // Empêcher le menu contextuel natif sur toute la zone
   overlay.addEventListener('contextmenu', e=>e.preventDefault());
 
+  // Dimensions réelles OCR — on attend que l'image soit chargée pour confirmer
+  let imgW = ocrData.width  || 0;
+  let imgH = ocrData.height || 0;
+
   function renderOverlay(){
+    if(!imgW || !imgH){ return; } // attendre les dimensions
     overlay.innerHTML = '';
     lines.forEach((line, idx)=>{
       const b = line.bbox;
@@ -1105,7 +1107,17 @@ function showOCRViewer(imageURL, ocrData){
       overlay.appendChild(box);
     });
   }
-  renderOverlay();
+  // Récupérer les vraies dimensions de l'image (priorité : Tesseract → naturalSize → fallback bbox max)
+  const imgEl = document.getElementById('ocrImg');
+  const initOverlay = ()=>{
+    if(!imgW || !imgH){
+      imgW = imgEl.naturalWidth  || ocrData.width  || Math.max(...lines.map(l=>l.bbox.x1), 1);
+      imgH = imgEl.naturalHeight || ocrData.height || Math.max(...lines.map(l=>l.bbox.y1), 1);
+    }
+    renderOverlay();
+  };
+  if(imgEl.complete && imgEl.naturalWidth) initOverlay();
+  else imgEl.addEventListener('load', initOverlay);
 
   document.getElementById('btnOcrSelAll').addEventListener('click',()=>{ lines.forEach((_,i)=>selected.add(i)); renderOverlay(); });
   document.getElementById('btnOcrSelNone').addEventListener('click',()=>{ selected.clear(); renderOverlay(); });
@@ -1119,13 +1131,58 @@ function showOCRViewer(imageURL, ocrData){
   });
 }
 
+// -- PDF → Image via PDF.js (lazy load) --------------
+let _pdfJsReady = null;
+function loadPdfJs(){
+  if(_pdfJsReady) return _pdfJsReady;
+  _pdfJsReady = new Promise((res,rej)=>{
+    if(window.pdfjsLib){ res(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4/build/pdf.min.mjs';
+    s.type = 'module';
+    s.onload = ()=>{
+      // PDF.js besoin du worker
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdn.jsdelivr.net/npm/pdfjs-dist@4/build/pdf.worker.min.mjs';
+      res();
+    };
+    s.onerror = rej;
+    document.head.appendChild(s);
+  });
+  return _pdfJsReady;
+}
+
+async function pdfToImageFile(file){
+  await loadPdfJs();
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+  // Prendre la première page (factures : 1 page en général)
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({scale: 2.5}); // haute résolution pour OCR
+  const canvas = document.createElement('canvas');
+  canvas.width  = viewport.width;
+  canvas.height = viewport.height;
+  const ctx = canvas.getContext('2d');
+  await page.render({canvasContext: ctx, viewport}).promise;
+  return new Promise(res => canvas.toBlob(blob => res(new File([blob],'scan.png',{type:'image/png'})), 'image/png'));
+}
+
 // -- Point d'entree principal -------------------------
 async function runScan(file){
   if(!file) return;
   const m = document.getElementById('modal');
   document.getElementById('modalTitle').textContent = 'Lecture en cours...';
-  document.getElementById('modalContent').innerHTML = '<div style="text-align:center;padding:30px 0"><div id="scanProgress" style="font-size:32px;color:var(--gold);margin-bottom:12px">0%</div><div style="color:var(--text-3);font-size:13px">Analyse de l&#39;image...</div><div style="margin-top:16px;height:4px;background:var(--navy-700);border-radius:2px;overflow:hidden"><div id="scanBar" style="height:100%;background:var(--gold);width:0%;transition:width .3s;border-radius:2px"></div></div></div>';
+  document.getElementById('modalContent').innerHTML = '<div style="text-align:center;padding:30px 0"><div id="scanProgress" style="font-size:32px;color:var(--gold);margin-bottom:12px">0%</div><div style="color:var(--text-3);font-size:13px">Analyse en cours...</div><div style="margin-top:16px;height:4px;background:var(--navy-700);border-radius:2px;overflow:hidden"><div id="scanBar" style="height:100%;background:var(--gold);width:0%;transition:width .3s;border-radius:2px"></div></div></div>';
   m.classList.add('show');
+
+  // Conversion PDF → image si nécessaire
+  if(file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf')){
+    const prog = document.getElementById('scanProgress');
+    if(prog) prog.textContent = '📄';
+    try{ file = await pdfToImageFile(file); }
+    catch(e){ m.classList.remove('show'); toast('Erreur lecture PDF : '+e.message); return; }
+  }
+
   const imageURL = URL.createObjectURL(file);
   try{
     const ocrData = await ocrImage(file, p=>{
@@ -1733,7 +1790,7 @@ function openIngredientForm(i){
         <div class="field"><label>${t('price')} (€)</label><input id="gBottlePrice" type="number" step="0.01" value="${i.bottlePrice||''}"></div>
       </div>
       <button type="button" class="btn btn-ghost btn-sm" id="btnScan" style="margin-bottom:10px">📷 ${t('scan.invoice')}</button>
-      <input type="file" id="invoiceFile" accept="image/*" capture="environment" hidden>
+      <input type="file" id="invoiceFile" accept="image/*,application/pdf" hidden>
     </div>
     <div id="homemadeBlock" style="display:${i.type==='homemade'?'block':'none'}">
       <div class="section-title">La recette</div>
