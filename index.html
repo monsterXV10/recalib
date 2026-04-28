@@ -953,185 +953,147 @@ function syncAllMissing(){
   return added;
 }
 
-/* ═══════════════ IA SCAN (Google Gemini) ═══════════════
-   Envoie l'image au modèle Gemini Vision, qui classe le document
-   (facture / recette / note) et extrait les données en JSON. */
+/* =======================================================
+   SCAN OCR -- Pipeline :
+   1. Tesseract.js (local, sans cle) --> texte brut
+   2a. Gemini TEXT (si cle dispo) --> JSON structure precis
+   2b. Parser local (fallback) --> regex sur le texte brut
+======================================================= */
+
+// -- Chargement lazy de Tesseract.js ------------------
+let _tesseractReady = null;
+function loadTesseract(){
+  if(_tesseractReady) return _tesseractReady;
+  _tesseractReady = new Promise((res,rej)=>{
+    if(window.Tesseract){ res(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+  return _tesseractReady;
+}
+
+// -- OCR via Tesseract.js -----------------------------
+async function ocrImage(file, onProgress){
+  await loadTesseract();
+  const worker = await Tesseract.createWorker('fra+eng', 1, {
+    logger: m => {
+      if(m.status==='recognizing text') onProgress?.(Math.round(m.progress*100));
+    }
+  });
+  const { data:{ text } } = await worker.recognize(file);
+  await worker.terminate();
+  return text.trim();
+}
+
+// -- Parser local (fallback sans cle) ----------------
+function parseOCRLocal(text){
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const priceRx = /\d+[.,]\d{2}\s*€?|€\s*\d/;
+  const unitRx  = /\b(\d+[.,]?\d*)\s*(cl|ml|l\b|g\b|kg|oz|pièce|feuille|brin|bouteille)/i;
+  const hasPrice = lines.some(l=>priceRx.test(l));
+  const hasUnits = lines.some(l=>unitRx.test(l));
+
+  if(hasPrice){
+    const items = [];
+    lines.forEach(l=>{
+      const priceM = l.match(/(\d+[.,]\d{1,2})\s*€?$/);
+      const price  = priceM ? parseFloat(priceM[1].replace(',','.')) : 0;
+      const unitM  = l.match(/(\d+[.,]?\d*)\s*(cl|ml|l\b|g|kg|oz|pièce|bouteille)/i);
+      const qty    = unitM ? parseFloat(unitM[1].replace(',','.')) : 0;
+      const unit   = unitM ? unitM[2].toLowerCase() : 'pièce';
+      let name = l.replace(priceRx,'').replace(unitRx,'').replace(/\s+/g,' ').trim();
+      if(name.length > 2) items.push({name, quantity:qty||1, unit, price});
+    });
+    if(items.length) return {type:'invoice', items};
+  }
+
+  if(hasUnits){
+    const ingredients = [];
+    let steps = '', name = lines[0]||'Recette';
+    lines.forEach((l,i)=>{
+      const m = l.match(/(\d+[.,]?\d*)\s*(cl|ml|l\b|g|kg|oz|traits?|gouttes?|brins?|feuilles?|pièce|cuillère|pincée|zeste)/i);
+      if(m){
+        const qty  = parseFloat(m[1].replace(',','.'));
+        const unit = m[2].toLowerCase();
+        const ingName = l.replace(m[0],'').replace(/[-–:*•]\s*/,'').trim()||('Ingrédient '+(i+1));
+        ingredients.push({name:ingName, qty, unit});
+      } else if(i>0 && l.length>8){ steps += l + '\n'; }
+    });
+    if(ingredients.length) return {type:'recipe', name, glass:'', family:'', alcohol:'', ingredients, steps:steps.trim()};
+  }
+
+  return {type:'note', text};
+}
+
+// -- Parse via Gemini TEXT (si cle dispo) -------------
+async function parseWithGemini(text){
+  const key = (state.settings.aiKey||'').trim();
+  if(!key) return null;
+  const prompt = 'Tu es un assistant bar/mixologie. Analyse ce texte OCR et détermine son type :\n1. "invoice" — facture / bon de commande\n2. "recipe"  — recette de cocktail\n3. "note"    — autre texte\n\nRéponds UNIQUEMENT en JSON strict (pas de markdown).\nUnités : cl/ml/l/g/kg/oz/pièce/feuilles/brins/gouttes/traits/cuillère/pincée/zeste.\n\nSchémas :\n- invoice: {"type":"invoice","items":[{"name":"string","quantity":number,"unit":"string","price":number}]}\n- recipe:  {"type":"recipe","name":"string","glass":"string","family":"string","alcohol":"string","ingredients":[{"name":"string","qty":number,"unit":"string"}],"steps":"string"}\n- note:    {"type":"note","text":"string"}\n\nTEXTE OCR :\n' + text;
+  try{
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(key),{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json',temperature:0.1}})
+    });
+    if(!res.ok) return null;
+    const j = await res.json();
+    const raw = j?.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    try{ return JSON.parse(raw); }catch(e){ const m=raw.match(/\{[\s\S]*\}/); return m?JSON.parse(m[0]):null; }
+  }catch(e){ return null; }
+}
+
+// -- base64 helper ------------------------------------
 function fileToBase64(file){
   return new Promise((resolve,reject)=>{
-    const r = new FileReader();
-    r.onload = ()=>{
-      const s = r.result; // data:image/...;base64,....
-      const i = s.indexOf(','); resolve({mime:file.type, b64:s.slice(i+1)});
-    };
-    r.onerror = reject; r.readAsDataURL(file);
+    const r=new FileReader();
+    r.onload=()=>{ const s=r.result; resolve({mime:file.type, b64:s.slice(s.indexOf(',')+1)}); };
+    r.onerror=reject; r.readAsDataURL(file);
   });
 }
-async function scanWithAI(file){
-  const key = (state.settings.aiKey||'').trim();
-  if(!key){ toast('⚠️ Clé API Gemini manquante (Paramètres → Scanner IA)'); return null; }
-  const {mime, b64} = await fileToBase64(file);
-  const prompt = `Tu es un assistant pour une app de bar/mixologie. Analyse cette image et détermine son type parmi:
-1. "invoice" — facture, ticket de caisse ou bon de commande avec produits et prix
-2. "recipe" — recette de cocktail (imprimée ou manuscrite) avec ingrédients et étapes
-3. "note" — note libre, liste de courses, tout autre texte
 
-Réponds UNIQUEMENT en JSON strict, sans commentaire, sans markdown, sans \`\`\`.
-Pour les unités, utilise cl/ml/l/g/kg/pièce/feuilles/brins/gouttes/traits/cuillère.
-
-Schéma selon le type:
-- invoice: {"type":"invoice","items":[{"name":"string","quantity":number,"unit":"string","price":number}]}
-- recipe:  {"type":"recipe","name":"string","glass":"string","family":"string","alcohol":"string","ingredients":[{"name":"string","qty":number,"unit":"string"}],"steps":"string"}
-- note:    {"type":"note","text":"string"}
-
-Si tu n'es pas sûr, prends "note".`;
-  const body = {
-    contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime, data:b64}}]}],
-    generationConfig:{responseMimeType:"application/json", temperature:0.2}
-  };
-  try{
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`,{
-      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
-    });
-    if(!res.ok){ const t = await res.text(); console.error(t); toast('❌ Erreur API Gemini'); return null; }
-    const j = await res.json();
-    const txt = j?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    let parsed; try{ parsed = JSON.parse(txt); }catch(e){
-      // fallback: extract JSON bloc
-      const m = txt.match(/\{[\s\S]*\}/); if(m) parsed = JSON.parse(m[0]);
-    }
-    return parsed || null;
-  }catch(err){ console.error(err); toast('❌ Scan échoué : '+err.message); return null; }
-}
-function processScanResult(result){
-  if(!result || !result.type){ toast('❌ Impossible de lire le document'); return; }
-  const m = document.getElementById('modal');
-  const type = result.type;
-  if(type==='invoice'){
-    const items = result.items||[];
-    document.getElementById('modalTitle').textContent = '🧾 Facture détectée';
-    document.getElementById('modalContent').innerHTML = `
-      <div style="margin-bottom:12px;color:var(--text-2);font-size:13px">${items.length} produit(s) détecté(s). Décoche ceux que tu ne veux pas ajouter.</div>
-      <div id="scanItems">
-        ${items.map((it,idx)=>`
-          <div class="ing-row" style="grid-template-columns:28px 1fr 70px 70px 70px auto;align-items:center">
-            <input type="checkbox" id="si_${idx}" checked style="width:auto;margin:0">
-            <input value="${escapeHtml(it.name||'')}" data-k="name" data-idx="${idx}">
-            <input type="number" step="0.1" value="${it.quantity||0}" data-k="quantity" data-idx="${idx}">
-            <input list="unitsDL" value="${escapeHtml(it.unit||'cl')}" data-k="unit" data-idx="${idx}">
-            <input type="number" step="0.01" value="${it.price||0}" data-k="price" data-idx="${idx}" placeholder="€">
-            <span></span>
-          </div>`).join('')}
-      </div>
-      <datalist id="unitsDL">${UNITS.map(u=>`<option value="${u}">`).join('')}</datalist>
-      <div class="form-actions"><button class="btn btn-primary btn-block" id="btnScanApply">Ajouter les cochés</button></div>`;
-    m.classList.add('show');
-    document.querySelectorAll('#scanItems input[data-k]').forEach(inp=>{
-      inp.addEventListener('input', ()=>{
-        const idx = +inp.dataset.idx;
-        items[idx][inp.dataset.k] = inp.dataset.k==='name' || inp.dataset.k==='unit' ? inp.value : parseFloat(inp.value)||0;
-      });
-    });
-    document.getElementById('btnScanApply').addEventListener('click', ()=>{
-      let added = 0;
-      items.forEach((it,idx)=>{
-        if(!document.getElementById('si_'+idx).checked) return;
-        if(!it.name) return;
-        const exist = state.ingredients.find(x=>(x.name||'').toLowerCase().trim()===it.name.toLowerCase().trim());
-        if(exist){
-          exist.bottleSize = it.quantity||exist.bottleSize;
-          exist.bottlePrice = it.price||exist.bottlePrice;
-          exist.unit = it.unit||exist.unit;
-          exist.incomplete = false;
-        } else {
-          state.ingredients.push({
-            id:uid(), name:it.name, category:'misc', type:'bought',
-            unit:it.unit||'cl', bottleSize:+it.quantity||0, bottlePrice:+it.price||0,
-            stock:0, stockUnit:'', minStock:0, recipe:[], steps:''
-          });
-        }
-        added++;
-      });
-      save(); closeModal(); if(currentScreen==='Ingredients') renderIngredients();
-      toast('✅ '+added+' ingrédient(s) ajouté(s)');
-    });
-  } else if(type==='recipe'){
-    const r = result;
-    document.getElementById('modalTitle').textContent = '📖 Recette détectée';
-    document.getElementById('modalContent').innerHTML = `
-      <div style="margin-bottom:12px;color:var(--text-2);font-size:13px">Vérifie les infos puis choisis ce que tu veux créer.</div>
-      <div class="field"><label>${t('name')}</label><input id="sr_name" value="${escapeHtml(r.name||'')}"></div>
-      <div class="field-row-3">
-        <div class="field"><label>${t('glass')}</label><input list="glassListSR" id="sr_glass" value="${escapeHtml(r.glass||'')}"></div>
-        <div class="field"><label>${t('family')}</label><input list="famListSR" id="sr_family" value="${escapeHtml(r.family||'')}"></div>
-        <div class="field"><label>${t('alcohol')}</label><input list="spiritListSR" id="sr_alcohol" value="${escapeHtml(r.alcohol||'')}"></div>
-      </div>
-      <datalist id="glassListSR">${GLASSES.map(g=>`<option value="${g}">`).join('')}</datalist>
-      <datalist id="famListSR">${FAMILIES.map(g=>`<option value="${g}">`).join('')}</datalist>
-      <datalist id="spiritListSR">${SPIRITS.map(g=>`<option value="${g}">`).join('')}</datalist>
-      <div class="section-title">${t('ingredients.plural')}</div>
-      <div id="srIngs">
-        ${(r.ingredients||[]).map((it,idx)=>`
-          <div class="ing-row">
-            <input value="${escapeHtml(it.name||'')}" data-k="name" data-idx="${idx}">
-            <input type="number" step="0.1" value="${it.qty||0}" data-k="qty" data-idx="${idx}">
-            <input list="unitsDL" value="${escapeHtml(it.unit||'cl')}" data-k="unit" data-idx="${idx}">
-            <span></span>
-          </div>`).join('')}
-      </div>
-      <datalist id="unitsDL">${UNITS.map(u=>`<option value="${u}">`).join('')}</datalist>
-      <div class="field"><label>${t('steps')}</label><textarea id="sr_steps">${escapeHtml(r.steps||'')}</textarea></div>
-      <div class="form-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <button class="btn btn-ghost" id="btnAsHomemade">Comme ingrédient maison</button>
-        <button class="btn btn-primary" id="btnAsCocktail">Comme cocktail</button>
-      </div>`;
-    m.classList.add('show');
-    const ings = [...(r.ingredients||[])];
-    document.querySelectorAll('#srIngs input').forEach(inp=>{
-      inp.addEventListener('input', ()=>{
-        const idx = +inp.dataset.idx;
-        ings[idx][inp.dataset.k] = inp.dataset.k==='qty' ? parseFloat(inp.value)||0 : inp.value;
-      });
-    });
-    const commonData = ()=>({
-      name: document.getElementById('sr_name').value.trim(),
-      steps: document.getElementById('sr_steps').value.trim(),
-      ingredients: ings.filter(x=>x.name)
-    });
-    document.getElementById('btnAsCocktail').addEventListener('click', ()=>{
-      const d = commonData(); if(!d.name){ toast('Nom requis'); return; }
-      const c = {id:uid(), name:d.name, glass:document.getElementById('sr_glass').value,
-        family:document.getElementById('sr_family').value, alcohol:document.getElementById('sr_alcohol').value,
-        menu:'', ingredients:d.ingredients, steps:d.steps};
-      state.cocktails.push(c); syncMissingIngredients(c.ingredients); save();
-      closeModal(); go('Cocktails'); toast('🍸 Cocktail créé');
-    });
-    document.getElementById('btnAsHomemade').addEventListener('click', ()=>{
-      const d = commonData(); if(!d.name){ toast('Nom requis'); return; }
-      const i = {id:uid(), name:d.name, category:'misc', type:'homemade',
-        unit:'cl', bottleSize:0, bottlePrice:0, stock:0, stockUnit:'', minStock:0,
-        recipe:d.ingredients, steps:d.steps};
-      state.ingredients.push(i); syncMissingIngredients(i.recipe); save();
-      closeModal(); go('Ingredients'); toast('🧪 Ingrédient maison créé');
-    });
-  } else {
-    // note
-    const text = result.text||'';
-    document.getElementById('modalTitle').textContent = '📝 Note détectée';
-    document.getElementById('modalContent').innerHTML = `
-      <div style="margin-bottom:12px;color:var(--text-2);font-size:13px">Aucun format de facture ou recette reconnu. Voici le texte extrait :</div>
-      <textarea readonly style="min-height:220px">${escapeHtml(text)}</textarea>
-      <div class="form-actions"><button class="btn btn-primary btn-block" id="btnNoteCopy">Copier le texte</button></div>`;
-    m.classList.add('show');
-    document.getElementById('btnNoteCopy').addEventListener('click', ()=>{
-      navigator.clipboard.writeText(text).then(()=>toast('📋 Copié'));
-    });
-  }
-}
+// -- Point d'entree principal -------------------------
 async function runScan(file){
   if(!file) return;
-  toast('🔍 Analyse IA en cours…');
-  const result = await scanWithAI(file);
-  processScanResult(result);
+  const m = document.getElementById('modal');
+  document.getElementById('modalTitle').textContent = '🔍 Lecture en cours…';
+  document.getElementById('modalContent').innerHTML = `
+    <div style="text-align:center;padding:30px 0">
+      <div id="scanProgress" style="font-size:32px;color:var(--gold);margin-bottom:12px">0%</div>
+      <div style="color:var(--text-3);font-size:13px">Analyse de l'image…</div>
+      <div style="margin-top:16px;height:4px;background:var(--navy-700);border-radius:2px;overflow:hidden">
+        <div id="scanBar" style="height:100%;background:var(--gold);width:0%;transition:width .3s;border-radius:2px"></div>
+      </div>
+    </div>`;
+  m.classList.add('show');
+  try{
+    const rawText = await ocrImage(file, p=>{
+      const el=document.getElementById('scanProgress');
+      const bar=document.getElementById('scanBar');
+      if(el) el.textContent=p+'%';
+      if(bar) bar.style.width=p+'%';
+    });
+    if(!rawText || rawText.length < 5){
+      m.classList.remove('show');
+      toast('❌ Aucun texte détecté dans l\'image');
+      return;
+    }
+    document.getElementById('modalTitle').textContent = '🧠 Analyse du texte…';
+    const el2=document.getElementById('scanProgress'); if(el2) el2.textContent='…';
+    let result = null;
+    if((state.settings.aiKey||'').trim().length > 0){
+      result = await parseWithGemini(rawText);
+    }
+    if(!result){ result = parseOCRLocal(rawText); }
+    m.classList.remove('show');
+    processScanResult(result);
+  }catch(err){
+    m.classList.remove('show');
+    console.error(err);
+    toast('❌ Scan échoué : '+err.message);
+  }
 }
 
 /* ══════════════════════════════════════════
