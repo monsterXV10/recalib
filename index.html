@@ -1049,9 +1049,9 @@ function showOCRViewer(imageURL, ocrData){
     <div style="font-size:12px;color:var(--text-3);margin-bottom:10px">
       Appuie pour deselectionner <span style="color:var(--gold)">${lines.length} lignes</span>
     </div>
-    <div id="ocrImgWrap" style="position:relative;display:block;width:100%;user-select:none;border-radius:var(--radius);overflow:hidden;background:#000">
-      <img id="ocrImg" src="${imageURL}" style="width:100%;height:auto;display:block;opacity:.55">
-      <div id="ocrOverlay" style="position:absolute;inset:0;pointer-events:none"></div>
+    <div id="ocrImgWrap" style="position:relative;display:block;width:100%;border-radius:var(--radius);overflow:hidden;background:#000;-webkit-user-select:none;user-select:none">
+      <img id="ocrImg" src="${imageURL}" style="width:100%;height:auto;display:block;opacity:.55;pointer-events:none;-webkit-user-drag:none;-webkit-touch-callout:none">
+      <div id="ocrOverlay" style="position:absolute;inset:0;pointer-events:auto"></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:10px">
       <button class="btn btn-ghost btn-sm" id="btnOcrSelAll" style="flex:1">Tout selectionner</button>
@@ -1063,6 +1063,9 @@ function showOCRViewer(imageURL, ocrData){
   m.classList.add('show');
 
   const overlay = document.getElementById('ocrOverlay');
+  // Empêcher le menu contextuel natif sur toute la zone
+  overlay.addEventListener('contextmenu', e=>e.preventDefault());
+
   function renderOverlay(){
     overlay.innerHTML = '';
     lines.forEach((line, idx)=>{
@@ -1076,23 +1079,29 @@ function showOCRViewer(imageURL, ocrData){
         'width:'+((b.x1-b.x0)/imgW*100).toFixed(2)+'%',
         'height:'+((b.y1-b.y0)/imgH*100).toFixed(2)+'%',
         'box-sizing:border-box',
-        'border-radius:2px',
+        'border-radius:3px',
         'cursor:pointer',
-        'pointer-events:all',
-        'transition:all .15s',
-        isSel ? 'background:rgba(200,169,110,0.4)' : 'background:rgba(255,255,255,0.04)',
-        isSel ? 'border:1.5px solid rgba(200,169,110,.95)' : 'border:1px solid rgba(255,255,255,.12)',
+        'touch-action:manipulation',
+        '-webkit-tap-highlight-color:transparent',
+        'transition:background .12s,border .12s',
+        isSel ? 'background:rgba(200,169,110,0.45)' : 'background:rgba(255,255,255,0.06)',
+        isSel ? 'border:2px solid rgba(200,169,110,.95)' : 'border:1px solid rgba(255,255,255,.2)',
         'display:flex',
         'align-items:center',
         'overflow:hidden'
       ].join(';');
       const label = document.createElement('span');
       label.textContent = line.text.trim();
-      label.style.cssText = 'font-size:9px;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px #000;pointer-events:none;color:'+(isSel?'#fff':'rgba(255,255,255,.35)');
+      label.style.cssText = 'font-size:9px;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px #000;pointer-events:none;color:'+(isSel?'#fff':'rgba(255,255,255,.4)');
       box.appendChild(label);
+
+      let touchMoved = false;
       const toggle = ()=>{ if(selected.has(idx)) selected.delete(idx); else selected.add(idx); renderOverlay(); };
-      box.addEventListener('click', toggle);
-      box.addEventListener('touchend', e=>{ e.preventDefault(); toggle(); });
+      box.addEventListener('touchstart', e=>{ touchMoved=false; e.stopPropagation(); }, {passive:true});
+      box.addEventListener('touchmove',  ()=>{ touchMoved=true; }, {passive:true});
+      box.addEventListener('touchend',   e=>{ e.preventDefault(); e.stopPropagation(); if(!touchMoved) toggle(); });
+      box.addEventListener('click',      e=>{ e.stopPropagation(); toggle(); });
+      box.addEventListener('contextmenu',e=>e.preventDefault());
       overlay.appendChild(box);
     });
   }
