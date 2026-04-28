@@ -519,6 +519,13 @@ input,select,textarea{font:inherit;color:inherit;user-select:text;-webkit-user-s
       </div>
     </div>
 
+    <div class="setting-section" id="customUnitsSection">
+      <h3>⚖️ Unités personnalisées</h3>
+      <div style="font-size:12px;color:var(--text-3);margin-bottom:10px">Définis tes propres unités de mesure<br><span style="color:var(--text-3)">Ex : 1 goutte = 0.05 ml · 1 dash = 0.6 ml</span></div>
+      <div id="customUnitsRows" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+      <button class="btn btn-ghost btn-sm" id="btnAddCustomUnit">+ Ajouter une unité</button>
+    </div>
+
     <div class="setting-section">
       <h3 data-i18n="settings.language">Langue</h3>
       <div class="setting-row">
@@ -841,7 +848,8 @@ const DEFAULT_STATE = {
   cocktails: [],
   ingredients: [],
   batches: [],
-  settings: {firstName:'', lastName:'', email:'', phone:'', venue:'', address:'', city:'', country:'', aiKey:''}
+  settings: {firstName:'', lastName:'', email:'', phone:'', venue:'', address:'', city:'', country:'', aiKey:''},
+  customUnits: []   // [{id, name, equivQty, equivUnit}]  — ex: 1 goutte = 0.05 ml
 };
 
 let state = load();
@@ -1728,6 +1736,20 @@ function openIngredientForm(i){
       <datalist id="ingListDL">${state.ingredients.map(x=>`<option value="${escapeHtml(x.name)}">`).join('')}</datalist>
       <datalist id="unitsDL">${[...UNITS,'%'].map(u=>`<option value="${u}">`).join('')}</datalist>
     </div>
+    <div class="section-title" style="margin-top:16px">⚖️ Équivalence poids / volume</div>
+    <div style="font-size:12px;color:var(--text-3);margin-bottom:8px">Optionnel · pour convertir g↔cl dans le batch (ex&nbsp;: 1&nbsp;kg&nbsp;=&nbsp;100&nbsp;cl pour l'eau)</div>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <input id="gDensityQty1" type="number" step="0.001" placeholder="1" value="${i.density?.qty1??''}" style="width:58px;background:var(--navy-700);border:1px solid rgba(200,169,110,.12);border-radius:var(--radius-sm);padding:9px 10px;color:var(--text-1);outline:none;font:inherit">
+      <select id="gDensityUnit1" style="width:70px;background:var(--navy-700);border:1px solid rgba(200,169,110,.12);border-radius:var(--radius-sm);padding:9px 6px;color:var(--text-1);outline:none">
+        ${UNITS.map(u=>`<option value="${u}"${(i.density?.unit1||'kg')===u?' selected':''}>${u}</option>`).join('')}
+      </select>
+      <span style="color:var(--text-3);font-size:13px">=</span>
+      <input id="gDensityQty2" type="number" step="0.001" placeholder="100" value="${i.density?.qty2??''}" style="width:58px;background:var(--navy-700);border:1px solid rgba(200,169,110,.12);border-radius:var(--radius-sm);padding:9px 10px;color:var(--text-1);outline:none;font:inherit">
+      <select id="gDensityUnit2" style="width:70px;background:var(--navy-700);border:1px solid rgba(200,169,110,.12);border-radius:var(--radius-sm);padding:9px 6px;color:var(--text-1);outline:none">
+        ${UNITS.map(u=>`<option value="${u}"${(i.density?.unit2||'cl')===u?' selected':''}>${u}</option>`).join('')}
+      </select>
+      <button type="button" id="btnClearDensity" class="btn btn-ghost btn-sm" style="color:var(--error)" title="Effacer">✕</button>
+    </div>
     <div class="section-title">${t('stock')}</div>
     <div class="field-row-3">
       <div class="field"><label>${t('stock.current')}</label><input id="gStock" type="number" step="0.1" value="${i.stock||0}"></div>
@@ -1830,6 +1852,10 @@ function openIngredientForm(i){
       fileIn.value='';
     });
   }
+  document.getElementById('btnClearDensity')?.addEventListener('click',()=>{
+    document.getElementById('gDensityQty1').value='';
+    document.getElementById('gDensityQty2').value='';
+  });
   document.getElementById('btnSaveI').addEventListener('click',()=>{
     i.name=document.getElementById('gName').value.trim();
     i.category=document.getElementById('gCat').value;
@@ -1843,6 +1869,15 @@ function openIngredientForm(i){
       if(i.mainOutput&&!i.mainOutput.name.trim()) i.mainOutput=null;
       i.byproducts=(i.byproducts||[]).filter(b=>b.name.trim());
     }
+    // Densité / équivalence poids-volume
+    const dq1=parseFloat(document.getElementById('gDensityQty1').value);
+    const dq2=parseFloat(document.getElementById('gDensityQty2').value);
+    if(dq1>0 && dq2>0){
+      i.density={
+        qty1: dq1, unit1: document.getElementById('gDensityUnit1').value,
+        qty2: dq2, unit2: document.getElementById('gDensityUnit2').value
+      };
+    } else { i.density = null; }
     i.stock=parseFloat(document.getElementById('gStock').value)||0;
     i.stockUnit=document.getElementById('gStockUnit').value;
     i.minStock=parseFloat(document.getElementById('gMinStock').value)||0;
@@ -2063,45 +2098,88 @@ function openBatchDetail(b){
   m.classList.add('show');
 }
 /* Conversion vers cl (unité de base) */
-// Normalise vers cl (volumes) ou g (poids) pour comparaison de ratio
+// ── Domaines d'unités ──────────────────────────────────
+const DOM_VOL = u => ['l','dl','cl','ml','oz'].includes((u||'').toLowerCase().trim());
+const DOM_WT  = u => ['g','kg'].includes((u||'').toLowerCase().trim());
+
+// Normalise vers cl (volumes) ou g (poids) — même axe numérique pour ratio intra-domaine
+// Unités custom depuis state.customUnits
 function toCl(qty, unit){
   const u = (unit||'cl').toLowerCase().trim();
   if(u==='l')   return qty * 100;
   if(u==='dl')  return qty * 10;
+  if(u==='cl')  return qty;
   if(u==='ml')  return qty * 0.1;
   if(u==='oz')  return qty * 2.957;   // 1 oz = 2.957 cl (standard bar)
-  if(u==='kg')  return qty * 1000;    // normalise en g quand unité poids
-  return qty; // cl, g, pièce, etc. → tel quel
+  if(u==='g')   return qty;           // base poids
+  if(u==='kg')  return qty * 1000;    // → g
+  // Unités personnalisées
+  const cu = (state.customUnits||[]).find(x=>(x.name||'').toLowerCase()===u);
+  if(cu) return toCl((cu.equivQty||0) * qty, cu.equivUnit||'cl');
+  return qty;
 }
+
+// Normalise qty/unit en valeur de référence, avec conversion inter-domaine via densité
+// density = {qty1, unit1, qty2, unit2}  ex: {qty1:1, unit1:'kg', qty2:100, unit2:'cl'}
+// Rappel : 1 l eau = 1 kg  →  {qty1:1, unit1:'l', qty2:1, unit2:'kg'}
+function toRefQty(qty, unit, density){
+  const raw = toCl(qty, unit);
+  if(!density || !density.qty1 || !density.qty2) return raw;
+  const u = (unit||'cl').toLowerCase().trim();
+  const u1 = (density.unit1||'').toLowerCase().trim();
+  const u2 = (density.unit2||'').toLowerCase().trim();
+  const curIsVol = DOM_VOL(u), curIsWt = DOM_WT(u);
+  const d1IsVol  = DOM_VOL(u1), d1IsWt = DOM_WT(u1);
+  const d2IsVol  = DOM_VOL(u2), d2IsWt = DOM_WT(u2);
+  // Conversion inter-domaine uniquement
+  if(curIsWt && d1IsWt && d2IsVol){
+    // g → cl via densité (ex: 500g sirop, densité 1kg=90cl → 500g = 45cl)
+    return raw / toCl(density.qty1, density.unit1) * toCl(density.qty2, density.unit2);
+  }
+  if(curIsWt && d2IsWt && d1IsVol){
+    // g → cl via densité inversée
+    return raw / toCl(density.qty2, density.unit2) * toCl(density.qty1, density.unit1);
+  }
+  if(curIsVol && d1IsVol && d2IsWt){
+    // cl → g via densité (ratio interne en cl → ok tel quel)
+    return raw;
+  }
+  if(curIsVol && d2IsVol && d1IsWt){
+    return raw;
+  }
+  return raw;
+}
+
 // Affiche une quantité normalisée dans l'unité la plus lisible
-function fmtNorm(clVal, origUnit){
+function fmtNorm(normVal, origUnit){
   const u = (origUnit||'cl').toLowerCase().trim();
-  // Volumes → cl ou ml selon taille
-  if(['cl','ml','l','dl','oz'].includes(u)){
-    if(clVal < 1)   return `${(clVal*10).toFixed(1)} ml`;
-    if(clVal >= 100) return `${(clVal/100).toFixed(2)} l`;
-    return `${clVal.toFixed(1)} cl`;
+  if(DOM_VOL(u)){
+    if(normVal < 1)    return `${(normVal*10).toFixed(1)} ml`;
+    if(normVal >= 100) return `${(normVal/100).toFixed(2)} l`;
+    return `${normVal.toFixed(1)} cl`;
   }
-  // Poids → g ou kg
-  if(['g','kg'].includes(u)){
-    if(clVal >= 1000) return `${(clVal/1000).toFixed(3)} kg`;
-    return `${clVal.toFixed(1)} g`;
+  if(DOM_WT(u)){
+    if(normVal >= 1000) return `${(normVal/1000).toFixed(3)} kg`;
+    return `${normVal.toFixed(1)} g`;
   }
-  // Unités non convertibles (pièce, feuilles…) → garder brut
-  return `${clVal.toFixed(2)} ${origUnit}`;
+  // Unités custom ou non convertibles
+  const cu = (state.customUnits||[]).find(x=>(x.name||'').toLowerCase()===u);
+  if(cu){ return `${normVal.toFixed(2)} ${origUnit}`; }
+  return `${normVal.toFixed(2)} ${origUnit}`;
 }
 function renderHomemadeTable(h){
   const ing = h.ingredient;
-  // Yield de base en cl (ignorer les ingrédients en %)
+  const density = ing.density || null;
+  // Yield de base (en ref cl ou g) — utilise densité pour conversion inter-domaine
   let baseCl;
   if(ing.mainOutput?.qtyMin){
-    baseCl = toCl(ing.mainOutput.qtyMin, ing.mainOutput.unit||'cl');
+    baseCl = toRefQty(ing.mainOutput.qtyMin, ing.mainOutput.unit||'cl', density);
   } else {
     baseCl = (ing.recipe||[])
       .filter(r=>(r.unit||'').trim()!=='%')
-      .reduce((s,r)=>s+toCl(r.qty||0, r.unit||'cl'),0) || 1;
+      .reduce((s,r)=>s+toRefQty(r.qty||0, r.unit||'cl', density),0) || 1;
   }
-  const requiredCl = toCl(h.required, h.unit);
+  const requiredCl = toRefQty(h.required, h.unit, density);
   const ratio = requiredCl / baseCl;
   // Nombre de préparations
   const nbPrep = Math.ceil(ratio);
@@ -2142,6 +2220,44 @@ function renderHomemadeTable(h){
 }
 
 /* Settings */
+function renderCustomUnits(){
+  const container = document.getElementById('customUnitsRows');
+  if(!container) return;
+  state.customUnits = state.customUnits||[];
+  container.innerHTML = '';
+  state.customUnits.forEach((cu,idx)=>{
+    const row = document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:6px;flex-wrap:wrap';
+    const _s='background:var(--navy-700);border:1px solid rgba(200,169,110,.12);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text-1);outline:none;font:inherit;font-size:13px';
+    row.innerHTML=`
+      <span style="color:var(--text-3);font-size:12px;min-width:14px">1</span>
+      <input placeholder="nom" value="${escapeHtml(cu.name||'')}" data-k="name" style="width:80px;${_s}">
+      <span style="color:var(--text-3);font-size:13px">=</span>
+      <input type="number" step="0.0001" placeholder="qté" value="${cu.equivQty!=null?cu.equivQty:''}" data-k="equivQty" style="width:70px;${_s}">
+      <select data-k="equivUnit" style="width:70px;${_s};padding:8px 6px">
+        ${UNITS.map(u=>`<option value="${u}"${(cu.equivUnit||'ml')===u?' selected':''}>${u}</option>`).join('')}
+      </select>
+      <button class="btn btn-ghost btn-sm rm-cu" data-idx="${idx}" style="color:var(--error);padding:6px">✕</button>`;
+    row.querySelectorAll('input,select').forEach(el=>{
+      const upd=()=>{
+        if(el.dataset.k==='equivQty') state.customUnits[idx].equivQty=parseFloat(el.value)||0;
+        else state.customUnits[idx][el.dataset.k]=el.value;
+        save();
+      };
+      el.addEventListener('input',upd); el.addEventListener('change',upd);
+    });
+    row.querySelector('.rm-cu').addEventListener('click',()=>{
+      state.customUnits.splice(idx,1); save(); renderCustomUnits();
+    });
+    container.appendChild(row);
+  });
+}
+document.getElementById('btnAddCustomUnit').addEventListener('click',()=>{
+  state.customUnits = state.customUnits||[];
+  state.customUnits.push({id:uid(), name:'', equivQty:1, equivUnit:'ml'});
+  save(); renderCustomUnits();
+});
+
 function renderSettings(){
   document.getElementById('settFirst').value = state.settings.firstName||'';
   document.getElementById('settLast').value = state.settings.lastName||'';
@@ -2153,6 +2269,7 @@ function renderSettings(){
   document.getElementById('settCountry').value = state.settings.country||'';
   document.querySelectorAll('.lang-toggle button[data-lang]').forEach(b=>b.classList.toggle('active', b.dataset.lang===state.lang));
   document.querySelectorAll('#themeToggle button').forEach(b=>b.classList.toggle('active', b.dataset.theme===(state.theme||'dark')));
+  renderCustomUnits();
 }
 ['settFirst','settLast','settEmail','settPhone','settVenue','settAddress','settCity','settCountry'].forEach(id=>{
   document.getElementById(id).addEventListener('input', e=>{
