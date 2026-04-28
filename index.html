@@ -2065,19 +2065,16 @@ function renderHomemadeTable(h){
   const ratio = requiredCl / baseCl;
   // Nombre de préparations
   const nbPrep = Math.ceil(ratio);
-  return `<table class="batch-table" style="margin-bottom:10px">
+  // Construire le tableau principal
+  let html = `<table class="batch-table" style="margin-bottom:6px">
     <thead><tr><th colspan="2">${escapeHtml(ing.name)} · ${h.required.toFixed(2)} ${escapeHtml(h.unit)} <span style="color:var(--text-3);font-size:11px">(×${ratio.toFixed(1)} prépa.)</span></th></tr></thead>
     <tbody>
       ${ing.recipe.map(r=>{
         const isPercent = (r.unit||'').toLowerCase().includes('%');
         let displayQty;
         if(isPercent){
-          // Convertir % en volume absolu : % × baseCl × ratio = % × requiredCl
           const qtyInCl = (r.qty||0) / 100 * requiredCl;
-          // Afficher en cl ou ml selon la taille
-          displayQty = qtyInCl >= 1
-            ? `${qtyInCl.toFixed(2)} cl`
-            : `${(qtyInCl*10).toFixed(2)} ml`;
+          displayQty = qtyInCl >= 1 ? `${qtyInCl.toFixed(2)} cl` : `${(qtyInCl*10).toFixed(2)} ml`;
         } else {
           displayQty = `${((r.qty||0)*ratio).toFixed(2)} ${escapeHtml(r.unit||'')}`;
         }
@@ -2086,6 +2083,22 @@ function renderHomemadeTable(h){
       ${ing.steps?`<tr class="sub-row"><td colspan="2" style="white-space:pre-wrap;color:var(--text-3);font-size:12px">📝 ${escapeHtml(ing.steps)}</td></tr>`:''}
     </tbody>
   </table>`;
+
+  // Récursion : si un ingrédient de la recette est aussi maison → l'expandre
+  ing.recipe.forEach(r=>{
+    const isPercent = (r.unit||'').toLowerCase().includes('%');
+    const scaledQty = isPercent
+      ? (r.qty||0) / 100 * requiredCl
+      : (r.qty||0) * ratio;
+    const scaledUnit = isPercent ? 'cl' : (r.unit||'cl');
+    const sub = state.ingredients.find(i=>i.name.toLowerCase()===(r.name||'').toLowerCase() && i.type==='homemade');
+    if(sub && sub.recipe?.length){
+      html += `<div style="margin-left:16px;border-left:2px solid rgba(200,169,110,.2);padding-left:8px;margin-bottom:10px">`;
+      html += renderHomemadeTable({ingredient:sub, required:scaledQty, unit:scaledUnit});
+      html += `</div>`;
+    }
+  });
+  return html;
 }
 
 /* Settings */
