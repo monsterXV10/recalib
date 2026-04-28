@@ -1537,12 +1537,15 @@ function openCocktailForm(c){
       r.innerHTML = `
         <input placeholder="${t('name')}" value="${escapeHtml(ing.name||'')}" data-k="name" autocomplete="off">
         <input type="number" step="0.1" placeholder="${t('quantity')}" value="${ing.qty||''}" data-k="qty">
-        <input list="unitsDL" placeholder="cl" value="${escapeHtml(ing.unit||'cl')}" data-k="unit" style="width:56px">
+        <select data-k="unit" style="width:70px">${UNITS.map(u=>`<option value="${u}"${(ing.unit||'cl')===u?' selected':''}>${u}</option>`).join('')}</select>
         <button type="button" class="rm">✕</button>`;
       const nameInp = r.querySelector('[data-k="name"]');
       makeIngAutocomplete(nameInp);
-      r.querySelectorAll('input').forEach(inp=>{
+      r.querySelectorAll('input,select').forEach(inp=>{
         inp.addEventListener('input', ()=>{
+          c.ingredients[i][inp.dataset.k] = inp.dataset.k==='qty' ? parseFloat(inp.value)||0 : inp.value;
+        });
+        inp.addEventListener('change', ()=>{
           c.ingredients[i][inp.dataset.k] = inp.dataset.k==='qty' ? parseFloat(inp.value)||0 : inp.value;
         });
       });
@@ -1745,11 +1748,16 @@ function openIngredientForm(i){
       row.innerHTML=`
         <input list="ingListDL" placeholder="Ingrédient" value="${escapeHtml(r.name||'')}" data-k="name">
         <input type="number" step="0.01" placeholder="Qté" value="${r.qty||''}" data-k="qty">
-        <input list="unitsDL" placeholder="cl/g/%" value="${escapeHtml(r.unit||'')}" data-k="unit" style="width:56px">
+        <select data-k="unit" style="width:70px">${[...UNITS,'%'].map(u=>`<option value="${u}"${(r.unit||'cl')===u?' selected':''}>${u}</option>`).join('')}</select>
         <button type="button" class="rm">✕</button>`;
-      row.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{
-        i.recipe[idx][inp.dataset.k]=inp.dataset.k==='qty'?parseFloat(inp.value)||0:inp.value;
-      }));
+      row.querySelectorAll('input,select').forEach(inp=>{
+        inp.addEventListener('input',()=>{
+          i.recipe[idx][inp.dataset.k]=inp.dataset.k==='qty'?parseFloat(inp.value)||0:inp.value;
+        });
+        inp.addEventListener('change',()=>{
+          i.recipe[idx][inp.dataset.k]=inp.dataset.k==='qty'?parseFloat(inp.value)||0:inp.value;
+        });
+      });
       row.querySelector('.rm').addEventListener('click',()=>{i.recipe.splice(idx,1);renderRec();});
       recRows.appendChild(row);
     });
@@ -1768,12 +1776,18 @@ function openIngredientForm(i){
       <input type="number" step="0.01" placeholder="min" value="${obj.qtyMin!=null?obj.qtyMin:''}" data-k="qtyMin" style="width:58px;${_is}" title="Quantité minimale">
       <span style="color:var(--text-3);font-size:12px;white-space:nowrap">à</span>
       <input type="number" step="0.01" placeholder="max" value="${obj.qtyMax!=null?obj.qtyMax:''}" data-k="qtyMax" style="width:58px;${_is}" title="Quantité maximale (optionnel)">
-      <input list="unitsDL" placeholder="cl" value="${escapeHtml(obj.unit||'cl')}" data-k="unit" style="width:52px;${_is}">
+      <select data-k="unit" style="width:68px;${_is}">${UNITS.map(u=>`<option value="${u}"${(obj.unit||'cl')===u?' selected':''}>${u}</option>`).join('')}</select>
       ${removable?'<button type="button" class="rm">✕</button>':''}`;
-    row.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{
-      const k=inp.dataset.k;
-      obj[k]=(k==='name'||k==='unit')?inp.value:(inp.value===''?null:parseFloat(inp.value)||0);
-    }));
+    row.querySelectorAll('input,select').forEach(inp=>{
+      inp.addEventListener('input',()=>{
+        const k=inp.dataset.k;
+        obj[k]=(k==='name'||k==='unit')?inp.value:(inp.value===''?null:parseFloat(inp.value)||0);
+      });
+      inp.addEventListener('change',()=>{
+        const k=inp.dataset.k;
+        obj[k]=(k==='name'||k==='unit')?inp.value:(inp.value===''?null:parseFloat(inp.value)||0);
+      });
+    });
     container.appendChild(row);
     return row;
   }
@@ -1961,13 +1975,13 @@ function openBatchForm(b){
         row.innerHTML = `
           <select data-k="refId">${state.ingredients.map(i=>`<option value="${i.id}" ${i.id===it.refId?'selected':''}>🧴 ${escapeHtml(i.name)}</option>`).join('')}</select>
           <input type="number" step="0.1" placeholder="${t('batch.qty')}" value="${it.qty||0}" data-k="qty">
-          <input list="unitsDL" value="${escapeHtml(it.unit||'cl')}" data-k="unit">
+          <select data-k="unit" style="width:70px">${UNITS.map(u=>`<option value="${u}"${(it.unit||'cl')===u?' selected':''}>${u}</option>`).join('')}</select>
           <button type="button" class="rm">✕</button>`;
       }
       row.querySelectorAll('select,input').forEach(el=>{
-        el.addEventListener('input', ()=>{
-          b.items[idx][el.dataset.k] = el.dataset.k==='qty' ? parseFloat(el.value)||0 : el.value;
-        });
+        const upd = ()=>{ b.items[idx][el.dataset.k] = el.dataset.k==='qty' ? parseFloat(el.value)||0 : el.value; };
+        el.addEventListener('input', upd);
+        el.addEventListener('change', upd);
       });
       row.querySelector('.rm').addEventListener('click', ()=>{b.items.splice(idx,1);renderItems();});
       itemsEl.appendChild(row);
