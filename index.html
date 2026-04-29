@@ -987,28 +987,64 @@ async function ocrImage(file, onProgress){
   return data; // text + lines avec bboxes
 }
 
-// -- Parser local (fallback sans cle) ----------------
+// -- Parser local -----------------------------------------------
+// Détecte automatiquement : ticket de caisse | recette | note
 function parseOCRLocal(text){
   const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
-  const priceRx = /\d+[.,]\d{2}\s*€?|€\s*\d/;
-  const unitRx  = /\b(\d+[.,]?\d*)\s*(cl|ml|l\b|g\b|kg|oz|pièce|feuille|brin|bouteille)/i;
-  const hasPrice = lines.some(l=>priceRx.test(l));
+
+  // ── Mots-clés de lignes à ignorer (en-têtes, totaux, TVA…) ──
+  const SKIP_RX = /^(total|sous.total|tva|net|brut|ticket|caisse|merci|bienvenu|hôte|tel|www\.|http|date|heure|ouvert|ticket\s*:|caissier|opérateur|paiement|carte|espèce|monnaie|rendu|avoir|fidélité|point|code|barre|\*{3,}|={3,}|-{3,})/i;
+
+  // ── Ticket de caisse ──────────────────────────────────────────
+  // Format Auchan (et similaires) :
+  //   3 colonnes : NOM...  QTY*PU  TOTAL
+  //   Tesseract peut les lire fusionnées ou séparées selon l'orientation
+  //
+  // Stratégie : chercher un prix valide (XX,XX) en fin de ligne
+  //   puis extraire le nom depuis le début jusqu'au 1er bloc numérique
+  //
+  // Exemples OCR observés :
+  //   "AUCH GOU CHOCO NOIR.. 2*1,59 3,18"   → name, qty=2, total=3.18
+  //   "AUCHAN LARDONS NATU.. 143,07 3,07"   → "1*3,07" fusionné → total=3.07
+  //   "COMTE AOP 24 MOIS 1*4,48 4,48"       → name, qty=1, total=4.48
+  //   "3,07" (ligne seule = col Total seule) → ignorée (pas de nom)
+  //   "1*3,07" (ligne seule = col QU seule)  → ignorée (pas de nom)
+
+  const ticketItems = [];
+  // Prix seul en fin de ligne (obligatoire : 1–4 chiffres + virgule/point + 2 chiffres)
+  const endPriceRx = /(\d{1,4}[.,]\d{2})\s*€?\s*$/;
+  // Motif quantité × prix unitaire (n'importe où dans la ligne)
+  const qtyPuRx = /\b(\d{1,3})\s*[*x×%]\s*(\d+[.,]\d{2})\b/;
+
+  lines.forEach(l=>{
+    if(SKIP_RX.test(l)) return;
+    // 1. Extraire le prix total (dernier nombre XX,XX de la ligne)
+    const priceM = l.match(endPriceRx);
+    if(!priceM) return;
+    const price = parseFloat(priceM[1].replace(',','.'));
+    if(price <= 0 || price > 500) return; // hors plage raisonnable
+
+    // 2. Isoler le nom : tout ce qui précède le premier bloc numérique
+    const beforePrice = l.slice(0, l.lastIndexOf(priceM[1])).trim();
+    // Retirer la partie QTY*PU si présente (ex: "2*1,59")
+    const clean = beforePrice.replace(qtyPuRx,'').replace(/\s+/g,' ').trim();
+    // Retirer trailing points/tirets/espaces
+    let name = clean.replace(/[\s.\-_*]+$/,'').trim();
+    // Retirer codes rayon en début (chiffres seuls ≤ 3 chars : "14", "3")
+    name = name.replace(/^\d{1,3}\s+/,'').trim();
+    if(name.length < 3) return; // pas de nom = ligne de total/TVA
+
+    // 3. Quantité
+    const qtyM = l.match(qtyPuRx);
+    const qty = qtyM ? parseInt(qtyM[1]) : 1;
+
+    ticketItems.push({name, quantity:qty, unit:'pièce', price});
+  });
+  if(ticketItems.length >= 2) return {type:'invoice', items: ticketItems};
+
+  // ── Recette : lignes avec unités bar/cuisine ──
+  const unitRx = /\b(\d+[.,]?\d*)\s*(cl|ml|l\b|g\b|kg|oz|traits?|gouttes?|brins?|feuilles?|pièce|cuillère|pincée|zeste)/i;
   const hasUnits = lines.some(l=>unitRx.test(l));
-
-  if(hasPrice){
-    const items = [];
-    lines.forEach(l=>{
-      const priceM = l.match(/(\d+[.,]\d{1,2})\s*€?$/);
-      const price  = priceM ? parseFloat(priceM[1].replace(',','.')) : 0;
-      const unitM  = l.match(/(\d+[.,]?\d*)\s*(cl|ml|l\b|g|kg|oz|pièce|bouteille)/i);
-      const qty    = unitM ? parseFloat(unitM[1].replace(',','.')) : 0;
-      const unit   = unitM ? unitM[2].toLowerCase() : 'pièce';
-      let name = l.replace(priceRx,'').replace(unitRx,'').replace(/\s+/g,' ').trim();
-      if(name.length > 2) items.push({name, quantity:qty||1, unit, price});
-    });
-    if(items.length) return {type:'invoice', items};
-  }
-
   if(hasUnits){
     const ingredients = [];
     let steps = '', name = lines[0]||'Recette';
@@ -1027,6 +1063,139 @@ function parseOCRLocal(text){
   return {type:'note', text};
 }
 
+// -- Traitement du résultat OCR parsé --------------------
+function processScanResult(parsed){
+  const m = document.getElementById('modal');
+
+  if(parsed.type === 'invoice'){
+    const items = parsed.items||[];
+    if(!items.length){ toast('Aucun article détecté'); return; }
+
+    // Pré-analyser : classer chaque article (nouveau / existant même prix / conflit prix)
+    const today = new Date().toISOString().slice(0,10);
+    const classified = items.map(it=>{
+      const existing = state.ingredients.find(x=>x.name.toLowerCase()===it.name.toLowerCase());
+      if(!existing) return {...it, _status:'new', _existing:null};
+      const oldPrice = existing.bottlePrice||0;
+      const priceDiff = Math.abs(oldPrice - it.price) > 0.01;
+      return {...it, _status: priceDiff && oldPrice > 0 ? 'conflict' : 'update', _existing:existing, _oldPrice:oldPrice};
+    });
+
+    const _is = 'background:var(--navy-700);border:1px solid rgba(200,169,110,.12);border-radius:var(--radius-sm);color:var(--text-1);padding:6px 8px;font-size:12px;outline:none;width:100%';
+
+    document.getElementById('modalTitle').textContent = '🧾 Import facture';
+    document.getElementById('modalContent').innerHTML = `
+      <div style="font-size:12px;color:var(--text-3);margin-bottom:12px">${classified.length} article(s) détecté(s)</div>
+      <div id="invoiceList" style="max-height:60vh;overflow-y:auto">
+        ${classified.map((it,i)=>{
+          const statusColor = it._status==='new' ? 'var(--gold)' : it._status==='conflict' ? '#e55' : '#4caf93';
+          const statusLabel = it._status==='new' ? '🆕 Nouveau' : it._status==='conflict' ? `⚠️ Prix modifié (était ${it._oldPrice.toFixed(2)} €)` : '✓ Existe';
+          return `
+          <div style="border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px 12px;margin-bottom:8px" data-idx="${i}">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <input type="checkbox" data-idx="${i}" checked style="accent-color:var(--gold);width:15px;height:15px;flex-shrink:0">
+              <div style="flex:1;font-size:13px;font-weight:600">${escapeHtml(it.name)}</div>
+              <span style="font-size:10px;color:${statusColor};white-space:nowrap">${statusLabel}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr ${it._status==='new'?'1fr':'0fr'};gap:6px">
+              <div>
+                <div style="font-size:10px;color:var(--text-3);margin-bottom:3px">Qté reçue</div>
+                <input type="number" min="0" step="1" value="${it.quantity}" data-field="qty" data-idx="${i}" style="${_is}">
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--text-3);margin-bottom:3px">Prix unitaire (€)</div>
+                <input type="number" min="0" step="0.01" value="${it.price.toFixed(2)}" data-field="price" data-idx="${i}" style="${_is}">
+              </div>
+              ${it._status==='new'?`
+              <div>
+                <div style="font-size:10px;color:var(--text-3);margin-bottom:3px">Fournisseur</div>
+                <input type="text" value="${escapeHtml(it._supplier||'')}" data-field="supplier" data-idx="${i}" style="${_is}" placeholder="ex: Auchan">
+              </div>`:''}
+            </div>
+            ${it._status==='conflict'?`
+            <div style="font-size:11px;color:#e55;margin-top:6px;background:rgba(229,85,85,.08);padding:6px 8px;border-radius:6px">
+              ⚠️ Ancien prix : <b>${it._oldPrice.toFixed(2)} €</b> · Nouveau : <b>${it.price.toFixed(2)} €</b><br>
+              <span style="color:var(--text-3)">Une note sera ajoutée à l'ingrédient avec la date et le nouveau prix.</span>
+            </div>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="form-actions" style="margin-top:12px;flex-direction:column;gap:8px">
+        <button class="btn btn-primary btn-block" id="btnInvoiceImport">📥 Importer</button>
+        <button class="btn btn-ghost btn-block" id="btnInvoiceCancel">Annuler</button>
+      </div>`;
+    m.classList.add('show');
+
+    // Lire les champs modifiables en temps réel dans classified
+    document.getElementById('invoiceList').addEventListener('input', e=>{
+      const el = e.target; if(!el.dataset.field) return;
+      const idx = parseInt(el.dataset.idx);
+      if(el.dataset.field==='qty')      classified[idx].quantity = parseFloat(el.value)||0;
+      if(el.dataset.field==='price')    classified[idx].price    = parseFloat(el.value)||0;
+      if(el.dataset.field==='supplier') classified[idx]._supplier = el.value.trim();
+    });
+
+    document.getElementById('btnInvoiceCancel').addEventListener('click', closeModal);
+    document.getElementById('btnInvoiceImport').addEventListener('click', ()=>{
+      const checks = document.querySelectorAll('#invoiceList input[type=checkbox]:checked');
+      let added=0, updated=0, conflicts=0;
+      checks.forEach(cb=>{
+        const it = classified[parseInt(cb.dataset.idx)];
+        if(it._status === 'new'){
+          // Créer l'ingrédient complet
+          state.ingredients.push({
+            id:uid(), name:it.name,
+            category:'', type:'bought',
+            unit:'pièce', bottleSize:1, bottlePrice:it.price,
+            stock:it.quantity, stockUnit:'pièce', minStock:0,
+            supplier: it._supplier||'',
+            priceHistory:[{date:today, price:it.price, qty:it.quantity}],
+            notes:'', recipe:[], steps:'',
+            mainOutput:{name:'',qtyMin:null,qtyMax:null,unit:'cl'}, byproducts:[]
+          });
+          added++;
+        } else if(it._status === 'conflict'){
+          const ex = it._existing;
+          // Ajouter au stock
+          ex.stock = (ex.stock||0) + it.quantity;
+          // Historique des prix
+          if(!ex.priceHistory) ex.priceHistory = [];
+          ex.priceHistory.push({date:today, price:it.price, qty:it.quantity});
+          // Note lisible
+          const noteEntry = `[${today}] Nouveau prix : ${it.price.toFixed(2)} € (était ${it._oldPrice.toFixed(2)} €) · ${it.quantity} unité(s) reçue(s)`;
+          ex.notes = ex.notes ? ex.notes + '\n' + noteEntry : noteEntry;
+          conflicts++;
+        } else {
+          // Même prix → simple ajout stock
+          it._existing.stock = (it._existing.stock||0) + it.quantity;
+          updated++;
+        }
+      });
+      save(); renderIngredients(); closeModal();
+      const parts = [];
+      if(added)     parts.push(`${added} créé(s)`);
+      if(updated)   parts.push(`${updated} stock mis à jour`);
+      if(conflicts) parts.push(`${conflicts} ⚠️ conflit(s) prix noté(s)`);
+      toast('✅ ' + parts.join(' · '));
+    });
+    return;
+  }
+
+  if(parsed.type === 'recipe'){
+    // ── Recette détectée → ouvrir le formulaire cocktail pré-rempli ──
+    closeModal();
+    const c = {id:uid(), name:parsed.name||'Recette scannée',
+      glass:parsed.glass||'', family:parsed.family||'',
+      alcohol:parsed.alcohol||'', ingredients:parsed.ingredients||[], steps:parsed.steps||''};
+    openCocktailForm(c);
+    toast('🍹 Recette détectée — vérifiez et sauvegardez');
+    return;
+  }
+
+  // ── Note libre ──
+  toast('📝 Texte : '+text.slice(0,80));
+}
+
 
 // -- base64 helper ------------------------------------
 function fileToBase64(file){
@@ -1038,15 +1207,16 @@ function fileToBase64(file){
 }
 
 // -- Vue interactive : image + lignes surlignees ------
-function showOCRViewer(imageURL, ocrData){
+function showOCRViewer(imageURL, ocrData, _rotation){
   const m = document.getElementById('modal');
   const lines = (ocrData.lines||[]).filter(l=>l.text.trim().length > 1);
   const selected = new Set(lines.map((_,i)=>i));
 
   document.getElementById('modalTitle').textContent = '✂️ Sélectionne les lignes à garder';
   document.getElementById('modalContent').innerHTML = `
-    <div style="font-size:12px;color:var(--text-3);margin-bottom:10px">
-      Appuie sur une ligne pour la désélectionner · <span style="color:var(--gold)">${lines.length} lignes détectées</span>
+    <div style="font-size:12px;color:var(--text-3);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+      <span>Appuie sur une ligne pour la désélectionner · <span style="color:var(--gold)">${lines.length} lignes détectées</span></span>
+      <button class="btn btn-ghost btn-sm" id="btnOcrRotate" style="padding:4px 10px;font-size:13px" title="Rotation 90°">↻ Rotation</button>
     </div>
     <div id="ocrImgWrap" style="position:relative;display:block;width:100%;border-radius:var(--radius);overflow:hidden;background:#000;-webkit-user-select:none;user-select:none">
       <img id="ocrImg" src="${imageURL}" style="width:100%;height:auto;display:block;opacity:.5;pointer-events:none;-webkit-user-drag:none;-webkit-touch-callout:none">
@@ -1122,9 +1292,47 @@ function showOCRViewer(imageURL, ocrData){
 
   document.getElementById('btnOcrSelAll').addEventListener('click',()=>{ lines.forEach((_,i)=>selected.add(i)); renderOverlay(); });
   document.getElementById('btnOcrSelNone').addEventListener('click',()=>{ selected.clear(); renderOverlay(); });
+
+  // ── Rotation : tourne l'image de 90° puis re-lance l'OCR ──
+  document.getElementById('btnOcrRotate').addEventListener('click', async ()=>{
+    const btn = document.getElementById('btnOcrRotate');
+    btn.disabled = true; btn.textContent = '⏳';
+    try{
+      // Charger l'image dans un canvas et la tourner de 90° dans le sens horaire
+      const img = await new Promise((res,rej)=>{
+        const i = new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=imageURL;
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width  = img.naturalHeight;
+      canvas.height = img.naturalWidth;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(canvas.width/2, canvas.height/2);
+      ctx.rotate(Math.PI/2);
+      ctx.drawImage(img, -img.naturalWidth/2, -img.naturalHeight/2);
+
+      // Convertir en File et re-lancer l'OCR
+      const rotatedFile = await new Promise(res=>canvas.toBlob(b=>res(new File([b],'rotated.png',{type:'image/png'})),'image/png'));
+      const newImageURL = URL.createObjectURL(rotatedFile);
+      URL.revokeObjectURL(imageURL);
+      m.classList.remove('show');
+      // Afficher progression
+      document.getElementById('modalTitle').textContent = 'Rotation + OCR...';
+      document.getElementById('modalContent').innerHTML = '<div style="text-align:center;padding:30px 0;color:var(--gold);font-size:24px">↻</div>';
+      m.classList.add('show');
+      const newOcrData = await ocrImage(rotatedFile, p=>{
+        const el=document.getElementById('modalContent');
+        if(el) el.innerHTML=`<div style="text-align:center;padding:30px 0;color:var(--gold);font-size:28px">${p}%</div>`;
+      });
+      m.classList.remove('show');
+      showOCRViewer(newImageURL, newOcrData);
+    } catch(e){
+      toast('Erreur rotation : '+e.message);
+      if(btn){ btn.disabled=false; btn.textContent='↻ Rotation'; }
+    }
+  });
+
   document.getElementById('btnOcrValidate').addEventListener('click',()=>{
     const selText = lines.filter((_,i)=>selected.has(i)).map(l=>l.text.trim()).join('\n');
-
     m.classList.remove('show');
     URL.revokeObjectURL(imageURL);
     if(!selText.trim()){ toast('Aucune ligne selectionnee'); return; }
@@ -1895,6 +2103,61 @@ function openIngredientForm(i){
   }
   makeResultRow(i.mainOutput, document.getElementById('mainOutRow'), false);
 
+  /* ── Avertissement cohérence mainOutput vs somme ingrédients ── */
+  const outputWarnEl = document.createElement('div');
+  outputWarnEl.id = 'outputWarn';
+  outputWarnEl.style.cssText = 'display:none;background:rgba(229,85,85,.12);border:1px solid rgba(229,85,85,.35);border-radius:8px;padding:10px 12px;font-size:12px;color:#e55;margin-bottom:10px;line-height:1.5';
+  document.getElementById('mainOutRow').after(outputWarnEl);
+
+  function checkOutputCoherence(){
+    const recipeSum = (i.recipe||[])
+      .filter(r=>!(r.unit||'').includes('%') && (r.qty||0)>0)
+      .reduce((s,r)=>s+toCl(r.qty||0, r.unit||'cl'), 0);
+
+    if(recipeSum <= 0){ outputWarnEl.style.display='none'; return; }
+
+    const sumLabel = fmtNorm(recipeSum, 'cl');
+
+    // Pas de mainOutput renseigné → info neutre
+    if(!i.mainOutput?.qtyMin || i.mainOutput.qtyMin <= 0){
+      outputWarnEl.style.display = 'block';
+      outputWarnEl.style.background = 'rgba(200,169,110,.08)';
+      outputWarnEl.style.borderColor = 'rgba(200,169,110,.25)';
+      outputWarnEl.style.color = 'var(--text-2)';
+      outputWarnEl.innerHTML = `ℹ️ Somme des ingrédients : <b style="color:var(--gold)">${sumLabel}</b> — renseigne le total attendu ci-dessus pour un calcul de batch précis.`;
+      return;
+    }
+
+    const outputNorm = toCl(i.mainOutput.qtyMin, i.mainOutput.unit||'cl');
+    const pct = (outputNorm / recipeSum) * 100;
+    const outLabel = fmtNorm(outputNorm, i.mainOutput.unit||'cl');
+
+    outputWarnEl.style.display = 'block';
+
+    if(pct < 30 || pct > 150){
+      // ⚠️ Incohérent
+      outputWarnEl.style.background = 'rgba(229,85,85,.12)';
+      outputWarnEl.style.borderColor = 'rgba(229,85,85,.35)';
+      outputWarnEl.style.color = '#e55';
+      const msg = pct < 30
+        ? `Le total déclaré est très faible par rapport aux ingrédients (${pct.toFixed(0)}%). Vérifiez l'unité.`
+        : `Le total déclaré dépasse largement la somme des ingrédients (${pct.toFixed(0)}%). Vérifiez la valeur.`;
+      outputWarnEl.innerHTML = `⚠️ <b>Incohérence détectée</b> — ingrédients : <b>${sumLabel}</b> · total déclaré : <b>${outLabel}</b><br><span style="font-size:11px">${msg}</span>`;
+    } else {
+      // ✅ Cohérent
+      outputWarnEl.style.background = 'rgba(76,175,147,.08)';
+      outputWarnEl.style.borderColor = 'rgba(76,175,147,.3)';
+      outputWarnEl.style.color = '#4caf93';
+      outputWarnEl.innerHTML = `✅ Cohérent — ingrédients : <b>${sumLabel}</b> · total déclaré : <b>${outLabel}</b> (${pct.toFixed(0)}% de rendement)`;
+    }
+  }
+  // Vérifier à l'initialisation et à chaque changement du mainOutput
+  checkOutputCoherence();
+  document.getElementById('mainOutRow').querySelectorAll('input,select').forEach(el=>{
+    el.addEventListener('input', checkOutputCoherence);
+    el.addEventListener('change', checkOutputCoherence);
+  });
+
   /* ── Produits en plus ── */
   const byproductRows=document.getElementById('byproductRows');
   function renderByproducts(){
@@ -1985,7 +2248,27 @@ function openIngredientDetail(i){
     ${i.type==='homemade' && i.recipe?.length ? `
       <div class="section-title">La recette</div>
       ${i.steps?`<div style="background:var(--navy-700);padding:14px;border-radius:var(--radius);white-space:pre-wrap;margin-bottom:10px;font-size:13px">${escapeHtml(i.steps)}</div>`:''}
-      <div class="list">${i.recipe.map(r=>`<div class="item"><div class="item-body"><div class="item-name">${escapeHtml(r.name)}</div></div><div style="color:var(--gold);font-weight:600">${r.unit==='%'?`${r.qty}% du vol.`:`${r.qty||''} ${escapeHtml(r.unit||'')}`}</div></div>`).join('')}</div>
+      <div class="list">${i.recipe.map(r=>`<div class="item"><div class="item-body"><div class="item-name">${escapeHtml(r.name)}</div></div><div style="color:var(--gold);font-weight:600">${(r.unit||'').includes('%')?`${r.qty}% du vol.`:`${r.qty||''} ${escapeHtml(r.unit||'')}`}</div></div>`).join('')}</div>
+      ${(()=>{
+        const recipeSum = i.recipe.filter(r=>!(r.unit||'').includes('%') && (r.qty||0)>0)
+          .reduce((s,r)=>s+toCl(r.qty||0,r.unit||'cl'),0);
+        if(recipeSum<=0) return '';
+        const sumLabel = fmtNorm(recipeSum,'cl');
+        if(!i.mainOutput?.qtyMin || i.mainOutput.qtyMin<=0){
+          return `<div style="font-size:12px;color:var(--text-3);padding:6px 0 2px">
+            ℹ️ Somme des ingrédients : <b style="color:var(--gold)">${sumLabel}</b> — renseigne le total attendu pour un calcul de batch précis.</div>`;
+        }
+        const outNorm = toCl(i.mainOutput.qtyMin, i.mainOutput.unit||'cl');
+        const pct = (outNorm/recipeSum)*100;
+        const outLabel = fmtNorm(outNorm, i.mainOutput.unit||'cl');
+        if(pct<30||pct>150){
+          return `<div style="background:rgba(229,85,85,.12);border:1px solid rgba(229,85,85,.3);border-radius:8px;padding:8px 12px;font-size:12px;color:#e55;margin-top:8px">
+            ⚠️ <b>Total attendu incohérent</b> — ingrédients : <b>${sumLabel}</b> · déclaré : <b>${outLabel}</b> (${pct.toFixed(0)}%)<br>
+            <span style="font-size:11px">${pct<30?'Total très faible, vérifiez l\'unité.':'Total trop élevé, vérifiez la valeur.'}</span></div>`;
+        }
+        return `<div style="font-size:12px;color:#4caf93;padding:6px 0 2px">
+          ✅ Rendement cohérent — <b>${outLabel}</b> pour <b>${sumLabel}</b> d'ingrédients (${pct.toFixed(0)}%)</div>`;
+      })()}
     `:''}
     ${(()=>{
       const fmtQty=(o)=>o.qtyMax!=null?`${o.qtyMin??''} – ${o.qtyMax}`:`${o.qtyMin??''}`;
@@ -2001,10 +2284,18 @@ function openIngredientDetail(i){
       if(!all.length) return '';
       return `
         <div class="section-title" style="margin-top:14px">🎯 Résultats <span style="color:var(--text-3);font-weight:400;font-size:11px">/ ${escapeHtml(i.stockUnit||'unité')}</span></div>
-        <div class="list">${all.map(o=>`<div class="item">
-          <div class="item-body"><div class="item-name">${escapeHtml(o.name)}${o._main?` <span style="font-size:10px;color:var(--gold);opacity:.7">principal</span>`:''}</div></div>
-          <div style="color:var(--gold);font-weight:600">${fmtQty(o)} ${escapeHtml(o.unit||'')}</div>
-        </div>`).join('')}</div>
+        <div class="list">${all.map(o=>{
+          const exists = state.ingredients.some(x=>x.name.toLowerCase()===o.name.toLowerCase());
+          return `<div class="item">
+            <div class="item-body"><div class="item-name">${escapeHtml(o.name)}${o._main?` <span style="font-size:10px;color:var(--gold);opacity:.7">principal</span>`:''}</div></div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="color:var(--gold);font-weight:600">${fmtQty(o)} ${escapeHtml(o.unit||'')}</span>
+              ${exists
+                ? `<span style="font-size:11px;color:#4caf93">✓ existe</span>`
+                : `<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px" data-create-ing="${escapeHtml(o.name)}" data-create-unit="${escapeHtml(o.unit||'cl')}">+ Ingrédient</button>`}
+            </div>
+          </div>`;
+        }).join('')}</div>
         ${i.stock>0?`
           <div class="section-title">📦 Stock disponible (${i.stock} ${escapeHtml(i.stockUnit||'')})</div>
           <div class="list">${all.map(o=>`<div class="item">
@@ -2012,12 +2303,44 @@ function openIngredientDetail(i){
             <div style="color:var(--gold);font-weight:700">${calcStock(o)}</div>
           </div>`).join('')}</div>`:''}`;
     })()}
+    ${i.supplier ? `<div style="font-size:12px;color:var(--text-3);margin-top:10px">🏪 Fournisseur : <b style="color:var(--text-1)">${escapeHtml(i.supplier)}</b></div>` : ''}
+    ${(i.priceHistory||[]).length > 1 ? `
+      <div class="section-title" style="margin-top:14px">📈 Historique des prix</div>
+      <div style="font-size:12px">
+        ${[...(i.priceHistory||[])].reverse().map(p=>`
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+            <span style="color:var(--text-3)">${p.date}</span>
+            <span><b style="color:var(--gold)">${p.price.toFixed(2)} €</b>${p.qty>1?` · ×${p.qty}`:''}</span>
+          </div>`).join('')}
+      </div>` : ''}
+    ${i.notes ? `
+      <div class="section-title" style="margin-top:14px">📝 Notes</div>
+      <div style="background:rgba(229,85,85,.06);border:1px solid rgba(229,85,85,.2);border-radius:8px;padding:10px 12px;font-size:12px;white-space:pre-wrap;color:var(--text-2)">${escapeHtml(i.notes)}</div>` : ''}
     <div class="form-actions">
       <button class="btn btn-ghost" id="btnIEdit">${t('edit')}</button>
       <button class="btn btn-primary btn-block" id="btnIClose">OK</button>
     </div>`;
   document.getElementById('btnIEdit').addEventListener('click', ()=>{closeModal();openIngredientForm(i);});
   document.getElementById('btnIClose').addEventListener('click', closeModal);
+  // Boutons "→ Créer ingrédient" depuis les résultats
+  document.querySelectorAll('[data-create-ing]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const name = btn.dataset.createIng;
+      const unit = btn.dataset.createUnit||'cl';
+      // Pré-remplir un nouvel ingrédient avec le nom du produit
+      const newIng = {
+        id: uid(), name, category: i.category||'', type: 'simple',
+        unit, stock: 0, stockUnit: unit,
+        recipe:[], steps:'',
+        mainOutput:{name:'',qtyMin:null,qtyMax:null,unit:'cl'},
+        byproducts:[]
+      };
+      closeModal();
+      openIngredientForm(newIng);
+      toast(`Nouvel ingrédient : ${name}`);
+    });
+  });
   m.classList.add('show');
 }
 
@@ -2476,14 +2799,17 @@ function fmtNorm(normVal, unitHint){
 function renderHomemadeTable(h){
   const ing = h.ingredient;
   const density = ing.density || null;
-  // Yield de base (en ref cl ou g) — utilise densité pour conversion inter-domaine
+  // baseCl = rendement réel par préparation
+  // Priorité : mainOutput (valeur explicite saisie par l'utilisateur)
+  // Fallback  : somme des ingrédients hors % (estimation)
+  const ingredientSum = (ing.recipe||[])
+    .filter(r=>!(r.unit||'').includes('%'))
+    .reduce((s,r)=>s+toRefQty(r.qty||0, r.unit||'cl', density), 0);
   let baseCl;
-  if(ing.mainOutput?.qtyMin){
+  if(ing.mainOutput?.qtyMin && ing.mainOutput.qtyMin > 0){
     baseCl = toRefQty(ing.mainOutput.qtyMin, ing.mainOutput.unit||'cl', density);
   } else {
-    baseCl = (ing.recipe||[])
-      .filter(r=>(r.unit||'').trim()!=='%')
-      .reduce((s,r)=>s+toRefQty(r.qty||0, r.unit||'cl', density),0) || 1;
+    baseCl = ingredientSum > 0 ? ingredientSum : 1;
   }
   const requiredCl = toRefQty(h.required, h.unit, density);
   const ratio = requiredCl / baseCl;
@@ -2621,12 +2947,15 @@ document.getElementById('btnLogin').addEventListener('click', async()=>{
   if(!sb){toast('⚠️ Remplace SUPABASE_KEY dans le code pour activer la synchro');return;}
   const btn = document.getElementById('btnLogin');
   if(btn.dataset.action==='logout' || sbUser){
-    // scope:'local' = efface les tokens locaux sans appel réseau → fiable même hors-ligne
-    try{ await sb.auth.signOut({scope:'local'}); }catch(e){ console.warn('signOut:',e.message); }
-    sbUser=null;
-    localStorage.removeItem(LS_KEY);
+    // Tenter la déconnexion côté serveur (best-effort)
+    try{ await sb.auth.signOut(); }catch(e){ console.warn('signOut:', e.message); }
+    // Forcer la suppression des tokens Supabase dans le localStorage
+    Object.keys(localStorage).forEach(k=>{
+      if(k.startsWith('sb-') || k.includes('supabase') || k.includes('auth-token')) localStorage.removeItem(k);
+    });
+    sbUser = null;
+    updateAuthUI();
     toast('👋 Déconnecté');
-    setTimeout(()=>{ location.href=window.location.origin+window.location.pathname; }, 600);
   } else openLoginModal();
 });
 document.getElementById('btnPromo').addEventListener('click', ()=>{
