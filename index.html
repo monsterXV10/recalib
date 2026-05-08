@@ -2305,10 +2305,12 @@ function openCocktailForm(c){
     </div>
     <div class="field-row">
       <div class="field"><label>Méthode</label>
-        <select id="fMethod">
-          <option value="">— Choisir —</option>
-          ${METHODS.map(m=>`<option value="${m}"${c.method===m?' selected':''}>${m}</option>`).join('')}
-        </select>
+        <div id="fMethodChips" style="display:flex;flex-wrap:wrap;gap:6px;padding-top:2px">${
+          METHODS.map(m=>{
+            const sel=(Array.isArray(c.method)?c.method:[c.method]).filter(Boolean).includes(m);
+            return `<button type="button" class="chip${sel?' active':''}" data-m="${m}" style="font-size:13px">${m}</button>`;
+          }).join('')
+        }</div>
       </div>
       <div class="field"><label>${t('menu.name')}</label>
         <select id="fMenu">${buildBookOptions(c.menu||'')}</select>
@@ -2345,6 +2347,12 @@ function openCocktailForm(c){
       }
     });
   }
+
+  /* ── Méthode multi-sélection ── */
+  document.getElementById('fMethodChips').addEventListener('click', e=>{
+    const btn = e.target.closest('[data-m]');
+    if(btn) btn.classList.toggle('active');
+  });
 
   /* ── Autocomplete ingrédients custom (datalist peu fiable sur mobile) ── */
   function makeIngAutocomplete(inp){
@@ -2431,7 +2439,7 @@ function openCocktailForm(c){
     c.name = document.getElementById('fName').value.trim();
     c.glass = document.getElementById('fGlass').value.trim();
     c.family = document.getElementById('fFamily').value.trim();
-    c.method = document.getElementById('fMethod').value;
+    c.method = [...document.querySelectorAll('#fMethodChips [data-m].active')].map(b=>b.dataset.m);
     c.alcohol = guessMainAlcohol(c.ingredients);
     const _menuVal=document.getElementById('fMenu').value;
     c.menu = _menuVal==='__new__' ? '' : _menuVal;
@@ -3971,7 +3979,8 @@ function _setLivrePg(n){
 
 function _renderLivreRecipe(){
   const c=_livreC;
-  const meta=[c.glass,c.family||c.livre,c.alcohol,c.method].filter(Boolean).join(' · ');
+  const methodStr=Array.isArray(c.method)?c.method.join(' · '):(c.method||'');
+  const meta=[c.glass,c.family||c.livre,c.alcohol,methodStr].filter(Boolean).join(' · ');
   document.getElementById('livrePg0').innerHTML=`
     <div class="livre-recipe-name">${escapeHtml(c.name)}</div>
     <div class="livre-recipe-meta">${escapeHtml(meta)}</div>
