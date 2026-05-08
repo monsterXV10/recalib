@@ -2442,6 +2442,7 @@ function openCocktailForm(c){
     const added = syncMissingIngredients(c.ingredients||[]);
     save(); closeModal(); renderCocktails();
     toast(added>0 ? `${t('saved')} · +${added} ${t('ingredients.plural').toLowerCase()}` : t('saved'));
+    openLivreView(c, false);
   });
   m.classList.add('show');
 }
