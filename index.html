@@ -4262,6 +4262,7 @@ document.getElementById('btnLogin').addEventListener('click', async()=>{
     renderSettings();
     updateAuthUI();
     toast('👋 Déconnecté');
+    setTimeout(()=>location.reload(), 1200);
   } else openLoginModal();
 });
 document.getElementById('btnPromo').addEventListener('click', ()=>{
