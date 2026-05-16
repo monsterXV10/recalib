@@ -39,7 +39,6 @@ export default function RecipeForm({ userId, initial }: Props) {
   )
   const [error, setError] = useState<string | null>(null)
 
-  // Metadata per type
   const initMeta = initial?.metadata ?? defaultMetadata(type)
   const [cocktailMeta, setCocktailMeta] = useState<CocktailMetadata>(
     isCocktailMetadata(initMeta) ? initMeta : { type: 'cocktail' }
@@ -50,10 +49,6 @@ export default function RecipeForm({ userId, initial }: Props) {
   const [cuisineMeta, setCuisineMeta] = useState<CuisineMetadata>(
     isCuisineMetadata(initMeta) ? initMeta : { type: 'cuisine', servings: 4, difficulty: 'medium' }
   )
-
-  function handleTypeChange(t: RecipeType) {
-    setType(t)
-  }
 
   function updateIngredient(idx: number, field: keyof RecipeIngredient, value: string | number) {
     setIngredients(prev => prev.map((ing, i) => i === idx ? { ...ing, [field]: value } : ing))
@@ -78,7 +73,6 @@ export default function RecipeForm({ userId, initial }: Props) {
       steps,
       ingredients: ingredients.filter(i => i.name.trim()),
     }
-
     const metadata = type === 'cocktail' ? cocktailMeta : type === 'coffee' ? coffeeMeta : cuisineMeta
 
     try {
@@ -95,315 +89,294 @@ export default function RecipeForm({ userId, initial }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 space-y-5 pb-24">
-      {/* Sélecteur de type */}
-      <div>
-        <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-dim)' }}>
-          TYPE DE RECETTE
-        </label>
-        <div className="flex gap-2">
+    <form onSubmit={handleSubmit} className="pb-24">
+      <div className="max-w-xl mx-auto px-4 pt-4 space-y-3">
+
+        {/* Sélecteur de type — tabs compacts */}
+        <div
+          className="flex rounded-[var(--radius)] overflow-hidden p-1 gap-1"
+          style={{ background: 'var(--surface)' }}
+        >
           {TYPES.map(t => (
             <button
               key={t.value}
               type="button"
-              onClick={() => handleTypeChange(t.value)}
-              className="flex-1 flex flex-col items-center gap-1 py-3 rounded-[var(--radius-sm)] text-xs font-medium transition-all"
+              onClick={() => setType(t.value)}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[var(--radius-sm)] text-sm font-semibold transition-all"
               style={{
-                background: type === t.value ? 'var(--gold)' : 'var(--surface)',
+                background: type === t.value ? 'var(--gold)' : 'transparent',
                 color: type === t.value ? '#0A0E1A' : 'var(--text-dim)',
-                border: `1px solid ${type === t.value ? 'var(--gold)' : 'var(--border)'}`,
               }}
             >
-              <span className="text-xl">{t.icon}</span>
-              {t.label}
+              <span>{t.icon}</span>
+              <span>{t.label}</span>
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Nom */}
-      <Field label="NOM DE LA RECETTE">
-        <input
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="Ex: Negroni, Espresso Martini..."
-          className="field-input"
-        />
-      </Field>
+        {/* Nom */}
+        <div className="rounded-[var(--radius)] overflow-hidden" style={{ background: 'var(--surface)' }}>
+          <input
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="Nom de la recette"
+            className="w-full px-4 py-4 text-lg font-semibold bg-transparent outline-none"
+            style={{ color: 'var(--text)' }}
+            autoFocus={!initial}
+          />
+        </div>
 
-      {/* Champs spécifiques Cocktail */}
-      {type === 'cocktail' && (
-        <>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="VERRE">
-              <input
-                type="text"
-                value={cocktailMeta.glass ?? ''}
-                onChange={e => setCocktailMeta(m => ({ ...m, glass: e.target.value }))}
-                placeholder="Coupe, Rocks..."
-                className="field-input"
-              />
-            </Field>
-            <Field label="FAMILLE">
-              <select
-                value={cocktailMeta.family ?? ''}
-                onChange={e => setCocktailMeta(m => ({ ...m, family: e.target.value }))}
-                className="field-input"
-              >
-                <option value="">—</option>
-                {COCKTAIL_FAMILIES.map(f => <option key={f} value={f}>{f}</option>)}
-              </select>
-            </Field>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="ALCOOL DE BASE">
-              <input
-                type="text"
-                value={cocktailMeta.alcohol ?? ''}
-                onChange={e => setCocktailMeta(m => ({ ...m, alcohol: e.target.value }))}
-                placeholder="Gin, Rhum, Vodka..."
-                className="field-input"
-              />
-            </Field>
-            <Field label="GARNITURE">
-              <input
-                type="text"
-                value={cocktailMeta.garnish ?? ''}
-                onChange={e => setCocktailMeta(m => ({ ...m, garnish: e.target.value }))}
-                placeholder="Zeste citron..."
-                className="field-input"
-              />
-            </Field>
-          </div>
-        </>
-      )}
-
-      {/* Champs spécifiques Café */}
-      {type === 'coffee' && (
-        <>
-          <Field label="TEMPÉRATURE">
-            <div className="flex gap-2">
-              {(['hot', 'iced', 'cold-brew'] as const).map(t => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setCoffeeMeta(m => ({ ...m, temperature: t }))}
-                  className="flex-1 py-2 rounded-[var(--radius-sm)] text-xs font-medium"
-                  style={{
-                    background: coffeeMeta.temperature === t ? 'var(--gold)' : 'var(--surface2)',
-                    color: coffeeMeta.temperature === t ? '#0A0E1A' : 'var(--text-dim)',
-                    border: '1px solid var(--border)',
-                  }}
+        {/* Ingrédients — section centrale */}
+        <Section title="Ingrédients" icon="🧪">
+          <div className="space-y-2">
+            {ingredients.map((ing, idx) => (
+              <div key={idx} className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  value={ing.name}
+                  onChange={e => updateIngredient(idx, 'name', e.target.value)}
+                  placeholder="Ingrédient"
+                  className="field-input"
+                  style={{ flex: 1, minWidth: 0 }}
+                />
+                <input
+                  type="number"
+                  value={ing.qty || ''}
+                  onChange={e => updateIngredient(idx, 'qty', Number(e.target.value))}
+                  placeholder="Qté"
+                  min={0}
+                  step="0.1"
+                  className="field-input text-center font-semibold"
+                  style={{ width: '4rem', flexShrink: 0 }}
+                />
+                <select
+                  value={ing.unit}
+                  onChange={e => updateIngredient(idx, 'unit', e.target.value)}
+                  className="field-input"
+                  style={{ width: '4rem', flexShrink: 0, paddingLeft: '6px', paddingRight: '2px' }}
                 >
-                  {t === 'hot' ? '🔥 Chaud' : t === 'iced' ? '🧊 Glacé' : '❄️ Cold Brew'}
-                </button>
-              ))}
-            </div>
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="MÉTHODE D'EXTRACTION">
-              <input
-                type="text"
-                value={coffeeMeta.brewMethod ?? ''}
-                onChange={e => setCoffeeMeta(m => ({ ...m, brewMethod: e.target.value }))}
-                placeholder="Espresso, V60, AeroPress..."
-                className="field-input"
-              />
-            </Field>
-            <Field label="RATIO CAFÉ:EAU">
-              <input
-                type="text"
-                value={coffeeMeta.ratio ?? ''}
-                onChange={e => setCoffeeMeta(m => ({ ...m, ratio: e.target.value }))}
-                placeholder="1:15"
-                className="field-input"
-              />
-            </Field>
+                  {['cl', 'ml', 'oz', 'g', 'kg', 'trait', 'goutte', 'pièce'].map(u => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
+                {ingredients.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeIngredient(idx)}
+                    className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full text-sm"
+                    style={{ background: 'var(--surface2)', color: 'var(--text-dim)' }}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="MOUTURE">
-              <select
-                value={coffeeMeta.grind ?? 'medium-fine'}
-                onChange={e => setCoffeeMeta(m => ({ ...m, grind: e.target.value as CoffeeMetadata['grind'] }))}
-                className="field-input"
-              >
-                {GRIND_OPTIONS.map(g => (
-                  <option key={g} value={g}>{GRIND_LABELS[g ?? 'medium']}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="TEMPS D'EXTRACTION (s)">
-              <input
-                type="number"
-                value={coffeeMeta.extractionTime ?? ''}
-                onChange={e => setCoffeeMeta(m => ({ ...m, extractionTime: Number(e.target.value) }))}
-                placeholder="25"
-                min={0}
-                className="field-input"
-              />
-            </Field>
-          </div>
-        </>
-      )}
+          <button
+            type="button"
+            onClick={addIngredient}
+            className="mt-2 w-full py-2.5 rounded-[var(--radius-sm)] text-sm font-medium flex items-center justify-center gap-2 transition-opacity hover:opacity-80"
+            style={{ background: 'var(--surface2)', color: 'var(--gold)', border: '1px dashed var(--gold)', opacity: 0.8 }}
+          >
+            + Ajouter un ingrédient
+          </button>
+        </Section>
 
-      {/* Champs spécifiques Cuisine */}
-      {type === 'cuisine' && (
-        <div className="grid grid-cols-3 gap-3">
-          <Field label="PORTIONS">
-            <input
-              type="number"
-              value={cuisineMeta.servings ?? 4}
-              onChange={e => setCuisineMeta(m => ({ ...m, servings: Number(e.target.value) }))}
-              min={1}
-              className="field-input"
-            />
-          </Field>
-          <Field label="PREP (min)">
-            <input
-              type="number"
-              value={cuisineMeta.prepTime ?? ''}
-              onChange={e => setCuisineMeta(m => ({ ...m, prepTime: Number(e.target.value) }))}
-              min={0}
-              placeholder="15"
-              className="field-input"
-            />
-          </Field>
-          <Field label="CUISSON (min)">
-            <input
-              type="number"
-              value={cuisineMeta.cookTime ?? ''}
-              onChange={e => setCuisineMeta(m => ({ ...m, cookTime: Number(e.target.value) }))}
-              min={0}
-              placeholder="30"
-              className="field-input"
-            />
-          </Field>
-          <div className="col-span-3">
-            <Field label="DIFFICULTÉ">
+        {/* Champs spécifiques par type */}
+        {type === 'cocktail' && (
+          <Section title="Détails" icon="🥃">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs mb-1.5" style={{ color: 'var(--text-dim)' }}>Verre</label>
+                <input
+                  type="text"
+                  value={cocktailMeta.glass ?? ''}
+                  onChange={e => setCocktailMeta(m => ({ ...m, glass: e.target.value }))}
+                  placeholder="Coupe, Rocks..."
+                  className="field-input"
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1.5" style={{ color: 'var(--text-dim)' }}>Famille</label>
+                <select
+                  value={cocktailMeta.family ?? ''}
+                  onChange={e => setCocktailMeta(m => ({ ...m, family: e.target.value }))}
+                  className="field-input"
+                >
+                  <option value="">—</option>
+                  {COCKTAIL_FAMILIES.map(f => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs mb-1.5" style={{ color: 'var(--text-dim)' }}>Alcool de base</label>
+                <input
+                  type="text"
+                  value={cocktailMeta.alcohol ?? ''}
+                  onChange={e => setCocktailMeta(m => ({ ...m, alcohol: e.target.value }))}
+                  placeholder="Gin, Rhum..."
+                  className="field-input"
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1.5" style={{ color: 'var(--text-dim)' }}>Garniture</label>
+                <input
+                  type="text"
+                  value={cocktailMeta.garnish ?? ''}
+                  onChange={e => setCocktailMeta(m => ({ ...m, garnish: e.target.value }))}
+                  placeholder="Zeste, feuille..."
+                  className="field-input"
+                />
+              </div>
+            </div>
+          </Section>
+        )}
+
+        {type === 'coffee' && (
+          <Section title="Détails café" icon="☕">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs mb-1.5" style={{ color: 'var(--text-dim)' }}>Température</label>
+                <div className="flex gap-2">
+                  {(['hot', 'iced', 'cold-brew'] as const).map(t => (
+                    <button key={t} type="button"
+                      onClick={() => setCoffeeMeta(m => ({ ...m, temperature: t }))}
+                      className="flex-1 py-2 rounded-[var(--radius-sm)] text-xs font-medium"
+                      style={{
+                        background: coffeeMeta.temperature === t ? 'var(--gold)' : 'var(--surface2)',
+                        color: coffeeMeta.temperature === t ? '#0A0E1A' : 'var(--text-dim)',
+                        border: '1px solid var(--border)',
+                      }}>
+                      {t === 'hot' ? '🔥 Chaud' : t === 'iced' ? '🧊 Glacé' : '❄️ Cold Brew'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs mb-1.5" style={{ color: 'var(--text-dim)' }}>Méthode</label>
+                  <input type="text" value={coffeeMeta.brewMethod ?? ''}
+                    onChange={e => setCoffeeMeta(m => ({ ...m, brewMethod: e.target.value }))}
+                    placeholder="Espresso, V60..." className="field-input" />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1.5" style={{ color: 'var(--text-dim)' }}>Ratio café:eau</label>
+                  <input type="text" value={coffeeMeta.ratio ?? ''}
+                    onChange={e => setCoffeeMeta(m => ({ ...m, ratio: e.target.value }))}
+                    placeholder="1:15" className="field-input" />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1.5" style={{ color: 'var(--text-dim)' }}>Mouture</label>
+                  <select value={coffeeMeta.grind ?? 'medium-fine'}
+                    onChange={e => setCoffeeMeta(m => ({ ...m, grind: e.target.value as CoffeeMetadata['grind'] }))}
+                    className="field-input">
+                    {GRIND_OPTIONS.map(g => <option key={g} value={g}>{GRIND_LABELS[g ?? 'medium']}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs mb-1.5" style={{ color: 'var(--text-dim)' }}>Extraction (s)</label>
+                  <input type="number" value={coffeeMeta.extractionTime ?? ''}
+                    onChange={e => setCoffeeMeta(m => ({ ...m, extractionTime: Number(e.target.value) }))}
+                    placeholder="25" min={0} className="field-input" />
+                </div>
+              </div>
+            </div>
+          </Section>
+        )}
+
+        {type === 'cuisine' && (
+          <Section title="Détails cuisine" icon="🍳">
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs mb-1.5" style={{ color: 'var(--text-dim)' }}>Portions</label>
+                <input type="number" value={cuisineMeta.servings ?? 4}
+                  onChange={e => setCuisineMeta(m => ({ ...m, servings: Number(e.target.value) }))}
+                  min={1} className="field-input" />
+              </div>
+              <div>
+                <label className="block text-xs mb-1.5" style={{ color: 'var(--text-dim)' }}>Prép (min)</label>
+                <input type="number" value={cuisineMeta.prepTime ?? ''}
+                  onChange={e => setCuisineMeta(m => ({ ...m, prepTime: Number(e.target.value) }))}
+                  placeholder="15" min={0} className="field-input" />
+              </div>
+              <div>
+                <label className="block text-xs mb-1.5" style={{ color: 'var(--text-dim)' }}>Cuisson (min)</label>
+                <input type="number" value={cuisineMeta.cookTime ?? ''}
+                  onChange={e => setCuisineMeta(m => ({ ...m, cookTime: Number(e.target.value) }))}
+                  placeholder="30" min={0} className="field-input" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <label className="block text-xs mb-1.5" style={{ color: 'var(--text-dim)' }}>Difficulté</label>
               <div className="flex gap-2">
                 {DIFFICULTY.map(d => (
-                  <button
-                    key={d}
-                    type="button"
+                  <button key={d} type="button"
                     onClick={() => setCuisineMeta(m => ({ ...m, difficulty: d }))}
-                    className="flex-1 py-2 rounded-[var(--radius-sm)] text-xs font-medium"
+                    className="flex-1 py-2 rounded-[var(--radius-sm)] text-sm font-medium"
                     style={{
                       background: cuisineMeta.difficulty === d ? 'var(--gold)' : 'var(--surface2)',
                       color: cuisineMeta.difficulty === d ? '#0A0E1A' : 'var(--text-dim)',
                       border: '1px solid var(--border)',
-                    }}
-                  >
+                    }}>
                     {DIFFICULTY_LABELS[d ?? 'medium']}
                   </button>
                 ))}
               </div>
-            </Field>
-          </div>
-        </div>
-      )}
-
-      {/* Ingrédients */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="text-xs font-medium" style={{ color: 'var(--text-dim)' }}>
-            INGRÉDIENTS
-          </label>
-          <button
-            type="button"
-            onClick={addIngredient}
-            className="text-xs px-2 py-1 rounded"
-            style={{ background: 'var(--surface2)', color: 'var(--gold)' }}
-          >
-            + Ajouter
-          </button>
-        </div>
-        <div className="space-y-2">
-          {ingredients.map((ing, idx) => (
-            <div key={idx} className="flex gap-2 items-center" style={{ minWidth: 0 }}>
-              <input
-                type="number"
-                value={ing.qty || ''}
-                onChange={e => updateIngredient(idx, 'qty', Number(e.target.value))}
-                placeholder="0"
-                min={0}
-                step="0.1"
-                className="field-input text-center"
-                style={{ width: '3.5rem', flexShrink: 0 }}
-              />
-              <select
-                value={ing.unit}
-                onChange={e => updateIngredient(idx, 'unit', e.target.value)}
-                className="field-input"
-                style={{ width: '3.5rem', flexShrink: 0, paddingLeft: '6px', paddingRight: '4px' }}
-              >
-                {['cl', 'ml', 'oz', 'g', 'kg', 'trait', 'goutte', 'pièce'].map(u => (
-                  <option key={u} value={u}>{u}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={ing.name}
-                onChange={e => updateIngredient(idx, 'name', e.target.value)}
-                placeholder="Nom de l'ingrédient"
-                className="field-input"
-                style={{ flex: 1, minWidth: 0 }}
-              />
-              {ingredients.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeIngredient(idx)}
-                  className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded text-xs"
-                  style={{ background: '#2B0F0F', color: '#FF6B6B' }}
-                >
-                  ×
-                </button>
-              )}
             </div>
-          ))}
-        </div>
+          </Section>
+        )}
+
+        {/* Méthode / étapes */}
+        <Section title="Préparation" icon="📋">
+          <textarea
+            value={steps}
+            onChange={e => setSteps(e.target.value)}
+            placeholder="Décrivez les étapes de préparation..."
+            rows={4}
+            className="field-input resize-none"
+          />
+        </Section>
+
+        {error && (
+          <p className="text-sm text-red-400 px-1">{error}</p>
+        )}
       </div>
-
-      {/* Étapes / Méthode */}
-      <Field label="MÉTHODE / ÉTAPES">
-        <textarea
-          value={steps}
-          onChange={e => setSteps(e.target.value)}
-          placeholder="Décrivez les étapes de préparation..."
-          rows={4}
-          className="field-input resize-none"
-        />
-      </Field>
-
-      {error && (
-        <p className="text-sm text-red-400 px-1">{error}</p>
-      )}
 
       {/* Bouton submit fixé en bas */}
       <div
         className="fixed bottom-0 left-0 right-0 p-4 z-10"
         style={{ background: 'var(--bg)', borderTop: '1px solid var(--border)' }}
       >
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full py-3 rounded-[var(--radius)] font-semibold text-sm disabled:opacity-50"
-          style={{ background: 'var(--gold)', color: '#0A0E1A' }}
-        >
-          {saving ? 'Sauvegarde...' : initial ? 'Mettre à jour' : 'Créer la recette'}
-        </button>
+        <div className="max-w-xl mx-auto">
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full py-3.5 rounded-[var(--radius)] font-bold text-base disabled:opacity-50"
+            style={{ background: 'var(--gold)', color: '#0A0E1A' }}
+          >
+            {saving ? 'Sauvegarde…' : initial ? 'Mettre à jour' : 'Créer la recette'}
+          </button>
+        </div>
       </div>
     </form>
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Section({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-dim)' }}>
-        {label}
-      </label>
-      {children}
+    <div className="rounded-[var(--radius)] overflow-hidden" style={{ background: 'var(--surface)' }}>
+      <div
+        className="flex items-center gap-2 px-4 py-2.5"
+        style={{ borderBottom: '1px solid var(--border)' }}
+      >
+        <span className="text-base">{icon}</span>
+        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>
+          {title}
+        </span>
+      </div>
+      <div className="p-4">
+        {children}
+      </div>
     </div>
   )
 }
