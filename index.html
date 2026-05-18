@@ -260,6 +260,7 @@ input,select,textarea{font:inherit;color:inherit;user-select:text;-webkit-user-s
 .ing-row input::placeholder{color:var(--text-3)}
 .ing-row input:focus,.ing-row select:focus{border-color:rgba(200,169,110,.4);background:var(--navy-600)}
 .ing-row .rm{color:var(--error);padding:6px;background:transparent;border:none}
+.ac-dd [data-n]:hover{background:rgba(200,169,110,.12)}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
   padding:11px 18px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;
@@ -2563,7 +2564,8 @@ function openIngredientForm(i){
   const isNew = !i;
   if(isNew) i = {id:uid(), name:'', category:'spirits', type:'bought', unit:'cl',
     bottleSize:70, bottlePrice:0, stock:0, stockUnit:'bouteilles', minStock:0,
-    recipe:[], steps:'', mainOutput:{name:'',qtyMin:null,qtyMax:null,unit:'cl'}, byproducts:[]};
+    recipe:[], steps:'', mainOutput:{name:'',qtyMin:null,qtyMax:null,unit:'cl'}, byproducts:[],
+    loss:{qty:0,unit:'cl'}};
   else {
     i = structuredClone(i);
     // Compat ascendante : ancien champ outputs → nouveau format
@@ -2574,6 +2576,7 @@ function openIngredientForm(i){
     }
     if(!i.mainOutput) i.mainOutput={name:'',qtyMin:null,qtyMax:null,unit:'cl'};
     if(!i.byproducts) i.byproducts=[];
+    if(!i.loss) i.loss={qty:0,unit:'cl'};
   }
   const m = document.getElementById('modal');
   document.getElementById('modalTitle').textContent = (isNew?t('add'):t('edit'))+' · '+t('ingredient');
@@ -2621,8 +2624,17 @@ function openIngredientForm(i){
       <div style="font-size:12px;color:var(--text-3);margin-bottom:8px">Sous-produits obtenus en parallèle (ex: zeste, pulpe…)</div>
       <div id="byproductRows"></div>
       <button type="button" class="btn btn-ghost btn-sm" id="btnAddByproduct" style="margin-top:6px">+ Ajouter un produit en plus</button>
+      <div class="section-title" style="margin-top:18px">💧 Perte de process</div>
+      <div style="font-size:12px;color:var(--text-3);margin-bottom:8px">Optionnel · évaporation, clarification, filtration… Si en %, s'applique sur le volume d'entrée total.</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <input id="gLossQty" type="number" step="0.01" placeholder="0" value="${i.loss?.qty||''}" style="width:72px;background:var(--navy-700);border:1px solid rgba(200,169,110,.12);border-radius:var(--radius-sm);padding:9px 10px;color:var(--text-1);outline:none;font:inherit">
+        <select id="gLossUnit" style="width:72px;background:var(--navy-700);border:1px solid rgba(200,169,110,.12);border-radius:var(--radius-sm);padding:9px 6px;color:var(--text-1);outline:none">
+          ${[...UNITS,'%'].map(u=>`<option value="${u}"${(i.loss?.unit||'cl')===u?' selected':''}>${u}</option>`).join('')}
+        </select>
+        <span style="color:var(--text-3);font-size:12px">perte estimée</span>
+      </div>
+      <div id="balanceBar" style="display:none;border-radius:8px;padding:10px 12px;font-size:12px;margin-top:10px;line-height:1.6"></div>
       <datalist id="ingListDL">${state.ingredients.map(x=>`<option value="${escapeHtml(x.name)}">`).join('')}</datalist>
-      <datalist id="unitsDL">${[...UNITS,'%'].map(u=>`<option value="${u}">`).join('')}</datalist>
     </div>
     <div class="section-title" style="margin-top:16px">⚖️ Équivalence poids / volume</div>
     <div style="font-size:12px;color:var(--text-3);margin-bottom:8px">Optionnel · pour convertir g↔cl dans le batch (ex&nbsp;: 1&nbsp;kg&nbsp;=&nbsp;100&nbsp;cl pour l'eau)</div>
@@ -2648,32 +2660,75 @@ function openIngredientForm(i){
       <button class="btn btn-primary btn-block" id="btnSaveI">${t('save')}</button>
     </div>`;
 
+  /* ── Autocomplete ingrédients (dropdown positionné en fixed) ── */
+  function makeIngAc(input, onSelect){
+    const dd=document.createElement('div');
+    dd.className='ac-dd';
+    dd.style.cssText='position:fixed;z-index:9999;display:none;background:var(--navy-700);border:1px solid rgba(200,169,110,.3);border-radius:var(--radius-sm);overflow-y:auto;max-height:180px;box-shadow:0 8px 24px rgba(0,0,0,.6)';
+    document.body.appendChild(dd);
+    function repos(){const r=input.getBoundingClientRect();dd.style.top=(r.bottom+2)+'px';dd.style.left=r.left+'px';dd.style.width=r.width+'px';}
+    function fill(q){
+      if(!q){dd.style.display='none';return;}
+      const lq=q.toLowerCase();
+      const hits=state.ingredients.filter(x=>(x.name||'').toLowerCase().includes(lq)).slice(0,8);
+      const exact=state.ingredients.some(x=>(x.name||'').toLowerCase()===lq);
+      let html=hits.map(m=>`<div data-n="${escapeHtml(m.name)}" style="padding:8px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:13px;border-bottom:1px solid rgba(200,169,110,.06)"><span>${escapeHtml(m.name)}</span><span style="color:var(--text-3);font-size:11px">${escapeHtml(m.category||'')}</span></div>`).join('');
+      if(!exact&&q.length>=2)html+=`<div style="padding:8px 12px;font-size:12px;color:rgba(232,184,75,.85);border-top:1px solid rgba(200,169,110,.1)">✨ "<b>${escapeHtml(q)}</b>" — nouvel ingrédient</div>`;
+      if(!html){dd.style.display='none';return;}
+      dd.innerHTML=html;repos();dd.style.display='block';
+    }
+    input.addEventListener('input',()=>fill(input.value.trim()));
+    input.addEventListener('focus',()=>{if(input.value.trim())fill(input.value.trim());});
+    input.addEventListener('blur',()=>setTimeout(()=>{dd.style.display='none';},200));
+    dd.addEventListener('mousedown',e=>{
+      e.preventDefault();
+      const item=e.target.closest('[data-n]');
+      if(item){input.value=item.dataset.n;onSelect(item.dataset.n);dd.style.display='none';}
+    });
+    dd.addEventListener('touchend',e=>{
+      const item=e.target.closest('[data-n]');
+      if(item){input.value=item.dataset.n;onSelect(item.dataset.n);dd.style.display='none';}
+    });
+    return ()=>dd.remove();
+  }
+
   /* ── Ingrédients de la recette ── */
   const recRows = document.getElementById('recRows');
+  let _acCleanups=[];
   function renderRec(){
+    _acCleanups.forEach(fn=>fn()); _acCleanups=[];
     recRows.innerHTML='';
-    i.recipe = i.recipe||[];
+    i.recipe=i.recipe||[];
     i.recipe.forEach((r,idx)=>{
       const row=document.createElement('div'); row.className='ing-row';
-      row.innerHTML=`
-        <input list="ingListDL" placeholder="Ingrédient" value="${escapeHtml(r.name||'')}" data-k="name">
-        <input type="number" step="0.01" placeholder="Qté" value="${r.qty||''}" data-k="qty">
-        <select data-k="unit" style="width:70px">${[...UNITS,'%'].map(u=>`<option value="${u}"${(r.unit||'cl')===u?' selected':''}>${u}</option>`).join('')}</select>
-        <button type="button" class="rm">✕</button>`;
-      row.querySelectorAll('input,select').forEach(inp=>{
-        inp.addEventListener('input',()=>{
-          i.recipe[idx][inp.dataset.k]=inp.dataset.k==='qty'?parseFloat(inp.value)||0:inp.value;
-        });
-        inp.addEventListener('change',()=>{
-          i.recipe[idx][inp.dataset.k]=inp.dataset.k==='qty'?parseFloat(inp.value)||0:inp.value;
-        });
-      });
-      row.querySelector('.rm').addEventListener('click',()=>{i.recipe.splice(idx,1);renderRec();});
+      const nameInp=document.createElement('input');
+      nameInp.placeholder='Ingrédient'; nameInp.value=r.name||''; nameInp.autocomplete='off';
+      const setStatus=v=>{
+        const ex=v&&state.ingredients.some(x=>(x.name||'').toLowerCase().trim()===v.toLowerCase().trim());
+        nameInp.style.borderColor=v?(ex?'rgba(76,175,147,.5)':'rgba(232,184,75,.5)'):'';
+        nameInp.style.background=v?(ex?'rgba(76,175,147,.04)':'rgba(232,184,75,.04)'):'';
+        nameInp.title=v?(ex?'✓ Ingrédient existant':'✨ Sera créé automatiquement'):'';
+      };
+      setStatus(r.name||'');
+      _acCleanups.push(makeIngAc(nameInp,name=>{i.recipe[idx].name=name;setStatus(name);checkOutputCoherence();}));
+      nameInp.addEventListener('input',()=>{i.recipe[idx].name=nameInp.value;setStatus(nameInp.value.trim());checkOutputCoherence();});
+      nameInp.addEventListener('change',()=>{i.recipe[idx].name=nameInp.value;setStatus(nameInp.value.trim());checkOutputCoherence();});
+      const qtyInp=document.createElement('input');
+      qtyInp.type='number';qtyInp.step='0.01';qtyInp.placeholder='Qté';qtyInp.value=r.qty||'';
+      qtyInp.addEventListener('input',()=>{i.recipe[idx].qty=parseFloat(qtyInp.value)||0;checkOutputCoherence();});
+      const unitSel=document.createElement('select');
+      unitSel.style.width='70px';
+      unitSel.innerHTML=[...UNITS,'%'].map(u=>`<option value="${u}"${(r.unit||'cl')===u?' selected':''}>${u}</option>`).join('');
+      unitSel.addEventListener('change',()=>{i.recipe[idx].unit=unitSel.value;checkOutputCoherence();});
+      const rmBtn=document.createElement('button');
+      rmBtn.type='button';rmBtn.className='rm';rmBtn.textContent='✕';
+      rmBtn.addEventListener('click',()=>{i.recipe.splice(idx,1);renderRec();checkOutputCoherence();});
+      row.appendChild(nameInp);row.appendChild(qtyInp);row.appendChild(unitSel);row.appendChild(rmBtn);
       recRows.appendChild(row);
     });
   }
   renderRec();
-  document.getElementById('btnAddRec')?.addEventListener('click',()=>{i.recipe.push({name:'',qty:0,unit:''});renderRec();});
+  document.getElementById('btnAddRec')?.addEventListener('click',()=>{i.recipe.push({name:'',qty:0,unit:''});renderRec();checkOutputCoherence();});
 
   /* ── Résultat principal ── */
   function makeResultRow(obj, container, removable){
@@ -2692,10 +2747,12 @@ function openIngredientForm(i){
       inp.addEventListener('input',()=>{
         const k=inp.dataset.k;
         obj[k]=(k==='name'||k==='unit')?inp.value:(inp.value===''?null:parseFloat(inp.value)||0);
+        checkOutputCoherence();
       });
       inp.addEventListener('change',()=>{
         const k=inp.dataset.k;
         obj[k]=(k==='name'||k==='unit')?inp.value:(inp.value===''?null:parseFloat(inp.value)||0);
+        checkOutputCoherence();
       });
     });
     container.appendChild(row);
@@ -2703,60 +2760,57 @@ function openIngredientForm(i){
   }
   makeResultRow(i.mainOutput, document.getElementById('mainOutRow'), false);
 
-  /* ── Avertissement cohérence mainOutput vs somme ingrédients ── */
-  const outputWarnEl = document.createElement('div');
-  outputWarnEl.id = 'outputWarn';
-  outputWarnEl.style.cssText = 'display:none;background:rgba(229,85,85,.12);border:1px solid rgba(229,85,85,.35);border-radius:8px;padding:10px 12px;font-size:12px;color:#e55;margin-bottom:10px;line-height:1.5';
-  document.getElementById('mainOutRow').after(outputWarnEl);
+  /* ── Balance (cohérence entrées / sorties / pertes) ── */
+  const outputWarnEl = document.getElementById('balanceBar');
 
   function checkOutputCoherence(){
-    const recipeSum = (i.recipe||[])
-      .filter(r=>!(r.unit||'').includes('%') && (r.qty||0)>0)
-      .reduce((s,r)=>s+toCl(r.qty||0, r.unit||'cl'), 0);
+    const totalIn=(i.recipe||[])
+      .filter(r=>!(r.unit||'').includes('%')&&(r.qty||0)>0)
+      .reduce((s,r)=>s+toCl(r.qty||0,r.unit||'cl'),0);
+    if(totalIn<=0){outputWarnEl.style.display='none';return;}
+    const inLabel=fmtNorm(totalIn,'cl');
 
-    if(recipeSum <= 0){ outputWarnEl.style.display='none'; return; }
+    const mainQty=(i.mainOutput?.qtyMin||0)>0?toCl(i.mainOutput.qtyMin,i.mainOutput.unit||'cl'):0;
+    const byQty=(i.byproducts||[]).filter(b=>(b.qtyMin||0)>0)
+      .reduce((s,b)=>s+toCl(b.qtyMin||0,b.unit||'cl'),0);
+    const totalOut=mainQty+byQty;
 
-    const sumLabel = fmtNorm(recipeSum, 'cl');
+    const lossQtyRaw=parseFloat(document.getElementById('gLossQty')?.value)||0;
+    const lossUnit=document.getElementById('gLossUnit')?.value||'cl';
+    const lossAbs=lossQtyRaw>0?(lossUnit==='%'?totalIn*lossQtyRaw/100:toCl(lossQtyRaw,lossUnit)):0;
 
-    // Pas de mainOutput renseigné → info neutre
-    if(!i.mainOutput?.qtyMin || i.mainOutput.qtyMin <= 0){
-      outputWarnEl.style.display = 'block';
-      outputWarnEl.style.background = 'rgba(200,169,110,.08)';
-      outputWarnEl.style.borderColor = 'rgba(200,169,110,.25)';
-      outputWarnEl.style.color = 'var(--text-2)';
-      outputWarnEl.innerHTML = `ℹ️ Somme des ingrédients : <b style="color:var(--gold)">${sumLabel}</b> — renseigne le total attendu ci-dessus pour un calcul de batch précis.`;
+    if(totalOut<=0&&lossAbs<=0){
+      outputWarnEl.style.cssText='display:block;background:rgba(200,169,110,.08);border:1px solid rgba(200,169,110,.25);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-2);line-height:1.6';
+      outputWarnEl.innerHTML=`ℹ️ Entrées : <b style="color:var(--gold)">${inLabel}</b> — renseigne les produits obtenus pour valider la balance.`;
       return;
     }
 
-    const outputNorm = toCl(i.mainOutput.qtyMin, i.mainOutput.unit||'cl');
-    const pct = (outputNorm / recipeSum) * 100;
-    const outLabel = fmtNorm(outputNorm, i.mainOutput.unit||'cl');
+    const accounted=totalOut+lossAbs;
+    const pct=(accounted/totalIn)*100;
+    const outParts=[];
+    if(mainQty>0)outParts.push(`principal <b>${fmtNorm(mainQty,'cl')}</b>`);
+    if(byQty>0)outParts.push(`sous-produits <b>${fmtNorm(byQty,'cl')}</b>`);
+    const outStr=outParts.join(' + ')||'—';
+    const lossStr=lossAbs>0?` · perte <b>${fmtNorm(lossAbs,'cl')}</b>`:'';
 
-    outputWarnEl.style.display = 'block';
-
-    if(pct < 30 || pct > 150){
-      // ⚠️ Incohérent
-      outputWarnEl.style.background = 'rgba(229,85,85,.12)';
-      outputWarnEl.style.borderColor = 'rgba(229,85,85,.35)';
-      outputWarnEl.style.color = '#e55';
-      const msg = pct < 30
-        ? `Le total déclaré est très faible par rapport aux ingrédients (${pct.toFixed(0)}%). Vérifiez l'unité.`
-        : `Le total déclaré dépasse largement la somme des ingrédients (${pct.toFixed(0)}%). Vérifiez la valeur.`;
-      outputWarnEl.innerHTML = `⚠️ <b>Incohérence détectée</b> — ingrédients : <b>${sumLabel}</b> · total déclaré : <b>${outLabel}</b><br><span style="font-size:11px">${msg}</span>`;
+    let bg,bc,col,icon,msg;
+    if(pct>=85&&pct<=115){
+      bg='rgba(76,175,147,.08)';bc='rgba(76,175,147,.3)';col='#4caf93';icon='✅';
+      msg='Balance cohérente';
+    } else if(pct>=50&&pct<85){
+      bg='rgba(232,184,75,.08)';bc='rgba(232,184,75,.3)';col='var(--warn)';icon='⚠️';
+      msg='Balance approximative — ajoutez la perte estimée ou vérifiez les quantités';
+    } else if(pct>115&&pct<=150){
+      bg='rgba(232,184,75,.08)';bc='rgba(232,184,75,.3)';col='var(--warn)';icon='⚠️';
+      msg="Sortie légèrement supérieure à l'entrée — vérifiez les valeurs";
     } else {
-      // ✅ Cohérent
-      outputWarnEl.style.background = 'rgba(76,175,147,.08)';
-      outputWarnEl.style.borderColor = 'rgba(76,175,147,.3)';
-      outputWarnEl.style.color = '#4caf93';
-      outputWarnEl.innerHTML = `✅ Cohérent — ingrédients : <b>${sumLabel}</b> · total déclaré : <b>${outLabel}</b> (${pct.toFixed(0)}% de rendement)`;
+      bg='rgba(229,85,85,.12)';bc='rgba(229,85,85,.35)';col='#e55';icon='⚠️';
+      msg=pct<50?"Total déclaré très faible vs entrée — vérifiez les unités":"Total déclaré dépasse largement l'entrée — vérifiez les valeurs";
     }
+    outputWarnEl.style.cssText=`display:block;background:${bg};border:1px solid ${bc};border-radius:8px;padding:10px 12px;font-size:12px;color:${col};line-height:1.6`;
+    outputWarnEl.innerHTML=`${icon} <b>${msg}</b><br><span style="font-size:11px;opacity:.9">Entrées : <b>${inLabel}</b> · Sorties : ${outStr}${lossStr} → <b>${pct.toFixed(0)}%</b> comptabilisé</span>`;
   }
-  // Vérifier à l'initialisation et à chaque changement du mainOutput
   checkOutputCoherence();
-  document.getElementById('mainOutRow').querySelectorAll('input,select').forEach(el=>{
-    el.addEventListener('input', checkOutputCoherence);
-    el.addEventListener('change', checkOutputCoherence);
-  });
 
   /* ── Produits en plus ── */
   const byproductRows=document.getElementById('byproductRows');
@@ -2769,16 +2823,18 @@ function openIngredientForm(i){
       const rmBtn=document.createElement('button');
       rmBtn.type='button'; rmBtn.className='rm'; rmBtn.textContent='✕';
       rmBtn.style.cssText='margin-left:auto;margin-bottom:6px';
-      rmBtn.addEventListener('click',()=>{i.byproducts.splice(idx,1);renderByproducts();});
+      rmBtn.addEventListener('click',()=>{i.byproducts.splice(idx,1);renderByproducts();checkOutputCoherence();});
       wrapper.querySelector('div').appendChild(rmBtn);
       byproductRows.appendChild(wrapper);
     });
   }
   renderByproducts();
   document.getElementById('btnAddByproduct')?.addEventListener('click',()=>{
-    i.byproducts.push({name:'',qtyMin:null,qtyMax:null,unit:'cl'}); renderByproducts();
+    i.byproducts.push({name:'',qtyMin:null,qtyMax:null,unit:'cl'}); renderByproducts(); checkOutputCoherence();
   });
 
+  document.getElementById('gLossQty')?.addEventListener('input', checkOutputCoherence);
+  document.getElementById('gLossUnit')?.addEventListener('change', checkOutputCoherence);
   document.getElementById('gType').addEventListener('change', e=>{
     i.type=e.target.value;
     document.getElementById('boughtBlock').style.display=i.type==='bought'?'block':'none';
@@ -2811,6 +2867,8 @@ function openIngredientForm(i){
       i.steps=document.getElementById('gSteps').value;
       if(i.mainOutput&&!i.mainOutput.name.trim()) i.mainOutput=null;
       i.byproducts=(i.byproducts||[]).filter(b=>b.name.trim());
+      const lq=parseFloat(document.getElementById('gLossQty')?.value)||0;
+      i.loss=lq>0?{qty:lq,unit:document.getElementById('gLossUnit')?.value||'cl'}:null;
     }
     // Densité / équivalence poids-volume
     const dq1=parseFloat(document.getElementById('gDensityQty1').value);
