@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import type { Recipe, RecipeType, RecipeIngredient, LegacyRecipeData, CoffeeMetadata, CocktailMetadata, CuisineMetadata } from '@/types/recipe'
 import { isCoffeeMetadata, isCocktailMetadata, isCuisineMetadata, defaultMetadata } from '@/types/recipe'
 import { useRecipes } from '@/hooks/useRecipes'
+import { useCatalogSearch } from '@/hooks/useCatalogSearch'
 
 const TYPES: { value: RecipeType; label: string; icon: string }[] = [
   { value: 'cocktail', label: 'Cocktail', icon: '🍸' },
@@ -35,6 +36,7 @@ function emptyIngredient(): RecipeIngredient {
 export default function RecipeForm({ userId, initial, ingredientNames = [] }: Props) {
   const router = useRouter()
   const { create, update, saving } = useRecipes(userId, [])
+  const { results: catalogResults, search: searchCatalog, clear: clearCatalog } = useCatalogSearch()
 
   const [type, setType] = useState<RecipeType>(initial?.type ?? 'cocktail')
   const [name, setName] = useState(initial?.data.name ?? '')
@@ -75,12 +77,36 @@ export default function RecipeForm({ userId, initial, ingredientNames = [] }: Pr
     setIngredients(prev => prev.map((ing, i) => i === idx ? { ...ing, [field]: value } : ing))
   }
 
+  function handleIngNameChange(idx: number, value: string) {
+    updateIngredient(idx, 'name', value)
+    setActiveIngIdx(idx)
+    if (value.length >= 2) searchCatalog(value)
+    else clearCatalog()
+  }
+
+  function selectCatalogItem(idx: number, itemName: string, unit: string) {
+    updateIngredient(idx, 'name', itemName)
+    if (ING_UNITS.includes(unit)) updateIngredient(idx, 'unit', unit)
+    setActiveIngIdx(null)
+    clearCatalog()
+  }
+
   function addIngredient() {
     setIngredients(prev => [...prev, emptyIngredient()])
   }
 
   function removeIngredient(idx: number) {
     setIngredients(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  function moveIngredient(idx: number, dir: 'up' | 'down') {
+    setIngredients(prev => {
+      const arr = [...prev]
+      const target = dir === 'up' ? idx - 1 : idx + 1
+      if (target < 0 || target >= arr.length) return prev
+      ;[arr[idx], arr[target]] = [arr[target], arr[idx]]
+      return arr
+    })
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -153,77 +179,133 @@ export default function RecipeForm({ userId, initial, ingredientNames = [] }: Pr
           <div className="space-y-2">
             {ingredients.map((ing, idx) => {
               const query = ing.name.toLowerCase()
-              const suggestions = activeIngIdx === idx && ing.name.length >= 1
+              const localSuggestions = activeIngIdx === idx && ing.name.length >= 1
                 ? ingredientNames.filter(n => n.toLowerCase().includes(query) && n.toLowerCase() !== query)
                 : []
+              const showCatalog = activeIngIdx === idx && ing.name.length >= 2 && catalogResults.length > 0
+              const catalogFiltered = catalogResults.filter(
+                c => !localSuggestions.map(s => s.toLowerCase()).includes(c.name.toLowerCase())
+              )
+              const showDropdown = localSuggestions.length > 0 || showCatalog
+
               return (
-              <div key={idx} className="flex gap-2 items-center">
-                <div className="relative" style={{ flex: 1, minWidth: 0 }}>
-                  <input
-                    ref={el => { ingInputRefs.current[idx] = el }}
-                    type="text"
-                    value={ing.name}
-                    onChange={e => updateIngredient(idx, 'name', e.target.value)}
-                    onFocus={() => setActiveIngIdx(idx)}
-                    onBlur={() => setTimeout(() => setActiveIngIdx(null), 160)}
-                    placeholder="Ingrédient"
-                    className="field-input"
-                    style={{ width: '100%' }}
-                  />
-                  {suggestions.length > 0 && (
-                    <ul
-                      className="absolute left-0 right-0 top-full mt-1 rounded-[var(--radius-sm)] overflow-hidden z-30 shadow-lg"
-                      style={{ background: 'var(--surface2)', border: '1px solid var(--border)' }}
+                <div key={idx} className="space-y-1">
+                  {/* Ligne principale : nom + qty + unit */}
+                  <div className="flex gap-2 items-center">
+                    {/* Boutons réorganisation */}
+                    <div className="flex flex-col gap-0.5 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => moveIngredient(idx, 'up')}
+                        disabled={idx === 0}
+                        className="w-5 h-4 flex items-center justify-center rounded text-xs disabled:opacity-20"
+                        style={{ background: 'var(--surface2)', color: 'var(--text-dim)' }}
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveIngredient(idx, 'down')}
+                        disabled={idx === ingredients.length - 1}
+                        className="w-5 h-4 flex items-center justify-center rounded text-xs disabled:opacity-20"
+                        style={{ background: 'var(--surface2)', color: 'var(--text-dim)' }}
+                      >
+                        ▼
+                      </button>
+                    </div>
+
+                    {/* Nom avec autocomplete */}
+                    <div className="relative" style={{ flex: 1, minWidth: 0 }}>
+                      <input
+                        ref={el => { ingInputRefs.current[idx] = el }}
+                        type="text"
+                        value={ing.name}
+                        onChange={e => handleIngNameChange(idx, e.target.value)}
+                        onFocus={() => { setActiveIngIdx(idx); if (ing.name.length >= 2) searchCatalog(ing.name) }}
+                        onBlur={() => setTimeout(() => { setActiveIngIdx(null); clearCatalog() }, 180)}
+                        placeholder="Ingrédient"
+                        className="field-input"
+                        style={{ width: '100%' }}
+                      />
+                      {showDropdown && (
+                        <ul
+                          className="absolute left-0 right-0 top-full mt-1 rounded-[var(--radius-sm)] overflow-hidden z-30 shadow-lg"
+                          style={{ background: 'var(--surface2)', border: '1px solid var(--border)' }}
+                        >
+                          {/* Stock local */}
+                          {localSuggestions.slice(0, 4).map(s => (
+                            <li key={s}>
+                              <button
+                                type="button"
+                                onMouseDown={() => { updateIngredient(idx, 'name', s); setActiveIngIdx(null); clearCatalog() }}
+                                className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:opacity-80"
+                                style={{ color: 'var(--text)', borderBottom: '1px solid var(--border)' }}
+                              >
+                                <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--surface)', color: 'var(--gold)', fontSize: '10px' }}>stock</span>
+                                {s}
+                              </button>
+                            </li>
+                          ))}
+                          {/* Catalogue */}
+                          {showCatalog && catalogFiltered.slice(0, 5).map(c => (
+                            <li key={c.id}>
+                              <button
+                                type="button"
+                                onMouseDown={() => selectCatalogItem(idx, c.name, c.default_unit)}
+                                className="w-full text-left px-3 py-2 text-sm flex items-center justify-between hover:opacity-80"
+                                style={{ color: 'var(--text)', borderBottom: '1px solid var(--border)' }}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--surface)', color: 'var(--text-dim)', fontSize: '10px' }}>catalogue</span>
+                                  {c.name}
+                                </div>
+                                <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-dim)' }}>
+                                  {c.default_unit}{c.typical_price ? ` · ${c.typical_price}€` : ''}
+                                </span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* Quantité */}
+                    <input
+                      type="number"
+                      value={ing.qty || ''}
+                      onChange={e => updateIngredient(idx, 'qty', Number(e.target.value))}
+                      placeholder="Qté"
+                      min={0}
+                      step="0.1"
+                      className="field-input text-center font-semibold"
+                      style={{ width: '4rem', flexShrink: 0 }}
+                    />
+
+                    {/* Unité */}
+                    <select
+                      value={ing.unit}
+                      onChange={e => updateIngredient(idx, 'unit', e.target.value)}
+                      className="field-input"
+                      style={{ width: '4.5rem', flexShrink: 0, paddingLeft: '6px', paddingRight: '2px' }}
                     >
-                      {suggestions.slice(0, 6).map(s => (
-                        <li key={s}>
-                          <button
-                            type="button"
-                            onMouseDown={() => {
-                              updateIngredient(idx, 'name', s)
-                              setActiveIngIdx(null)
-                            }}
-                            className="w-full text-left px-3 py-2 text-sm hover:opacity-80"
-                            style={{ color: 'var(--text)', borderBottom: '1px solid var(--border)' }}
-                          >
-                            {s}
-                          </button>
-                        </li>
+                      {ING_UNITS.map(u => (
+                        <option key={u} value={u}>{u}</option>
                       ))}
-                    </ul>
-                  )}
+                    </select>
+
+                    {/* Supprimer */}
+                    {ingredients.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeIngredient(idx)}
+                        className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full text-sm"
+                        style={{ background: 'var(--surface2)', color: 'var(--text-dim)' }}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <input
-                  type="number"
-                  value={ing.qty || ''}
-                  onChange={e => updateIngredient(idx, 'qty', Number(e.target.value))}
-                  placeholder="Qté"
-                  min={0}
-                  step="0.1"
-                  className="field-input text-center font-semibold"
-                  style={{ width: '4rem', flexShrink: 0 }}
-                />
-                <select
-                  value={ing.unit}
-                  onChange={e => updateIngredient(idx, 'unit', e.target.value)}
-                  className="field-input"
-                  style={{ width: '4rem', flexShrink: 0, paddingLeft: '6px', paddingRight: '2px' }}
-                >
-                  {ING_UNITS.map(u => (
-                    <option key={u} value={u}>{u}</option>
-                  ))}
-                </select>
-                {ingredients.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeIngredient(idx)}
-                    className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full text-sm"
-                    style={{ background: 'var(--surface2)', color: 'var(--text-dim)' }}
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
               )
             })}
           </div>
